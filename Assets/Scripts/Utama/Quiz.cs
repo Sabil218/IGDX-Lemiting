@@ -1,40 +1,41 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class QuizManager : MonoBehaviour
+public class Quiz : MonoBehaviour
 {
-    [Header("Question")]
-    public Image questionImage;
-    public Sprite questionSprite;
-
     [Header("Answer Buttons")]
     public Button[] answerButtons;
-
-    [Header("Answer Images")]
-    public Sprite[] answerSprites = new Sprite[4];
 
     [Header("Correct Answer")]
     [Range(0, 3)]
     public int correctAnswer;
 
-    [Header("Battle Manager")]
-    public BattleManager battleManager;
+    private BattleManager battleManager;
+    private QuizManager quizManager;
 
-    void Start()
+    private bool answered = false;
+
+    private void Start()
     {
-        questionImage.sprite = questionSprite;
+        battleManager = FindFirstObjectByType<BattleManager>();
+        quizManager = FindFirstObjectByType<QuizManager>();
 
         for (int i = 0; i < answerButtons.Length; i++)
         {
-
             int index = i;
+
             answerButtons[i].onClick.RemoveAllListeners();
             answerButtons[i].onClick.AddListener(() => CheckAnswer(index));
         }
     }
 
-    void CheckAnswer(int selectedAnswer)
+    public void CheckAnswer(int selectedAnswer)
     {
+        if (answered)
+            return;
+
+        answered = true;
+
         foreach (Button btn in answerButtons)
         {
             btn.interactable = false;
@@ -42,13 +43,15 @@ public class QuizManager : MonoBehaviour
 
         if (selectedAnswer == correctAnswer)
         {
+            Debug.Log("Jawaban Benar");
             battleManager.PlayerAttack();
         }
         else
         {
+            Debug.Log("Jawaban Salah");
             battleManager.EnemyAttack();
         }
 
-        gameObject.SetActive(false);
+        quizManager.RemoveQuiz();
     }
 }
