@@ -3,7 +3,9 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Ingredients
+  - CuttingBoard
   layers:
   - Default
   - TransparentFX
@@ -17,8 +19,8 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - Ingredients
+  - CuttingBoard
   - 
   - 
   - 
@@ -40,4 +42,10 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: CuttingBoard
+    uniqueID: 3166436953
+    locked: 0
+  - name: Ingredients
+    uniqueID: 1425351033
     locked: 0
