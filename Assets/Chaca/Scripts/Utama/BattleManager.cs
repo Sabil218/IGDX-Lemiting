@@ -8,10 +8,10 @@ public class BattleManager : MonoBehaviour
     public int playerHP = 100;
     public int playerDamage = 20;
 
-    [Header("Enemy")]
-    public Transform enemy;
-    public int enemyHP = 100;
-    public int enemyDamage = 15;
+    [Header("Enemies")]
+    public Enemy[] enemies;
+    private Enemy currentEnemy;
+    private int currentEnemyIndex = 0;
 
     [Header("Attack Settings")]
     public float attackDelay = 0.5f;
@@ -21,7 +21,17 @@ public class BattleManager : MonoBehaviour
 
     [Header("Player Movement")]
     public float moveSpeed = 3f;
-    public Transform nextPoint;
+    public Transform[] battlePoints;
+
+    private void Start()
+    {
+        currentEnemy = enemies[currentEnemyIndex];
+
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            enemies[i].gameObject.SetActive(i == 0);
+        }
+    }
 
     public void PlayerAttack()
     {
@@ -36,26 +46,21 @@ public class BattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(attackDelay);
 
-        enemyHP -= playerDamage;
+        currentEnemy.TakeDamage(playerDamage);
 
-        if (enemyHP < 0)
-            enemyHP = 0;
-
-        Debug.Log("Enemy HP : " + enemyHP);
-
-        // enemyAnimator.SetTrigger("Hit");
-
-        if (enemyHP <= 0)
+        if (currentEnemy.currentHP <= 0)
         {
-            Debug.Log("Enemy Mati");
-
-            // enemyAnimator.SetTrigger("Die");
-
             quizManager.RemoveQuiz();
 
             yield return new WaitForSeconds(1f);
 
-            enemy.gameObject.SetActive(false);
+            currentEnemyIndex++;
+
+            if (currentEnemyIndex >= enemies.Length)
+            {
+                Debug.Log("Semua Enemy Sudah Mati");
+                yield break;
+            }
 
             StartCoroutine(PlayerMoveToNextPoint());
         }
@@ -82,7 +87,7 @@ public class BattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(attackDelay);
 
-        playerHP -= enemyDamage;
+        playerHP -= currentEnemy.damage;
 
         if (playerHP < 0)
             playerHP = 0;
@@ -113,11 +118,11 @@ public class BattleManager : MonoBehaviour
 
         // playerAnimator.SetBool("Walk", true);
 
-        while (Vector2.Distance(player.position, nextPoint.position) > 0.05f)
+        while (Vector2.Distance(player.position, battlePoints[currentEnemyIndex].position) > 0.05f)
         {
             player.position = Vector2.MoveTowards(
                 player.position,
-                nextPoint.position,
+                battlePoints[currentEnemyIndex].position,
                 moveSpeed * Time.deltaTime);
 
             yield return null;
@@ -125,6 +130,16 @@ public class BattleManager : MonoBehaviour
 
         // playerAnimator.SetBool("Walk", false);
 
-        Debug.Log("Player Sampai");
+        currentEnemy.gameObject.SetActive(false);
+
+        currentEnemy = enemies[currentEnemyIndex];
+
+        currentEnemy.gameObject.SetActive(true);
+
+        currentEnemy.ResetHP();
+
+        quizManager.SpawnRandomQuiz();
+
+        Debug.Log("Battle Selanjutnya");
     }
 }
