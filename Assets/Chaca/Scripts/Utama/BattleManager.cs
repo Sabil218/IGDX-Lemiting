@@ -1,145 +1,408 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class BattleManager : MonoBehaviour
 {
     [Header("Player")]
-    public Transform player;
-    public int playerHP = 100;
-    public int playerDamage = 20;
+    public Player player;
 
-    [Header("Enemies")]
-    public Enemy[] enemies;
-    private Enemy currentEnemy;
-    private int currentEnemyIndex = 0;
+    [Header("Enemy Prefabs")]
+    public GameObject[] enemyPrefabs;
 
-    [Header("Attack Settings")]
-    public float attackDelay = 0.5f;
+    [Header("Enemy Spawn Points")]
+    public Transform[] enemySpawnPoints;
+
+    [Header("Player Stop Points")]
+    public Transform[] playerStopPoints;
 
     [Header("Quiz")]
     public QuizManager quizManager;
+    public float quizDelay = 1f;
 
     [Header("Player Movement")]
-    public float moveSpeed = 3f;
-    public Transform[] battlePoints;
+    public float moveSpeed = 2f;
+
+    private int currentEnemyIndex;
+    private GameObject currentEnemy;
+    private EnemyBase currentEnemyBase;
+
+    private bool battleBusy;
+    private bool changingEnemy;
 
     private void Start()
     {
-        currentEnemy = enemies[currentEnemyIndex];
+        currentEnemyIndex = 0;
 
-        for (int i = 0; i < enemies.Length; i++)
+        SpawnCurrentEnemy();
+
+        StartCoroutine(StartFirstQuiz());
+    }
+
+    private IEnumerator StartFirstQuiz()
+    {
+        yield return new WaitForSeconds(quizDelay);
+
+        SpawnQuiz();
+    }
+
+    private GameObject SpawnCurrentEnemy()
+    {
+        if (
+            enemyPrefabs == null ||
+            enemyPrefabs.Length == 0
+        )
         {
-            enemies[i].gameObject.SetActive(i == 0);
+            return null;
         }
+
+        if (
+            currentEnemyIndex >=
+            enemyPrefabs.Length
+        )
+        {
+            return null;
+        }
+
+        if (
+            enemySpawnPoints == null ||
+            currentEnemyIndex >=
+            enemySpawnPoints.Length
+        )
+        {
+            return null;
+        }
+
+        GameObject enemyPrefab =
+            enemyPrefabs[currentEnemyIndex];
+
+        Transform spawnPoint =
+            enemySpawnPoints[currentEnemyIndex];
+
+        if (enemyPrefab == null)
+        {
+            return null;
+        }
+
+        if (spawnPoint == null)
+        {
+            return null;
+        }
+
+        currentEnemy =
+            Instantiate(
+                enemyPrefab,
+                spawnPoint.position,
+                spawnPoint.rotation
+            );
+
+        currentEnemy.name =
+            enemyPrefab.name;
+
+        currentEnemyBase =
+            currentEnemy.GetComponent<EnemyBase>();
+
+        if (currentEnemyBase == null)
+        {
+            Destroy(currentEnemy);
+
+            currentEnemy = null;
+
+            return null;
+        }
+
+        currentEnemyBase.player =
+            player.transform;
+
+        currentEnemyBase.battleManager =
+            this;
+
+        return currentEnemy;
     }
 
     public void PlayerAttack()
     {
-        StartCoroutine(PlayerAttackCoroutine());
+        if (battleBusy)
+            return;
+
+        if (changingEnemy)
+            return;
+
+        if (currentEnemyBase == null)
+            return;
+
+        if (currentEnemyBase.IsDead)
+            return;
+
+        battleBusy = true;
+
+        StartCoroutine(
+            PlayerAttackCoroutine()
+        );
     }
 
-    IEnumerator PlayerAttackCoroutine()
+    private IEnumerator PlayerAttackCoroutine()
     {
-        Debug.Log("Player Attack");
-
-        // playerAnimator.SetTrigger("Attack");
-
-        yield return new WaitForSeconds(attackDelay);
-
-        currentEnemy.TakeDamage(playerDamage);
-
-        if (currentEnemy.currentHP <= 0)
+        if (currentEnemyBase == null)
         {
-            quizManager.RemoveQuiz();
-
-            yield return new WaitForSeconds(1f);
-
-            currentEnemyIndex++;
-
-            if (currentEnemyIndex >= enemies.Length)
-            {
-                Debug.Log("Semua Enemy Sudah Mati");
-                yield break;
-            }
-
-            StartCoroutine(PlayerMoveToNextPoint());
+            battleBusy = false;
+            yield break;
         }
-        else
+
+        yield return StartCoroutine(
+            player.Attack(
+                currentEnemy.transform
+            )
+        );
+
+        if (currentEnemyBase == null)
         {
-            quizManager.RemoveQuiz();
-
-            yield return new WaitForSeconds(0.5f);
-
-            quizManager.SpawnRandomQuiz();
+            battleBusy = false;
+            yield break;
         }
+
+        if (currentEnemyBase.IsDead)
+        {
+            battleBusy = false;
+            yield break;
+        }
+
+        yield return new WaitForSeconds(
+            quizDelay
+        );
+
+        if (
+            !changingEnemy &&
+            currentEnemyBase != null &&
+            !currentEnemyBase.IsDead
+        )
+        {
+            SpawnQuiz();
+        }
+
+        battleBusy = false;
     }
 
-    public void EnemyAttack()
+    public void EnemyDefeated()
     {
-        StartCoroutine(EnemyAttackCoroutine());
+        if (changingEnemy)
+            return;
+
+        StartCoroutine(
+            EnemyDefeatedCoroutine()
+        );
     }
 
-    IEnumerator EnemyAttackCoroutine()
+    private IEnumerator EnemyDefeatedCoroutine()
     {
-        Debug.Log("Enemy Attack");
+        changingEnemy = true;
+        battleBusy = true;
 
-        // enemyAnimator.SetTrigger("Attack");
+        RemoveQuiz();
 
-        yield return new WaitForSeconds(attackDelay);
+        currentEnemy = null;
+        currentEnemyBase = null;
 
-        playerHP -= currentEnemy.damage;
+        currentEnemyIndex++;
 
-        if (playerHP < 0)
-            playerHP = 0;
-
-        Debug.Log("Player HP : " + playerHP);
-
-        // playerAnimator.SetTrigger("Hit");
-
-        if (playerHP <= 0)
+        if (
+            currentEnemyIndex >=
+            enemyPrefabs.Length
+        )
         {
-            Debug.Log("Player Mati");
-
-            // playerAnimator.SetTrigger("Die");
+            battleBusy = false;
+            yield break;
         }
-        else
+
+        GameObject nextEnemy =
+            SpawnCurrentEnemy();
+
+        if (nextEnemy == null)
         {
-            quizManager.RemoveQuiz();
-
-            yield return new WaitForSeconds(0.5f);
-
-            quizManager.SpawnRandomQuiz();
+            battleBusy = false;
+            yield break;
         }
+
+        if (
+            playerStopPoints == null ||
+            currentEnemyIndex >=
+            playerStopPoints.Length
+        )
+        {
+            battleBusy = false;
+            yield break;
+        }
+
+        Transform playerStopPoint =
+            playerStopPoints[currentEnemyIndex];
+
+        if (playerStopPoint == null)
+        {
+            battleBusy = false;
+            yield break;
+        }
+
+        yield return StartCoroutine(
+            MovePlayerTo(
+                playerStopPoint
+            )
+        );
+
+        yield return new WaitForSeconds(
+            quizDelay
+        );
+
+        changingEnemy = false;
+
+        SpawnQuiz();
+
+        battleBusy = false;
     }
 
-    IEnumerator PlayerMoveToNextPoint()
+    private IEnumerator MovePlayerTo(
+        Transform target
+    )
     {
-        Debug.Log("Player Jalan");
+        if (target == null)
+            yield break;
 
-        // playerAnimator.SetBool("Walk", true);
+        float playerY =
+            player.transform.position.y;
 
-        while (Vector2.Distance(player.position, battlePoints[currentEnemyIndex].position) > 0.05f)
+        SetRunAnimation(true);
+
+        while (
+            Mathf.Abs(
+                player.transform.position.x -
+                target.position.x
+            ) > 0.05f
+        )
         {
-            player.position = Vector2.MoveTowards(
-                player.position,
-                battlePoints[currentEnemyIndex].position,
-                moveSpeed * Time.deltaTime);
+            Vector3 currentPosition =
+                player.transform.position;
+
+            float newX =
+                Mathf.MoveTowards(
+                    currentPosition.x,
+                    target.position.x,
+                    moveSpeed *
+                    Time.deltaTime
+                );
+
+            player.transform.position =
+                new Vector3(
+                    newX,
+                    playerY,
+                    currentPosition.z
+                );
 
             yield return null;
         }
 
-        // playerAnimator.SetBool("Walk", false);
+        player.transform.position =
+            new Vector3(
+                target.position.x,
+                playerY,
+                player.transform.position.z
+            );
 
-        currentEnemy.gameObject.SetActive(false);
+        SetRunAnimation(false);
+    }
 
-        currentEnemy = enemies[currentEnemyIndex];
+    private void SetRunAnimation(
+        bool running
+    )
+    {
+        if (player == null)
+            return;
 
-        currentEnemy.gameObject.SetActive(true);
+        if (player.animator == null)
+            return;
 
-        currentEnemy.ResetHP();
+        player.animator.SetBool(
+            "isRun",
+            running
+        );
+    }
+
+    public void EnemyAttack()
+    {
+        if (battleBusy)
+            return;
+
+        if (changingEnemy)
+            return;
+
+        if (currentEnemyBase == null)
+            return;
+
+        if (currentEnemyBase.IsDead)
+            return;
+
+        battleBusy = true;
+
+        StartCoroutine(
+            EnemyAttackCoroutine()
+        );
+    }
+
+    private IEnumerator EnemyAttackCoroutine()
+    {
+        if (currentEnemyBase == null)
+        {
+            battleBusy = false;
+            yield break;
+        }
+
+        currentEnemyBase.Attack();
+
+        while (
+            currentEnemyBase != null &&
+            currentEnemyBase.IsAttacking
+        )
+        {
+            yield return null;
+        }
+
+        RemoveQuiz();
+
+        yield return new WaitForSeconds(
+            quizDelay
+        );
+
+        if (
+            !changingEnemy &&
+            currentEnemyBase != null &&
+            !currentEnemyBase.IsDead
+        )
+        {
+            SpawnQuiz();
+        }
+
+        battleBusy = false;
+    }
+
+    private void SpawnQuiz()
+    {
+        if (quizManager == null)
+            return;
+
+        if (changingEnemy)
+            return;
+
+        if (currentEnemyBase == null)
+            return;
+
+        if (currentEnemyBase.IsDead)
+            return;
 
         quizManager.SpawnRandomQuiz();
+    }
 
-        Debug.Log("Battle Selanjutnya");
+    private void RemoveQuiz()
+    {
+        if (quizManager == null)
+            return;
+
+        quizManager.RemoveQuiz();
     }
 }

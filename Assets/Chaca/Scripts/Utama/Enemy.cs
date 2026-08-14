@@ -7,13 +7,18 @@ public class Enemy : MonoBehaviour
     public int currentHP;
     public int damage = 15;
 
+    public bool IsDead { get; private set; }
+
     private void Awake()
     {
-        currentHP = maxHP;
+        ResetHP();
     }
 
     public void TakeDamage(int amount)
     {
+        if (IsDead)
+            return;
+
         currentHP -= amount;
 
         if (currentHP < 0)
@@ -29,17 +34,18 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void Die()
+    void Die()
     {
+        IsDead = true;
+
         Debug.Log(gameObject.name + " Mati");
 
         // animator.SetTrigger("Die");
-
-        gameObject.SetActive(false);
     }
 
     public void ResetHP()
     {
         currentHP = maxHP;
+        IsDead = false;
     }
 }
