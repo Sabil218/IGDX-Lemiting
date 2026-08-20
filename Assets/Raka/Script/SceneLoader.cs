@@ -9,4 +9,10 @@ public class SceneLoader : MonoBehaviour
     {
         SceneManager.LoadScene("Level1");
     }
+
+    public void LoadMainMenu()
+    {
+        PlayerPrefs.SetInt("OpenLevelSelect", 1);
+        SceneManager.LoadScene("Mainmenu");
+    }
 }
