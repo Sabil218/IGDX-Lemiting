@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class BattleManager : MonoBehaviour
 {
@@ -22,15 +23,28 @@ public class BattleManager : MonoBehaviour
     [Header("Player Movement")]
     public float moveSpeed = 2f;
 
+    [Header("Win / Lose Panel")]
+    public GameObject winningPanel;
+    public GameObject loosePanel;
+
     private int currentEnemyIndex;
     private GameObject currentEnemy;
     private EnemyBase currentEnemyBase;
 
     private bool battleBusy;
     private bool changingEnemy;
+    private bool gameEnded;
 
     private void Start()
     {
+        Time.timeScale = 1f;
+
+        if (winningPanel != null)
+            winningPanel.SetActive(false);
+
+        if (loosePanel != null)
+            loosePanel.SetActive(false);
+
         currentEnemyIndex = 0;
 
         SpawnCurrentEnemy();
@@ -38,39 +52,41 @@ public class BattleManager : MonoBehaviour
         StartCoroutine(StartFirstQuiz());
     }
 
+    private void Update()
+    {
+        if (gameEnded)
+            return;
+
+        if (player == null)
+            return;
+
+        if (player.currentHearts <= 0)
+        {
+            LoseGame();
+        }
+    }
+
     private IEnumerator StartFirstQuiz()
     {
         yield return new WaitForSeconds(quizDelay);
 
-        SpawnQuiz();
+        if (!gameEnded)
+            SpawnQuiz();
     }
 
     private GameObject SpawnCurrentEnemy()
     {
-        if (
-            enemyPrefabs == null ||
-            enemyPrefabs.Length == 0
-        )
-        {
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
             return null;
-        }
 
-        if (
-            currentEnemyIndex >=
-            enemyPrefabs.Length
-        )
-        {
+        if (currentEnemyIndex >= enemyPrefabs.Length)
             return null;
-        }
 
         if (
             enemySpawnPoints == null ||
-            currentEnemyIndex >=
-            enemySpawnPoints.Length
+            currentEnemyIndex >= enemySpawnPoints.Length
         )
-        {
             return null;
-        }
 
         GameObject enemyPrefab =
             enemyPrefabs[currentEnemyIndex];
@@ -79,14 +95,10 @@ public class BattleManager : MonoBehaviour
             enemySpawnPoints[currentEnemyIndex];
 
         if (enemyPrefab == null)
-        {
             return null;
-        }
 
         if (spawnPoint == null)
-        {
             return null;
-        }
 
         currentEnemy =
             Instantiate(
@@ -95,8 +107,7 @@ public class BattleManager : MonoBehaviour
                 spawnPoint.rotation
             );
 
-        currentEnemy.name =
-            enemyPrefab.name;
+        currentEnemy.name = enemyPrefab.name;
 
         currentEnemyBase =
             currentEnemy.GetComponent<EnemyBase>();
@@ -104,9 +115,7 @@ public class BattleManager : MonoBehaviour
         if (currentEnemyBase == null)
         {
             Destroy(currentEnemy);
-
             currentEnemy = null;
-
             return null;
         }
 
@@ -127,10 +136,16 @@ public class BattleManager : MonoBehaviour
         if (changingEnemy)
             return;
 
+        if (gameEnded)
+            return;
+
         if (currentEnemyBase == null)
             return;
 
         if (currentEnemyBase.IsDead)
+            return;
+
+        if (player == null || player.IsDead)
             return;
 
         battleBusy = true;
@@ -154,6 +169,12 @@ public class BattleManager : MonoBehaviour
             )
         );
 
+        if (gameEnded)
+        {
+            battleBusy = false;
+            yield break;
+        }
+
         if (currentEnemyBase == null)
         {
             battleBusy = false;
@@ -172,6 +193,7 @@ public class BattleManager : MonoBehaviour
 
         if (
             !changingEnemy &&
+            !gameEnded &&
             currentEnemyBase != null &&
             !currentEnemyBase.IsDead
         )
@@ -185,6 +207,9 @@ public class BattleManager : MonoBehaviour
     public void EnemyDefeated()
     {
         if (changingEnemy)
+            return;
+
+        if (gameEnded)
             return;
 
         StartCoroutine(
@@ -204,12 +229,9 @@ public class BattleManager : MonoBehaviour
 
         currentEnemyIndex++;
 
-        if (
-            currentEnemyIndex >=
-            enemyPrefabs.Length
-        )
+        if (currentEnemyIndex >= enemyPrefabs.Length)
         {
-            battleBusy = false;
+            WinGame();
             yield break;
         }
 
@@ -219,16 +241,17 @@ public class BattleManager : MonoBehaviour
         if (nextEnemy == null)
         {
             battleBusy = false;
+            changingEnemy = false;
             yield break;
         }
 
         if (
             playerStopPoints == null ||
-            currentEnemyIndex >=
-            playerStopPoints.Length
+            currentEnemyIndex >= playerStopPoints.Length
         )
         {
             battleBusy = false;
+            changingEnemy = false;
             yield break;
         }
 
@@ -238,6 +261,7 @@ public class BattleManager : MonoBehaviour
         if (playerStopPoint == null)
         {
             battleBusy = false;
+            changingEnemy = false;
             yield break;
         }
 
@@ -253,7 +277,8 @@ public class BattleManager : MonoBehaviour
 
         changingEnemy = false;
 
-        SpawnQuiz();
+        if (!gameEnded)
+            SpawnQuiz();
 
         battleBusy = false;
     }
@@ -332,10 +357,16 @@ public class BattleManager : MonoBehaviour
         if (changingEnemy)
             return;
 
+        if (gameEnded)
+            return;
+
         if (currentEnemyBase == null)
             return;
 
         if (currentEnemyBase.IsDead)
+            return;
+
+        if (player == null || player.IsDead)
             return;
 
         battleBusy = true;
@@ -363,6 +394,18 @@ public class BattleManager : MonoBehaviour
             yield return null;
         }
 
+        if (gameEnded)
+        {
+            battleBusy = false;
+            yield break;
+        }
+
+        if (player != null && player.currentHearts <= 0)
+        {
+            LoseGame();
+            yield break;
+        }
+
         RemoveQuiz();
 
         yield return new WaitForSeconds(
@@ -371,6 +414,7 @@ public class BattleManager : MonoBehaviour
 
         if (
             !changingEnemy &&
+            !gameEnded &&
             currentEnemyBase != null &&
             !currentEnemyBase.IsDead
         )
@@ -389,10 +433,16 @@ public class BattleManager : MonoBehaviour
         if (changingEnemy)
             return;
 
+        if (gameEnded)
+            return;
+
         if (currentEnemyBase == null)
             return;
 
         if (currentEnemyBase.IsDead)
+            return;
+
+        if (player == null || player.IsDead)
             return;
 
         quizManager.SpawnRandomQuiz();
@@ -404,5 +454,48 @@ public class BattleManager : MonoBehaviour
             return;
 
         quizManager.RemoveQuiz();
+    }
+
+    public void WinGame()
+    {
+        if (gameEnded)
+            return;
+
+        gameEnded = true;
+        battleBusy = true;
+        changingEnemy = true;
+
+        RemoveQuiz();
+
+        if (winningPanel != null)
+            winningPanel.SetActive(true);
+
+        Time.timeScale = 0f;
+    }
+
+    public void LoseGame()
+    {
+        if (gameEnded)
+            return;
+
+        gameEnded = true;
+        battleBusy = true;
+        changingEnemy = true;
+
+        RemoveQuiz();
+
+        if (loosePanel != null)
+            loosePanel.SetActive(true);
+
+        Time.timeScale = 0f;
+    }
+
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(
+            SceneManager.GetActiveScene().buildIndex
+        );
     }
 }

@@ -151,8 +151,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eca9e277b658642419b65be0286853bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHearts: 3
-  currentHearts: 3
+  maxHearts: 1
+  currentHearts: 1
   damage: 1
   animator: {fileID: 6170296354498949192}
   battleManager: {fileID: 0}
