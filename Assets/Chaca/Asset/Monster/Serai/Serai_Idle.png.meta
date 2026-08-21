@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3d97073208768004e8a9a2f9c0e6cf3b
+guid: 66b9fbc516eaaef408a92fe9722115ad
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,76 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: MC_Idle_1
-      rect:
-        serializedVersion: 2
-        x: 1080
-        y: 2160
-        width: 1080
-        height: 1080
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: ce21937c31ea61847bab8d08cf1d5b02
-      internalID: -1465042440
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: MC_Idle_2
-      rect:
-        serializedVersion: 2
-        x: 2160
-        y: 2160
-        width: 1080
-        height: 1080
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 35aaff453fa9eab4b834b1c406c625c9
-      internalID: -126990061
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: MC_Idle_3
-      rect:
-        serializedVersion: 2
-        x: 3240
-        y: 2160
-        width: 1080
-        height: 1080
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: f45d8cbcc0204554f8476fee6e964433
-      internalID: 531712570
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: MC_Idle_4
+      name: Serai_Idle_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 1080
-        width: 1080
-        height: 1080
+        y: 1440
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -174,20 +111,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1d201357738f9b349b82fffc44cc49a1
-      internalID: -875264229
+      spriteID: 16561d2f9e0f5a44db8f299f65574f4e
+      internalID: -1308830301
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_5
+      name: Serai_Idle_1
       rect:
         serializedVersion: 2
-        x: 1080
-        y: 1080
-        width: 1080
-        height: 1080
+        x: 720
+        y: 1440
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -195,20 +132,41 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c10b9e3303843684c880af2375b7d331
-      internalID: -202186249
+      spriteID: 64074eb71cc3f1441b5e51e4132b7492
+      internalID: -1632210245
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_6
+      name: Serai_Idle_2
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a16e5839cefec34191a6eb8f5487539
+      internalID: 141556806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serai_Idle_3
       rect:
         serializedVersion: 2
         x: 2160
-        y: 1080
-        width: 1080
-        height: 1080
+        y: 1440
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -216,20 +174,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 98ebe8fbb10fa5241a9ac0d28cc92477
-      internalID: 711166595
+      spriteID: 178029f438435d24da606667af4b5063
+      internalID: 307541237
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_7
+      name: Serai_Idle_4
       rect:
         serializedVersion: 2
-        x: 3240
-        y: 1080
-        width: 1080
-        height: 1080
+        x: 0
+        y: 720
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -237,20 +195,83 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f833994d03ec7744ba8a8acabddd474a
-      internalID: 924534679
+      spriteID: 686ab24cf3b969a4ea383b26485fbd00
+      internalID: 617679091
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_8
+      name: Serai_Idle_5
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0b8f39ec21568d42af40e13bfe4668e
+      internalID: 2040934134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serai_Idle_6
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05d0760ac61507b43a6b3ac1e73d87a6
+      internalID: -1737224227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serai_Idle_7
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 805f0e8e43ec54c41ab10f0d7d8a9bc6
+      internalID: -423750914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serai_Idle_8
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1080
-        height: 1080
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -258,20 +279,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6e8f57cebc328124a8b8d289106294c7
-      internalID: 871887022
+      spriteID: a79a145899ff59d4eb8f40c83f1ed18f
+      internalID: -707796178
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_9
+      name: Serai_Idle_9
       rect:
         serializedVersion: 2
-        x: 1080
+        x: 720
         y: 0
-        width: 1080
-        height: 1080
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -279,20 +300,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 72fc3c3a210a2604db89c3421f681f7e
-      internalID: 1396468921
+      spriteID: f09d339f99ca86b48a020b9ef12ce2fc
+      internalID: -357869459
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MC_Idle_0
+      name: Serai_Idle_10
       rect:
         serializedVersion: 2
-        x: 0
-        y: 2160
-        width: 1080
-        height: 1080
+        x: 1440
+        y: 0
+        width: 720
+        height: 720
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -300,8 +321,29 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d22f3244c4d515e45ac157d458885796
-      internalID: -1363075563
+      spriteID: 66f9bf384e5bcbf4ebb038569688d4f3
+      internalID: -1760576347
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Serai_Idle_11
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 0
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7dcab9a84c2d0d24cb663d11ea4e0aea
+      internalID: -367565443
       vertices: []
       indices: 
       edges: []
@@ -317,16 +359,18 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      MC_Idle_0: -1363075563
-      MC_Idle_1: -1465042440
-      MC_Idle_2: -126990061
-      MC_Idle_3: 531712570
-      MC_Idle_4: -875264229
-      MC_Idle_5: -202186249
-      MC_Idle_6: 711166595
-      MC_Idle_7: 924534679
-      MC_Idle_8: 871887022
-      MC_Idle_9: 1396468921
+      Serai_Idle_0: -1308830301
+      Serai_Idle_1: -1632210245
+      Serai_Idle_10: -1760576347
+      Serai_Idle_11: -367565443
+      Serai_Idle_2: 141556806
+      Serai_Idle_3: 307541237
+      Serai_Idle_4: 617679091
+      Serai_Idle_5: 2040934134
+      Serai_Idle_6: -1737224227
+      Serai_Idle_7: -423750914
+      Serai_Idle_8: -707796178
+      Serai_Idle_9: -357869459
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

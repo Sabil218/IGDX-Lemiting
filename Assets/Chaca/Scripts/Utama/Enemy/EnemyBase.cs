@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class EnemyBase : MonoBehaviour, IDamageable
@@ -14,6 +15,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public BattleManager battleManager;
     public Transform player;
 
+    [Header("Death Fade")]
+    public float fadeDuration = 1f;
+
     protected bool isDead;
     protected bool isAttacking;
 
@@ -29,6 +33,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             animator = GetComponent<Animator>();
         }
     }
+
+    // =========================================
+    // TAKE DAMAGE
+    // =========================================
 
     public virtual void TakeDamage(int amount)
     {
@@ -59,6 +67,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         TriggerHurt();
     }
 
+    // =========================================
+    // HURT
+    // =========================================
+
     protected virtual void TriggerHurt()
     {
         if (animator == null)
@@ -70,6 +82,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         animator.SetTrigger("Hurt");
     }
 
+    // =========================================
+    // DIE
+    // =========================================
+
     protected virtual void Die()
     {
         if (isDead)
@@ -78,16 +94,153 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         isDead = true;
         isAttacking = false;
 
+        Debug.Log(
+            gameObject.name +
+            " MATI"
+        );
+
+        // =========================================
+        // MATIKAN COLLIDER
+        // =========================================
+
+        Collider2D[] colliders =
+            GetComponentsInChildren<Collider2D>();
+
+        foreach (Collider2D col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        // =========================================
+        // MATIKAN ATTACK
+        // =========================================
+
+        if (animator != null)
+        {
+            animator.enabled = false;
+        }
+
+        // =========================================
+        // BERI TAHU BATTLE MANAGER
+        // =========================================
+
         if (battleManager != null)
         {
             battleManager.EnemyDefeated();
         }
-        else
+
+        // =========================================
+        // FADE
+        // =========================================
+
+        StartCoroutine(
+            FadeOut()
+        );
+    }
+
+    // =========================================
+    // FADE OUT
+    // =========================================
+
+    private IEnumerator FadeOut()
+    {
+        SpriteRenderer[] renderers =
+            GetComponentsInChildren<SpriteRenderer>();
+
+        // Kalau tidak ada SpriteRenderer,
+        // langsung hancurkan
+        if (
+            renderers == null ||
+            renderers.Length == 0
+        )
         {
+            Destroy(gameObject);
+            yield break;
         }
+
+        // Simpan warna awal
+        Color[] originalColors =
+            new Color[renderers.Length];
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+            {
+                originalColors[i] =
+                    renderers[i].color;
+            }
+        }
+
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+
+            float progress =
+                Mathf.Clamp01(
+                    timer / fadeDuration
+                );
+
+            float alpha =
+                Mathf.Lerp(
+                    1f,
+                    0f,
+                    progress
+                );
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null)
+                    continue;
+
+                Color color =
+                    originalColors[i];
+
+                color.a =
+                    originalColors[i].a *
+                    alpha;
+
+                renderers[i].color =
+                    color;
+            }
+
+            yield return null;
+        }
+
+        // =========================================
+        // PASTIKAN TRANSPARAN
+        // =========================================
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] == null)
+                continue;
+
+            Color color =
+                originalColors[i];
+
+            color.a = 0f;
+
+            renderers[i].color =
+                color;
+        }
+
+        Debug.Log(
+            gameObject.name +
+            " FADE SELESAI"
+        );
+
+        // =========================================
+        // HANCURKAN ENEMY
+        // =========================================
 
         Destroy(gameObject);
     }
+
+    // =========================================
+    // CHECK ANIMATOR PARAMETER
+    // =========================================
 
     protected bool HasParameter(
         string parameterName
@@ -109,6 +262,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         return false;
     }
+
+    // =========================================
+    // ATTACK
+    // =========================================
 
     public abstract void Attack();
 }

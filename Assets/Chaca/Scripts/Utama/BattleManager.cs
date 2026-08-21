@@ -23,6 +23,9 @@ public class BattleManager : MonoBehaviour
     [Header("Player Movement")]
     public float moveSpeed = 2f;
 
+    [Header("Enemy Fade")]
+    public float enemyFadeDuration = 1f;
+
     [Header("Win / Lose Panel")]
     public GameObject winningPanel;
     public GameObject loosePanel;
@@ -204,6 +207,10 @@ public class BattleManager : MonoBehaviour
         battleBusy = false;
     }
 
+    // =========================================
+    // ENEMY DEFEATED
+    // =========================================
+
     public void EnemyDefeated()
     {
         if (changingEnemy)
@@ -224,16 +231,39 @@ public class BattleManager : MonoBehaviour
 
         RemoveQuiz();
 
+        // =========================================
+        // FADE MUSUH TERLEBIH DAHULU
+        // =========================================
+
+        if (currentEnemy != null)
+        {
+            yield return StartCoroutine(
+                FadeEnemy(currentEnemy)
+            );
+        }
+
+        // =========================================
+        // HAPUS REFERENSI MUSUH LAMA
+        // =========================================
+
         currentEnemy = null;
         currentEnemyBase = null;
 
         currentEnemyIndex++;
+
+        // =========================================
+        // SEMUA MUSUH SUDAH KALAH
+        // =========================================
 
         if (currentEnemyIndex >= enemyPrefabs.Length)
         {
             WinGame();
             yield break;
         }
+
+        // =========================================
+        // SPAWN MUSUH BERIKUTNYA
+        // =========================================
 
         GameObject nextEnemy =
             SpawnCurrentEnemy();
@@ -244,6 +274,10 @@ public class BattleManager : MonoBehaviour
             changingEnemy = false;
             yield break;
         }
+
+        // =========================================
+        // PLAYER STOP POINT
+        // =========================================
 
         if (
             playerStopPoints == null ||
@@ -265,11 +299,19 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
+        // =========================================
+        // GERAKKAN PLAYER
+        // =========================================
+
         yield return StartCoroutine(
             MovePlayerTo(
                 playerStopPoint
             )
         );
+
+        // =========================================
+        // DELAY QUIZ
+        // =========================================
 
         yield return new WaitForSeconds(
             quizDelay
@@ -282,6 +324,101 @@ public class BattleManager : MonoBehaviour
 
         battleBusy = false;
     }
+
+    // =========================================
+    // FADE ENEMY
+    // =========================================
+
+    private IEnumerator FadeEnemy(
+        GameObject enemy
+    )
+    {
+        if (enemy == null)
+            yield break;
+
+        SpriteRenderer[] renderers =
+            enemy.GetComponentsInChildren<SpriteRenderer>();
+
+        if (
+            renderers == null ||
+            renderers.Length == 0
+        )
+        {
+            yield break;
+        }
+
+        // Simpan warna awal setiap SpriteRenderer
+        Color[] originalColors =
+            new Color[renderers.Length];
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+            {
+                originalColors[i] =
+                    renderers[i].color;
+            }
+        }
+
+        float timer = 0f;
+
+        while (timer < enemyFadeDuration)
+        {
+            timer += Time.deltaTime;
+
+            float progress =
+                Mathf.Clamp01(
+                    timer / enemyFadeDuration
+                );
+
+            float alpha =
+                Mathf.Lerp(
+                    1f,
+                    0f,
+                    progress
+                );
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null)
+                    continue;
+
+                Color color =
+                    originalColors[i];
+
+                color.a =
+                    originalColors[i].a *
+                    alpha;
+
+                renderers[i].color =
+                    color;
+            }
+
+            yield return null;
+        }
+
+        // Pastikan benar-benar transparan
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] == null)
+                continue;
+
+            Color color =
+                originalColors[i];
+
+            color.a = 0f;
+
+            renderers[i].color =
+                color;
+        }
+
+        // Hapus musuh lama
+        Destroy(enemy);
+    }
+
+    // =========================================
+    // PLAYER MOVEMENT
+    // =========================================
 
     private IEnumerator MovePlayerTo(
         Transform target
@@ -349,6 +486,10 @@ public class BattleManager : MonoBehaviour
         );
     }
 
+    // =========================================
+    // ENEMY ATTACK
+    // =========================================
+
     public void EnemyAttack()
     {
         if (battleBusy)
@@ -400,7 +541,10 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
-        if (player != null && player.currentHearts <= 0)
+        if (
+            player != null &&
+            player.currentHearts <= 0
+        )
         {
             LoseGame();
             yield break;
@@ -424,6 +568,10 @@ public class BattleManager : MonoBehaviour
 
         battleBusy = false;
     }
+
+    // =========================================
+    // QUIZ
+    // =========================================
 
     private void SpawnQuiz()
     {
@@ -456,6 +604,10 @@ public class BattleManager : MonoBehaviour
         quizManager.RemoveQuiz();
     }
 
+    // =========================================
+    // WIN
+    // =========================================
+
     public void WinGame()
     {
         if (gameEnded)
@@ -473,6 +625,10 @@ public class BattleManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
+    // =========================================
+    // LOSE
+    // =========================================
+
     public void LoseGame()
     {
         if (gameEnded)
@@ -489,6 +645,10 @@ public class BattleManager : MonoBehaviour
 
         Time.timeScale = 0f;
     }
+
+    // =========================================
+    // RESTART
+    // =========================================
 
     public void RestartGame()
     {
