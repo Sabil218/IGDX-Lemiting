@@ -4,8 +4,8 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Ingredients
-  - CuttingBoard
+  - Wajan
+  - BahanMentah
   layers:
   - Default
   - TransparentFX
@@ -16,11 +16,11 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - Ingredients
   - CuttingBoard
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
