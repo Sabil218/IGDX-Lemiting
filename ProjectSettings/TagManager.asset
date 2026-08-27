@@ -4,6 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
+  - Ingredients
+  - CuttingBoard
+  - Ground
+  - Enemy
   - Wajan
   - BahanMentah
   layers:
@@ -40,8 +44,14 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Background
+    uniqueID: 4161858115
+    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Character
+    uniqueID: 2460552657
     locked: 0
   - name: CuttingBoard
     uniqueID: 3166436953
