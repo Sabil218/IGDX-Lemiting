@@ -6,19 +6,60 @@ public class CameraFollow : MonoBehaviour
     public float speed = 5f;
 
     private Vector3 offset;
+    private bool isFollowing;
 
-    void Start()
+    private void Start()
     {
-        offset = transform.position - target.position;
+        isFollowing = false;
+
+        if (target != null)
+        {
+            offset = transform.position - target.position;
+        }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        Vector3 targetPosition = target.position + offset;
+        if (target == null)
+            return;
+
+        if (!isFollowing)
+            return;
+
+        Vector3 targetPosition = new Vector3(
+            target.position.x + offset.x,
+            transform.position.y,
+            transform.position.z
+        );
 
         transform.position = Vector3.Lerp(
             transform.position,
             targetPosition,
-            speed * Time.deltaTime);
+            speed * Time.deltaTime
+        );
+    }
+
+    public void StartFollowing()
+    {
+        if (target == null)
+            return;
+
+        offset = transform.position - target.position;
+        isFollowing = true;
+    }
+
+    public void StopFollowing()
+    {
+        isFollowing = false;
+    }
+
+    public void ResetFollow()
+    {
+        isFollowing = false;
+
+        if (target != null)
+        {
+            offset = transform.position - target.position;
+        }
     }
 }

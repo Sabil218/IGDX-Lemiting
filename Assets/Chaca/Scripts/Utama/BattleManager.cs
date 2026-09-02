@@ -26,6 +26,9 @@ public class BattleManager : MonoBehaviour
     [Header("Enemy Fade")]
     public float enemyFadeDuration = 1f;
 
+    [Header("Camera")]
+    public CameraFollow cameraFollow;
+
     [Header("Win / Lose Panel")]
     public GameObject winningPanel;
     public GameObject loosePanel;
@@ -50,9 +53,12 @@ public class BattleManager : MonoBehaviour
 
         currentEnemyIndex = 0;
 
-        SpawnCurrentEnemy();
+        if (cameraFollow != null)
+        {
+            cameraFollow.StopFollowing();
+        }
 
-        StartCoroutine(StartFirstQuiz());
+        StartCoroutine(StartBattle());
     }
 
     private void Update()
@@ -69,9 +75,61 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-    private IEnumerator StartFirstQuiz()
+    private IEnumerator StartBattle()
     {
-        yield return new WaitForSeconds(quizDelay);
+        battleBusy = true;
+        changingEnemy = true;
+
+        RemoveQuiz();
+
+        currentEnemy = SpawnCurrentEnemy();
+
+        if (currentEnemy == null)
+        {
+            battleBusy = false;
+            changingEnemy = false;
+            yield break;
+        }
+
+        if (
+            playerStopPoints == null ||
+            playerStopPoints.Length == 0 ||
+            playerStopPoints[0] == null
+        )
+        {
+            if (cameraFollow != null)
+            {
+                cameraFollow.StartFollowing();
+            }
+
+            changingEnemy = false;
+            battleBusy = false;
+
+            yield return new WaitForSeconds(quizDelay);
+
+            if (!gameEnded)
+                SpawnQuiz();
+
+            yield break;
+        }
+
+        yield return StartCoroutine(
+            MovePlayerTo(
+                playerStopPoints[0]
+            )
+        );
+
+        if (cameraFollow != null)
+        {
+            cameraFollow.StartFollowing();
+        }
+
+        yield return new WaitForSeconds(
+            quizDelay
+        );
+
+        changingEnemy = false;
+        battleBusy = false;
 
         if (!gameEnded)
             SpawnQuiz();
@@ -79,17 +137,30 @@ public class BattleManager : MonoBehaviour
 
     private GameObject SpawnCurrentEnemy()
     {
-        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        if (
+            enemyPrefabs == null ||
+            enemyPrefabs.Length == 0
+        )
+        {
             return null;
+        }
 
-        if (currentEnemyIndex >= enemyPrefabs.Length)
+        if (
+            currentEnemyIndex >=
+            enemyPrefabs.Length
+        )
+        {
             return null;
+        }
 
         if (
             enemySpawnPoints == null ||
-            currentEnemyIndex >= enemySpawnPoints.Length
+            currentEnemyIndex >=
+            enemySpawnPoints.Length
         )
+        {
             return null;
+        }
 
         GameObject enemyPrefab =
             enemyPrefabs[currentEnemyIndex];
@@ -110,7 +181,8 @@ public class BattleManager : MonoBehaviour
                 spawnPoint.rotation
             );
 
-        currentEnemy.name = enemyPrefab.name;
+        currentEnemy.name =
+            enemyPrefab.name;
 
         currentEnemyBase =
             currentEnemy.GetComponent<EnemyBase>();
@@ -122,8 +194,11 @@ public class BattleManager : MonoBehaviour
             return null;
         }
 
-        currentEnemyBase.player =
-            player.transform;
+        if (player != null)
+        {
+            currentEnemyBase.player =
+                player.transform;
+        }
 
         currentEnemyBase.battleManager =
             this;
@@ -148,7 +223,10 @@ public class BattleManager : MonoBehaviour
         if (currentEnemyBase.IsDead)
             return;
 
-        if (player == null || player.IsDead)
+        if (player == null)
+            return;
+
+        if (player.IsDead)
             return;
 
         battleBusy = true;
@@ -207,10 +285,6 @@ public class BattleManager : MonoBehaviour
         battleBusy = false;
     }
 
-    // =========================================
-    // ENEMY DEFEATED
-    // =========================================
-
     public void EnemyDefeated()
     {
         if (changingEnemy)
@@ -231,10 +305,6 @@ public class BattleManager : MonoBehaviour
 
         RemoveQuiz();
 
-        // =========================================
-        // FADE MUSUH TERLEBIH DAHULU
-        // =========================================
-
         if (currentEnemy != null)
         {
             yield return StartCoroutine(
@@ -242,28 +312,20 @@ public class BattleManager : MonoBehaviour
             );
         }
 
-        // =========================================
-        // HAPUS REFERENSI MUSUH LAMA
-        // =========================================
-
         currentEnemy = null;
         currentEnemyBase = null;
 
         currentEnemyIndex++;
 
-        // =========================================
-        // SEMUA MUSUH SUDAH KALAH
-        // =========================================
-
-        if (currentEnemyIndex >= enemyPrefabs.Length)
+        if (
+            enemyPrefabs == null ||
+            currentEnemyIndex >=
+            enemyPrefabs.Length
+        )
         {
             WinGame();
             yield break;
         }
-
-        // =========================================
-        // SPAWN MUSUH BERIKUTNYA
-        // =========================================
 
         GameObject nextEnemy =
             SpawnCurrentEnemy();
@@ -275,13 +337,10 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
-        // =========================================
-        // PLAYER STOP POINT
-        // =========================================
-
         if (
             playerStopPoints == null ||
-            currentEnemyIndex >= playerStopPoints.Length
+            currentEnemyIndex >=
+            playerStopPoints.Length
         )
         {
             battleBusy = false;
@@ -299,19 +358,11 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
-        // =========================================
-        // GERAKKAN PLAYER
-        // =========================================
-
         yield return StartCoroutine(
             MovePlayerTo(
                 playerStopPoint
             )
         );
-
-        // =========================================
-        // DELAY QUIZ
-        // =========================================
 
         yield return new WaitForSeconds(
             quizDelay
@@ -324,10 +375,6 @@ public class BattleManager : MonoBehaviour
 
         battleBusy = false;
     }
-
-    // =========================================
-    // FADE ENEMY
-    // =========================================
 
     private IEnumerator FadeEnemy(
         GameObject enemy
@@ -344,10 +391,10 @@ public class BattleManager : MonoBehaviour
             renderers.Length == 0
         )
         {
+            Destroy(enemy);
             yield break;
         }
 
-        // Simpan warna awal setiap SpriteRenderer
         Color[] originalColors =
             new Color[renderers.Length];
 
@@ -362,13 +409,16 @@ public class BattleManager : MonoBehaviour
 
         float timer = 0f;
 
-        while (timer < enemyFadeDuration)
+        while (
+            timer < enemyFadeDuration
+        )
         {
             timer += Time.deltaTime;
 
             float progress =
                 Mathf.Clamp01(
-                    timer / enemyFadeDuration
+                    timer /
+                    enemyFadeDuration
                 );
 
             float alpha =
@@ -378,7 +428,11 @@ public class BattleManager : MonoBehaviour
                     progress
                 );
 
-            for (int i = 0; i < renderers.Length; i++)
+            for (
+                int i = 0;
+                i < renderers.Length;
+                i++
+            )
             {
                 if (renderers[i] == null)
                     continue;
@@ -397,8 +451,11 @@ public class BattleManager : MonoBehaviour
             yield return null;
         }
 
-        // Pastikan benar-benar transparan
-        for (int i = 0; i < renderers.Length; i++)
+        for (
+            int i = 0;
+            i < renderers.Length;
+            i++
+        )
         {
             if (renderers[i] == null)
                 continue;
@@ -412,18 +469,16 @@ public class BattleManager : MonoBehaviour
                 color;
         }
 
-        // Hapus musuh lama
         Destroy(enemy);
     }
-
-    // =========================================
-    // PLAYER MOVEMENT
-    // =========================================
 
     private IEnumerator MovePlayerTo(
         Transform target
     )
     {
+        if (player == null)
+            yield break;
+
         if (target == null)
             yield break;
 
@@ -486,10 +541,6 @@ public class BattleManager : MonoBehaviour
         );
     }
 
-    // =========================================
-    // ENEMY ATTACK
-    // =========================================
-
     public void EnemyAttack()
     {
         if (battleBusy)
@@ -507,7 +558,10 @@ public class BattleManager : MonoBehaviour
         if (currentEnemyBase.IsDead)
             return;
 
-        if (player == null || player.IsDead)
+        if (player == null)
+            return;
+
+        if (player.IsDead)
             return;
 
         battleBusy = true;
@@ -569,10 +623,6 @@ public class BattleManager : MonoBehaviour
         battleBusy = false;
     }
 
-    // =========================================
-    // QUIZ
-    // =========================================
-
     private void SpawnQuiz()
     {
         if (quizManager == null)
@@ -590,7 +640,10 @@ public class BattleManager : MonoBehaviour
         if (currentEnemyBase.IsDead)
             return;
 
-        if (player == null || player.IsDead)
+        if (player == null)
+            return;
+
+        if (player.IsDead)
             return;
 
         quizManager.SpawnRandomQuiz();
@@ -603,10 +656,6 @@ public class BattleManager : MonoBehaviour
 
         quizManager.RemoveQuiz();
     }
-
-    // =========================================
-    // WIN
-    // =========================================
 
     public void WinGame()
     {
@@ -625,10 +674,6 @@ public class BattleManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    // =========================================
-    // LOSE
-    // =========================================
-
     public void LoseGame()
     {
         if (gameEnded)
@@ -645,10 +690,6 @@ public class BattleManager : MonoBehaviour
 
         Time.timeScale = 0f;
     }
-
-    // =========================================
-    // RESTART
-    // =========================================
 
     public void RestartGame()
     {
