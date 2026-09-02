@@ -20,8 +20,6 @@ public class Serai : EnemyBase
 
         isAttacking = true;
 
-        Debug.Log("SERAI MULAI ATTACK");
-
         if (animator != null)
         {
             animator.ResetTrigger("Attack");
@@ -39,13 +37,7 @@ public class Serai : EnemyBase
             yield break;
 
         isAttacking = false;
-
-        Debug.Log("SERAI SELESAI ATTACK");
     }
-
-    // =========================================
-    // SPAWN PROJECTILE
-    // =========================================
 
     public void SpawnProjectile()
     {
@@ -53,30 +45,14 @@ public class Serai : EnemyBase
             return;
 
         if (projectilePrefab == null)
-        {
-            Debug.LogError(
-                "Serai: Projectile Prefab belum diisi!"
-            );
             return;
-        }
 
         if (projectileSpawnPoint == null)
-        {
-            Debug.LogError(
-                "Serai: Projectile Spawn Point belum diisi!"
-            );
             return;
-        }
 
         if (player == null)
-        {
-            Debug.LogError(
-                "Serai: Player tidak ditemukan!"
-            );
             return;
-        }
 
-        // Projectile menggunakan rotasi bawaan prefab
         GameObject projectile = Instantiate(
             projectilePrefab,
             projectileSpawnPoint.position,
@@ -88,10 +64,6 @@ public class Serai : EnemyBase
 
         if (projectileScript == null)
         {
-            Debug.LogError(
-                "SeraiProjectile tidak ditemukan pada prefab!"
-            );
-
             Destroy(projectile);
             return;
         }
@@ -100,22 +72,10 @@ public class Serai : EnemyBase
             player,
             damage
         );
-
-        Debug.Log(
-            "SERAI SPAWN PROJECTILE"
-        );
     }
-
-    // =========================================
-    // ATTACK ANIMATION FINISHED
-    // =========================================
 
     public void AttackAnimationFinished()
     {
         isAttacking = false;
-
-        Debug.Log(
-            "SERAI ATTACK ANIMATION FINISHED"
-        );
     }
 }

@@ -8,6 +8,9 @@ public class Player : MonoBehaviour
     public int currentHearts;
     public int damage = 20;
 
+    [Header("Health UI")]
+    public PlayerHealthUI healthUI;
+
     [Header("Animator")]
     public Animator animator;
 
@@ -32,23 +35,27 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (healthUI != null)
+        {
+            healthUI.UpdateHearts();
+        }
+    }
+
     public IEnumerator Attack(Transform enemy)
     {
         if (IsDead)
         {
-            Debug.Log("Player sudah mati.");
             yield break;
         }
 
         if (enemy == null)
         {
-            Debug.LogError("Target Enemy kosong saat Player Attack!");
             yield break;
         }
 
         currentAttackTarget = enemy;
-
-        Debug.Log("Target Attack Player : " + currentAttackTarget.name);
 
         if (animator != null)
         {
@@ -60,18 +67,10 @@ public class Player : MonoBehaviour
 
     public void ThrowBoomerangEvent()
     {
-        Debug.Log("Animation Event: Throw Boomerang");
-
         if (currentAttackTarget == null)
         {
-            Debug.LogError("Target Boomerang kosong!");
             return;
         }
-
-        Debug.Log(
-            "Boomerang menargetkan : " +
-            currentAttackTarget.name
-        );
 
         ThrowBoomerang(currentAttackTarget);
     }
@@ -80,19 +79,16 @@ public class Player : MonoBehaviour
     {
         if (boomerangPrefab == null)
         {
-            Debug.LogError("Boomerang Prefab belum diisi!");
             return;
         }
 
         if (boomerangSpawnPoint == null)
         {
-            Debug.LogError("Boomerang Spawn Point belum diisi!");
             return;
         }
 
         if (enemy == null)
         {
-            Debug.LogError("Target Enemy kosong!");
             return;
         }
 
@@ -107,10 +103,6 @@ public class Player : MonoBehaviour
 
         if (boomerang == null)
         {
-            Debug.LogError(
-                "PlayerBoomerang tidak ditemukan di prefab Boomerang!"
-            );
-
             Destroy(boomerangObject);
             return;
         }
@@ -119,11 +111,6 @@ public class Player : MonoBehaviour
             transform,
             enemy,
             damage
-        );
-
-        Debug.Log(
-            "Boomerang berhasil dilempar ke " +
-            enemy.name
         );
     }
 
@@ -139,23 +126,15 @@ public class Player : MonoBehaviour
             currentHearts = 0;
         }
 
-        Debug.Log(
-            "Player Heart : " +
-            currentHearts +
-            "/" +
-            maxHearts
-        );
-
-        if (animator == null)
+        if (healthUI != null)
         {
-            Debug.LogError("Animator Player belum diisi!");
+            healthUI.UpdateHearts();
         }
-        else
+
+        if (animator != null)
         {
             animator.ResetTrigger("Hurt");
             animator.SetTrigger("Hurt");
-
-            Debug.Log("Hurt Trigger dipanggil");
         }
 
         if (currentHearts <= 0)
@@ -168,11 +147,8 @@ public class Player : MonoBehaviour
     {
         if (target == null)
         {
-            Debug.LogError("Target MoveTo kosong!");
             yield break;
         }
-
-        Debug.Log("Player Mulai Jalan");
 
         float fixedY = transform.position.y;
 
@@ -210,8 +186,6 @@ public class Player : MonoBehaviour
         {
             animator.SetBool("isRun", false);
         }
-
-        Debug.Log("Player Sampai");
     }
 
     private void Die()
@@ -225,8 +199,6 @@ public class Player : MonoBehaviour
         {
             animator.SetBool("isRun", false);
         }
-
-        Debug.Log("Player Mati");
     }
 
     public void ResetHP()
@@ -235,18 +207,16 @@ public class Player : MonoBehaviour
         IsDead = false;
         currentAttackTarget = null;
 
+        if (healthUI != null)
+        {
+            healthUI.UpdateHearts();
+        }
+
         if (animator != null)
         {
             animator.SetBool("isRun", false);
             animator.ResetTrigger("Hurt");
             animator.ResetTrigger("Attack");
         }
-
-        Debug.Log(
-            "Player Heart Reset : " +
-            currentHearts +
-            "/" +
-            maxHearts
-        );
     }
 }

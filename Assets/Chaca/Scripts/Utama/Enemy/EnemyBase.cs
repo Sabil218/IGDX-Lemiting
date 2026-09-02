@@ -18,6 +18,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     [Header("Death Fade")]
     public float fadeDuration = 1f;
 
+    [Header("Item Drop")]
+    public GameObject dropItemPrefab;
+    public float dropHeight = 0.5f;
+
     protected bool isDead;
     protected bool isAttacking;
 
@@ -34,10 +38,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         }
     }
 
-    // =========================================
-    // TAKE DAMAGE
-    // =========================================
-
     public virtual void TakeDamage(int amount)
     {
         if (isDead)
@@ -50,14 +50,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             currentHearts = 0;
         }
 
-        Debug.Log(
-            gameObject.name +
-            " Heart: " +
-            currentHearts +
-            "/" +
-            maxHearts
-        );
-
         if (currentHearts <= 0)
         {
             Die();
@@ -66,10 +58,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         TriggerHurt();
     }
-
-    // =========================================
-    // HURT
-    // =========================================
 
     protected virtual void TriggerHurt()
     {
@@ -82,10 +70,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         animator.SetTrigger("Hurt");
     }
 
-    // =========================================
-    // DIE
-    // =========================================
-
     protected virtual void Die()
     {
         if (isDead)
@@ -94,14 +78,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         isDead = true;
         isAttacking = false;
 
-        Debug.Log(
-            gameObject.name +
-            " MATI"
-        );
-
-        // =========================================
-        // MATIKAN COLLIDER
-        // =========================================
+        DropItem();
 
         Collider2D[] colliders =
             GetComponentsInChildren<Collider2D>();
@@ -111,44 +88,40 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             col.enabled = false;
         }
 
-        // =========================================
-        // MATIKAN ATTACK
-        // =========================================
-
         if (animator != null)
         {
             animator.enabled = false;
         }
-
-        // =========================================
-        // BERI TAHU BATTLE MANAGER
-        // =========================================
 
         if (battleManager != null)
         {
             battleManager.EnemyDefeated();
         }
 
-        // =========================================
-        // FADE
-        // =========================================
-
-        StartCoroutine(
-            FadeOut()
-        );
+        StartCoroutine(FadeOut());
     }
 
-    // =========================================
-    // FADE OUT
-    // =========================================
+    protected virtual void DropItem()
+    {
+        if (dropItemPrefab == null)
+            return;
+
+        Vector3 spawnPosition =
+            transform.position +
+            Vector3.up * dropHeight;
+
+        Instantiate(
+            dropItemPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+    }
 
     private IEnumerator FadeOut()
     {
         SpriteRenderer[] renderers =
             GetComponentsInChildren<SpriteRenderer>();
 
-        // Kalau tidak ada SpriteRenderer,
-        // langsung hancurkan
         if (
             renderers == null ||
             renderers.Length == 0
@@ -158,7 +131,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             yield break;
         }
 
-        // Simpan warna awal
         Color[] originalColors =
             new Color[renderers.Length];
 
@@ -208,10 +180,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             yield return null;
         }
 
-        // =========================================
-        // PASTIKAN TRANSPARAN
-        // =========================================
-
         for (int i = 0; i < renderers.Length; i++)
         {
             if (renderers[i] == null)
@@ -226,21 +194,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
                 color;
         }
 
-        Debug.Log(
-            gameObject.name +
-            " FADE SELESAI"
-        );
-
-        // =========================================
-        // HANCURKAN ENEMY
-        // =========================================
-
         Destroy(gameObject);
     }
-
-    // =========================================
-    // CHECK ANIMATOR PARAMETER
-    // =========================================
 
     protected bool HasParameter(
         string parameterName
@@ -262,10 +217,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         return false;
     }
-
-    // =========================================
-    // ATTACK
-    // =========================================
 
     public abstract void Attack();
 }
