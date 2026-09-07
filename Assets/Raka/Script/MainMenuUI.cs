@@ -6,6 +6,7 @@ public class MainMenuUI : MonoBehaviour
     [Header("Main Panel")]
     public GameObject optionPanel;
     public GameObject levelSelectPanel;
+    public GameObject cutsceneManager;
 
     [Header("Pages")]
     public GameObject levelSelectPage;
@@ -79,10 +80,19 @@ public class MainMenuUI : MonoBehaviour
 
     public void OpenLevelSelect()
     {
-        levelSelectPanel.SetActive(true);
+        if (PlayerPrefs.GetInt("LevelSelectCutscenePlayed", 0) == 0)
+        {
+            levelSelectPanel.SetActive(false);
 
-        // Selalu mulai dari halaman Level Select
-        SetLevelSelectActive();
+            cutsceneManager.GetComponent<CutsceneManager>().PlayCutscene();
+
+            PlayerPrefs.SetInt("LevelSelectCutscenePlayed", 1);
+            PlayerPrefs.Save();
+        }
+        else
+        {
+            levelSelectPanel.SetActive(true);
+        }
     }
 
     public void CloseLevelSelect()

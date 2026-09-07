@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,7 +10,19 @@ public class SceneLoader : MonoBehaviour
 
     public void LoadMainMenu()
     {
-        PlayerPrefs.SetInt("OpenLevelSelect", 1);
         SceneManager.LoadScene("Mainmenu");
+    }
+
+    public void LoadLevelSelect()
+    {
+        PlayerPrefs.SetInt("OpenLevelSelect", 1);
+        PlayerPrefs.Save();
+
+        SceneManager.LoadScene("Mainmenu");
+    }
+
+    public void RetryLevel()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
