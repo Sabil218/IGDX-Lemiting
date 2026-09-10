@@ -10,7 +10,9 @@ public class SceneLoader : MonoBehaviour
     public Slider loadingBar;
 
     [Header("Loading Settings")]
-    public float loadingDuration = 5f;
+    public float loadingDuration = 3f;
+
+    private float previousAudioVolume;
 
     public void LoadLevel01()
     {
@@ -20,6 +22,12 @@ public class SceneLoader : MonoBehaviour
         {
             loadingBar.value = 0f;
         }
+
+        // Simpan volume sebelum loading
+        previousAudioVolume = AudioListener.volume;
+
+        // Matikan semua suara selama loading
+        AudioListener.volume = 0f;
 
         StartCoroutine(LoadLevelAsync("Level1"));
     }
@@ -69,7 +77,7 @@ public class SceneLoader : MonoBehaviour
             loadingBar.value = 1f;
         }
 
-        // Pastikan scene sudah selesai loading
+        // Tunggu scene selesai loading
         while (operation.progress < 0.9f)
         {
             yield return null;
@@ -77,6 +85,13 @@ public class SceneLoader : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
+        // Masuk ke level
         operation.allowSceneActivation = true;
+
+        // Tunggu sampai scene benar-benar aktif
+        yield return null;
+
+        // Nyalakan kembali audio
+        AudioListener.volume = previousAudioVolume;
     }
 }
