@@ -8,49 +8,85 @@ public class StirManager : MonoBehaviour, ICookingPhase
     [SerializeField] private StirInput stirInput;
 
     [Header("Scene")]
-    [Tooltip("Masukkan langsung objek Sendok (bukan parent pivot) ke sini.")]
+    [Tooltip("Spoon Object")]
     [SerializeField] private Transform spoonTransform;
 
-    [Tooltip("Objek placeholder bahan makanan")]
-    [SerializeField] private Transform ingredientsTransform;
-
-    [Header("Crossfade Visuals")]
-    [Tooltip("Sprite bahan saat masih mentah (awal)")]
-    [SerializeField] private SpriteRenderer rawVisual;
-    [Tooltip("Sprite bahan saat matang/tercampur (akhir)")]
-    [SerializeField] private SpriteRenderer cookedVisual;
-
-    [SerializeField] private float ingredientSpeedMultiplier = 0.5f;
+    [Header("Orbit Settings")]
+    [Tooltip("Seberapa dekat jarak orbit sendok ke pinggiran panci")]
+    public float orbitMultiplier = 0.75f;
+    private Vector2 dynamicOrbitRadii;
 
     [Header("Visuals to Toggle")]
+    [SerializeField] private float ingredientSpeedMultiplier = 0.5f;
     [SerializeField] private GameObject[] stirVisuals;
+
+    [Header("Phase Specific Visuals")]
+    [SerializeField] private Sprite[] phaseCookingStages;
 
     [Header("Progress")]
     [SerializeField] private Image progressBarFill;
     [SerializeField] private float completionDelay = 1.0f;
 
-    private Quaternion lockedSpoonRotation;
+    private float currentOrbitAngle = 0f;
 
-    //Initialize spoon rotation
+    // Mengambil PUSAT WAJAN secara visual (akurat dari gambar kuah)
+    private Vector3 GetTruePanCenter()
+    {
+        if (CookingVisualController.Instance != null && CookingVisualController.Instance.foodContentRenderer != null)
+        {
+            return CookingVisualController.Instance.foodContentRenderer.bounds.center;
+        }
+        else if (CookingVisualController.Instance != null)
+        {
+            return CookingVisualController.Instance.transform.position;
+        }
+        return transform.position;
+    }
+
+    // Mengambil UKURAN WAJAN secara visual (akurat dari gambar kuah)
+    private Vector2 GetTruePanExtents()
+    {
+        if (CookingVisualController.Instance != null && CookingVisualController.Instance.foodContentRenderer != null)
+        {
+            return CookingVisualController.Instance.foodContentRenderer.bounds.extents;
+        }
+        if (stirInput != null && stirInput.StirZoneObject != null)
+        {
+            Collider2D col = stirInput.StirZoneObject.GetComponent<Collider2D>();
+            if (col != null) return col.bounds.extents;
+        }
+        return new Vector2(3f, 1f); // Fallback
+    }
+
     private void Start()
     {
         if (spoonTransform != null)
         {
-            lockedSpoonRotation = spoonTransform.rotation;
+            Vector3 center = GetTruePanCenter();
+            Vector3 offset = spoonTransform.position - center;
+
+            CalculateDynamicOrbit();
+
+            float normalizedX = dynamicOrbitRadii.x != 0f ? offset.x / dynamicOrbitRadii.x : 0f;
+            float normalizedY = dynamicOrbitRadii.y != 0f ? offset.y / dynamicOrbitRadii.y : 0f;
+            currentOrbitAngle = Mathf.Atan2(normalizedY, normalizedX) * Mathf.Rad2Deg;
         }
     }
 
-    //Start stirring phase
+    private void CalculateDynamicOrbit()
+    {
+        Vector2 extents = GetTruePanExtents();
+        dynamicOrbitRadii = new Vector2(extents.x * orbitMultiplier, extents.y * orbitMultiplier);
+    }
+
     public void StartPhase()
     {
         SetVisualsActive(true);
     }
 
-    //Toggle visuals state
     public void SetVisualsActive(bool isActive)
     {
         if (spoonTransform != null) spoonTransform.gameObject.SetActive(isActive);
-        if (ingredientsTransform != null) ingredientsTransform.gameObject.SetActive(isActive);
 
         if (stirVisuals != null)
         {
@@ -60,24 +96,17 @@ public class StirManager : MonoBehaviour, ICookingPhase
             }
         }
 
-        if (stirInput != null && stirInput.StirZoneObject != null)
+        if (stirInput != null && stirInput.StirZoneObject != null && !stirInput.StirZoneObject.CompareTag("Wajan"))
         {
-            // Pengecekan diganti menggunakan Tag untuk menghindari hardcoded string name
-            if (!stirInput.StirZoneObject.CompareTag("Wajan"))
-            {
-                stirInput.StirZoneObject.SetActive(isActive);
-            }
+            stirInput.StirZoneObject.SetActive(isActive);
         }
 
-        // Reset opasitas ke kondisi awal saat fase diaktifkan
-        if (isActive)
+        if (isActive && CookingVisualController.Instance != null && phaseCookingStages != null && phaseCookingStages.Length > 0)
         {
-            if (rawVisual != null) { Color c = rawVisual.color; c.a = 1f; rawVisual.color = c; }
-            if (cookedVisual != null) { Color c = cookedVisual.color; c.a = 0f; cookedVisual.color = c; }
+            CookingVisualController.Instance.SetTransitionSprites(phaseCookingStages);
         }
     }
 
-    //Subscribe to stir events
     private void OnEnable()
     {
         if (stirInput != null)
@@ -86,11 +115,9 @@ public class StirManager : MonoBehaviour, ICookingPhase
             stirInput.OnStirProgress += HandleStirProgress;
             stirInput.OnStirCompleted += HandleStirCompleted;
         }
-
         if (progressBarFill != null) progressBarFill.fillAmount = 0f;
     }
 
-    //Unsubscribe from stir events
     private void OnDisable()
     {
         if (stirInput != null)
@@ -101,68 +128,91 @@ public class StirManager : MonoBehaviour, ICookingPhase
         }
     }
 
-    //Rotate objects and handle logic
     private void HandleStirred(float angleDelta)
     {
-        if (stirInput == null || stirInput.StirZoneObject == null) return;
-        Vector3 panCenter = stirInput.StirZoneObject.transform.position;
+        Vector3 panCenter = GetTruePanCenter();
+        Vector2 extents = GetTruePanExtents();
+        
+        // Hitung rasio oval sejati wajan
+        float squash = extents.x != 0 ? extents.y / extents.x : 1f;
 
         if (spoonTransform != null)
         {
-            // Mengorbitkan posisi sendok
-            spoonTransform.RotateAround(panCenter, Vector3.forward, angleDelta);
-            
-            // Mengunci rotasi agar tetap miring seperti di Editor
-            spoonTransform.rotation = lockedSpoonRotation;
+            currentOrbitAngle += angleDelta;
+            float rad = currentOrbitAngle * Mathf.Deg2Rad;
 
-            // --- LOGIKA AUTO FLIP (Opsional) ---
-            Vector3 skalaSendok = spoonTransform.localScale;
-            if (spoonTransform.position.x < panCenter.x)
-                skalaSendok.x = -Mathf.Abs(skalaSendok.x); // Balik gambar (Flip X) saat di kiri
-            else
-                skalaSendok.x = Mathf.Abs(skalaSendok.x);  // Normal saat di kanan
-                
-            spoonTransform.localScale = skalaSendok;
-            // --- BATAS AKHIR LOGIKA AUTO FLIP ------------------------------
+            CalculateDynamicOrbit();
+
+            // Gerak Elips Sendok
+            float newX = Mathf.Cos(rad) * dynamicOrbitRadii.x;
+            float newY = Mathf.Sin(rad) * dynamicOrbitRadii.y;
+            spoonTransform.position = panCenter + new Vector3(newX, newY, 0);
+
+            // Rotasi Dinamis Sendok
+            float spoonOrientAngle = currentOrbitAngle - 90f; 
+            spoonTransform.rotation = Quaternion.Euler(0, 0, spoonOrientAngle);
         }
 
-        if (ingredientsTransform != null)
+        if (CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
         {
-            // Mengorbitkan bahan makanan
-            ingredientsTransform.RotateAround(panCenter, Vector3.forward, angleDelta * ingredientSpeedMultiplier);
+            Transform rawContainer = CookingVisualController.Instance.rawIngredientsContainer;
+
+            float angleRad = angleDelta * ingredientSpeedMultiplier * Mathf.Deg2Rad;
+            float cos = Mathf.Cos(angleRad);
+            float sin = Mathf.Sin(angleRad);
+
+            foreach (Transform rootItem in rawContainer)
+            {
+                if (rootItem.childCount > 0)
+                {
+                    foreach (Transform piece in rootItem)
+                    {
+                        ApplyOvalOrbit(piece, panCenter, cos, sin, squash, angleDelta * ingredientSpeedMultiplier);
+                    }
+                }
+                else
+                {
+                    ApplyOvalOrbit(rootItem, panCenter, cos, sin, squash, angleDelta * ingredientSpeedMultiplier);
+                }
+            }
         }
     }
 
-    //Update visuals and UI based on progress
+    private void ApplyOvalOrbit(Transform target, Vector3 panCenter, float cos, float sin, float squash, float spinAngle)
+    {
+        Vector3 localPos = target.position - panCenter;
+        
+        // Cegah error matematika (NaN) jika objek kebetulan berada persis di titik 0,0,0
+        if (localPos.sqrMagnitude < 0.001f) 
+        {
+            target.Rotate(Vector3.forward, spinAngle);
+            return;
+        }
+
+        float unSquashedY = squash != 0 ? localPos.y / squash : localPos.y;
+        
+        float rotX = localPos.x * cos - unSquashedY * sin;
+        float rotY = localPos.x * sin + unSquashedY * cos;
+        float newY = rotY * squash;
+        
+        target.position = panCenter + new Vector3(rotX, newY, -0.1f);
+        target.Rotate(Vector3.forward, spinAngle); 
+    }
+
     private void HandleStirProgress(float progress)
     {
         if (progressBarFill != null) progressBarFill.fillAmount = progress;
 
-        // Logika Crossfade Opasitas
-        if (rawVisual != null)
-        {
-            Color rawColor = rawVisual.color;
-            rawColor.a = 1f - progress; // Mentah memudar perlahan
-            rawVisual.color = rawColor;
-        }
-
-        if (cookedVisual != null)
-        {
-            Color cookedColor = cookedVisual.color;
-            cookedColor.a = progress; // Matang muncul perlahan
-            cookedVisual.color = cookedColor;
-        }
+        if (CookingVisualController.Instance != null)
+            CookingVisualController.Instance.UpdateStirProgress(progress);
     }
 
-    //Trigger stage completion
     private void HandleStirCompleted()
     {
-        Debug.Log("[StirManager] POC Adukan Selesai! Pindah ke fase berikutnya.");
         if (progressBarFill != null) progressBarFill.fillAmount = 1f;
         StartCoroutine(DelayedTransition());
     }
 
-    //Delay before notifying manager
     private IEnumerator DelayedTransition()
     {
         yield return new WaitForSeconds(completionDelay);

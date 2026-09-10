@@ -1,16 +1,14 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using TMPro;
 
 /// <summary>
 /// Komponen Draggable Letter
 /// </summary>
-
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [Header("Visual")]
-    [SerializeField] private TextMeshProUGUI letterText;
+    [SerializeField] private CandyBitmapTextUGUI letterText;
 
     public char Letter { get; private set; }
 
@@ -22,14 +20,14 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
     private Canvas rootCanvas;
     public bool isConsumed { get; private set; }
 
-    //Initialize component references
+    // Initialize component references
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
         rectTransform = GetComponent<RectTransform>();
     }
 
-    //Setup tile letter and visual
+    // Setup tile letter and visual
     public void Initialize(char letter)
     {
         Letter = char.ToUpper(letter);
@@ -37,7 +35,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
 
         if (letterText != null)
         {
-            letterText.text = Letter.ToString();
+            letterText.Text = Letter.ToString();
         }
 
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
@@ -54,7 +52,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    //Handle start dragging event
+    // Handle start dragging event
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -74,7 +72,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         transform.SetAsLastSibling();
     }
 
-    //Handle drag movement
+    // Handle drag movement
     public void OnDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -89,7 +87,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    //Handle end dragging event
+    // Handle end dragging event
     public void OnEndDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -99,7 +97,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
 
         transform.SetParent(originParent, false);
         transform.SetSiblingIndex(originSiblingIndex);
-        
+
         if (originParent != null)
         {
             RectTransform rt = originParent.GetComponent<RectTransform>();
@@ -110,7 +108,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    //Hide and consume tile when placed correctly
+    // Hide and consume tile when placed correctly
     public void Consume()
     {
         isConsumed = true;

@@ -25,7 +25,7 @@ public class SwipeInput : MonoBehaviour
     {
         if (IsPointerDown())
         {
-            // Cegah swipe dimulai jika kursor berada di atas elemen UI (Canvas)
+            // Handle swipe start
             if (UnityEngine.EventSystems.EventSystem.current != null && 
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
                 return;

@@ -14,11 +14,16 @@ public class FoodSlicer : MonoBehaviour
         public Transform ejectedFragment;
         public Vector2 knockbackDirection;
 
-        [Header("Rotasi Jatuh")]
+        [Header("Juiceness Effect (Rotating and Movement of Sliced Objects)")]
         public float tiltAngle = 15f;
 
-        [Header("Sprite Swapping (Optional)")]
-        [Tooltip("Jika diisi, objek sumber tidak akan di-disable, melainkan berganti gambar.")]
+        [Tooltip("Optional to move non-ejected fragments")]
+        public bool moveNonEjected = false;
+        public Vector2 secondaryKnockbackDirection = new Vector2(-0.2f, -0.1f);
+        public float secondaryTiltAngle = -3f;
+
+        [Header("Sprite Swapping")]
+        [Tooltip("Change cut sprite")]
         public Sprite cutSprite;
     }
 
@@ -33,8 +38,8 @@ public class FoodSlicer : MonoBehaviour
     [SerializeField] private float perpDistanceTolerance = 0.3f;
 
     [Header("Game Feel (Juiciness)")]
-    [SerializeField] private float knockbackDistance = 0.5f;
-    [SerializeField] private float knockbackDuration = 0.15f;
+    [SerializeField] private float knockbackDistance;
+    [SerializeField] private float knockbackDuration;
 
     private int currentPhaseIndex = 0;
     private float currentSliceProgress = 1f;
@@ -76,7 +81,7 @@ public class FoodSlicer : MonoBehaviour
         currentPhaseIndex = 0;
         currentSliceProgress = 1f;
 
-        // Bersihkan pecahan hasil spawn dari sesi pemotongan sebelumnya
+        // Clean sliced fragment from prev ingredient
         foreach (var frag in spawnedFragments)
         {
             if (frag != null) Destroy(frag);
@@ -93,7 +98,7 @@ public class FoodSlicer : MonoBehaviour
 
             foreach (GameObject obj in slicePhases[i].resultObjects)
             {
-                // Hanya matikan jika ia adalah objek di dalam scene (bukan Prefab)
+                // Validating object type
                 if (obj != null && obj.scene.IsValid()) obj.SetActive(false);
             }
         }
@@ -102,7 +107,7 @@ public class FoodSlicer : MonoBehaviour
         {
             GameObject src = slicePhases[0].sourceObject;
             
-            // Kembalikan ke sprite awal jika kita menggunakan fitur Sprite Swapping
+            // Reset sprite for next ingredient
             SpriteRenderer sr = src.GetComponent<SpriteRenderer>();
             if (sr != null && originalSprites.TryGetValue(sr, out Sprite origSprite))
             {
@@ -214,19 +219,18 @@ public class FoodSlicer : MonoBehaviour
 
             if (startPerpDistance > perpDistanceTolerance * 1.5f || currentPerpDistance > perpDistanceTolerance * 1.5f)
             {
-                // Jangan reset ke 1f, abaikan input melenceng agar progress tersimpan
                 return;
             }
 
-            // 2. Hitung tinggi garis (World Space)
+            // Hitung tinggi garis (World Space)
             RectTransform rectT = currentPhase.sliceLine.rectTransform;
             float worldHeight = rectT.rect.height * rectT.lossyScale.y;
 
-            // 3. Proyeksi jari ke vertikal garis
+            // Proyeksi jari ke vertikal garis
             Vector2 midOffset = currentPos - linePos;
             float alongDistance = Vector2.Dot(midOffset, lineUp); // Posisi jari relatif thd tengah
 
-            // 4. Deteksi arah usapan untuk ubah Fill Origin otomatis
+            // Deteksi arah usapan untuk ubah Fill Origin otomatis
             Vector2 swipeDir = (currentPos - startPos).normalized;
             bool swipingUp = Vector2.Dot(swipeDir, lineUp) > 0;
             
@@ -282,7 +286,7 @@ public class FoodSlicer : MonoBehaviour
         {
             if (phase.cutSprite != null)
             {
-                // Fitur Baru: Ganti Sprite saja (jangan matikan Collider/Objek)
+                // Change Sprite
                 SpriteRenderer sr = phase.sourceObject.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
@@ -291,7 +295,6 @@ public class FoodSlicer : MonoBehaviour
             }
             else
             {
-                // Logika Lama: Matikan Objek / Komponen
                 if (phase.sourceObject == this.gameObject)
                 {
                     SpriteRenderer sr = phase.sourceObject.GetComponent<SpriteRenderer>();
@@ -332,17 +335,23 @@ public class FoodSlicer : MonoBehaviour
                     activeObj.SetActive(true);
                 }
 
-                // Cek apakah objek ini adalah pecahan yang harus terlempar (knockback)
+                // Cek apakah objek ini adalah pecahan yang harus terlempar (knockback utama)
                 if (phase.ejectedFragment != null && obj.transform == phase.ejectedFragment)
                 {
                     Vector3 knockbackDir = new Vector3(phase.knockbackDirection.x, phase.knockbackDirection.y, 0).normalized;
                     StartCoroutine(ProcessKnockback(activeObj.transform, knockbackDir * knockbackDistance, knockbackDuration, phase.tiltAngle));
                 }
+                else if (phase.moveNonEjected)
+                {
+                    // Secondary jiggle movement untuk objek sisa
+                    Vector3 secKnockbackDir = new Vector3(phase.secondaryKnockbackDirection.x, phase.secondaryKnockbackDirection.y, 0);
+                    StartCoroutine(ProcessKnockback(activeObj.transform, secKnockbackDir, knockbackDuration * 0.8f, phase.secondaryTiltAngle));
+                }
             }
         }
 
         currentPhaseIndex++;
-        currentSliceProgress = 1f; // Reset progress untuk fase berikutnya
+        currentSliceProgress = 1f; // Reset progress
 
         if (currentPhaseIndex < slicePhases.Length)
         {

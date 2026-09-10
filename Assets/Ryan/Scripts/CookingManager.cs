@@ -17,14 +17,14 @@ public class CookingManager : MonoBehaviour
         public string phaseName;
         public GameObject phaseContainer;
         
-        [Tooltip("Event/Fungsi yang akan dijalankan saat fase ini dimulai")]
+        [Tooltip("Start Event for this phase")]
         public UnityEngine.Events.UnityEvent onPhaseStart;
     }
 
     // ─── Inspector References ───────────────────────────────────────
 
-    [Header("Cooking Sequence (Dinamis)")]
-    [Tooltip("Urutan memasak. Tambahkan urutan dengan tombol +")]
+    [Header("Cooking Sequence")]
+    [Tooltip("Urutan memasak")]
     public System.Collections.Generic.List<CookingPhase> cookingSequence = new System.Collections.Generic.List<CookingPhase>();
     private int currentPhaseIndex = 0;
 
@@ -37,6 +37,7 @@ public class CookingManager : MonoBehaviour
     //Start first cooking phase
     void Start()
     {
+        Debug.Log("Cooking Started");
         currentPhaseIndex = 0;
         if (cookingSequence.Count > 0)
         {
@@ -44,7 +45,7 @@ public class CookingManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("No Container for Cooking Phase");
+            Debug.LogWarning("No Cooking Container Reference Found");
         }
     }
 
@@ -62,17 +63,15 @@ public class CookingManager : MonoBehaviour
 
         if (currentPhaseIndex < cookingSequence.Count)
         {
-            //Fase MiniGame Saat ini
+            //Fase saat ini
             CookingPhase currentPhase = cookingSequence[currentPhaseIndex];
-            
-            Debug.Log($"[CookingManager] Memulai Fase: {currentPhase.phaseName}");
-
+      
             //Show Container
             if (currentPhase.phaseContainer != null)
             {
                 currentPhase.phaseContainer.SetActive(true);
 
-                // Jalankan otomatis semua ICookingPhase yang ada di dalam container
+                //Run all Phase Scripts that implement ICookingPhase
                 ICookingPhase[] phases = currentPhase.phaseContainer.GetComponentsInChildren<ICookingPhase>(true);
                 foreach (var phase in phases)
                 {
@@ -83,8 +82,6 @@ public class CookingManager : MonoBehaviour
             currentPhase.onPhaseStart?.Invoke();
         }
     }
-
-    // (Fungsi StartSlicingPhase dan StartSpellingPhase telah dipindahkan ke masing-masing manager)
 
     //Trigger stirring phase
     public void StartStirringPhase()
@@ -121,9 +118,6 @@ public class CookingManager : MonoBehaviour
         if (stirCanvas != null) stirCanvas.gameObject.SetActive(isActive);
     }
 
-    // ─── Slicing Phase ──────────────────────────────────────────────
-
-
     //Advance to next cooking sequence
     public void NextStep()
     {
@@ -135,7 +129,7 @@ public class CookingManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("[CookingManager] Semua fase memasak telah selesai!");
+            Debug.Log("All cooking phases completed.");
         }
     }
 }

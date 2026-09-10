@@ -1,32 +1,26 @@
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-//Approach -> Image used to enabling raycast
 public class BoardDropZone : MonoBehaviour, IDropHandler
 {
     [Header("Visual")]
-    [SerializeField] private TextMeshProUGUI displayText;
-    [SerializeField] private UnityEngine.UI.Image backgroundImage;
+    [SerializeField] private CandyBitmapTextUGUI displayText;
+    [SerializeField] private Image backgroundImage;
 
     [Header("State Colors")]
-    [Tooltip("Warna sebelum selesai")]
-    [SerializeField] private Color lockedColor = new Color(1f, 1f, 1f, 0.5f); //Unanswered Letter
-    [Tooltip("Warna Setelah selesai")]
-    [SerializeField] private Color completedColor = new Color(0f, 1f, 0.2f, 1f); //Answered Correct Letter
-    
+    [SerializeField] private Color lockedColor = new Color(1f, 1f, 1f, 0.5f);
+    [SerializeField] private Color completedColor = new Color(0f, 1f, 0.2f, 1f);
+
     private string fullWord;
     private int completedLength = 0;
 
-    //Setup target word and visual
     public void InitializeWord(string word)
     {
         fullWord = word.ToUpper();
         completedLength = 0;
 
-//Making Transparent Image
-        if (backgroundImage != null) 
+        if (backgroundImage != null)
         {
             Color c = backgroundImage.color;
             c.a = 0f;
@@ -38,7 +32,6 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         UpdateDisplay();
     }
 
-    //Override current progress
     public void SetCompleted(int newCompletedLength)
     {
         completedLength = newCompletedLength;
@@ -46,57 +39,65 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         UpdateDisplay();
     }
 
-    //Auto-skip space characters
     private void SkipSpacesIfAny()
     {
         if (string.IsNullOrEmpty(fullWord)) return;
-        
+
         while (completedLength < fullWord.Length && fullWord[completedLength] == ' ')
         {
             completedLength++;
         }
     }
 
-    //Refresh text UI with colors
     private void UpdateDisplay()
     {
         if (displayText == null) return;
 
-        string richText = "";
-        string hexLocked = ColorUtility.ToHtmlStringRGBA(lockedColor);
-        string hexCompleted = ColorUtility.ToHtmlStringRGBA(completedColor);
+        string finalWord = "";
+
+        // 1. Tampilkan huruf aslinya secara utuh sejak awal, JANGAN diganti jadi setrip ("-")
+        for (int i = 0; i < fullWord.Length; i++)
+        {
+            finalWord += fullWord[i];
+        }
+
+        // Masukkan teks utuh ke script Candy
+        displayText.Text = finalWord;
+
+        // 2. Warnai setiap gambar huruf secara dinamis
+        Image[] glyphImages = displayText.GetComponentsInChildren<Image>(true);
+        int glyphIndex = 0;
 
         for (int i = 0; i < fullWord.Length; i++)
         {
-            if (fullWord[i] == ' ')
+            // Abaikan spasi karena script Candy tidak memproduksi GameObject gambar untuk spasi
+            if (fullWord[i] == ' ') continue;
+
+            if (glyphIndex < glyphImages.Length)
             {
-                richText += " ";
-            }
-            else if (i < completedLength)
-            {
-                richText += $"<color=#{hexCompleted}>{fullWord[i]}</color>";
-            }
-            else
-            {
-                richText += $"<color=#{hexLocked}>{fullWord[i]}</color>";
+                if (i < completedLength)
+                {
+                    glyphImages[glyphIndex].color = completedColor; // Huruf yang sudah ditebak (Hijau)
+                }
+                else
+                {
+                    glyphImages[glyphIndex].color = lockedColor; // Huruf yang belum ditebak (Biru Buram)
+                }
+                glyphIndex++;
             }
         }
-
-        displayText.text = richText;
     }
 
-    //Handle tile drop event
     public void OnDrop(PointerEventData eventData)
     {
         DraggableLetterTile tile = eventData.pointerDrag?.GetComponent<DraggableLetterTile>();
-        
+
         if (tile != null)
         {
             TrySpellLetter(tile);
         }
     }
 
-//Check Word and Answer
     private void TrySpellLetter(DraggableLetterTile tile)
     {
         if (completedLength >= fullWord.Length) return;
@@ -106,10 +107,10 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         if (tile.Letter == expectedChar)
         {
             tile.Consume();
-            
+
             completedLength++;
             SkipSpacesIfAny();
-            
+
             UpdateDisplay();
 
             if (WordMatchingManager.instance != null)
@@ -119,7 +120,6 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
 
             if (completedLength >= fullWord.Length)
             {
-                Debug.Log("Phase Complete");
                 if (WordMatchingManager.instance != null)
                 {
                     WordMatchingManager.instance.OnWordComplete();
@@ -128,7 +128,7 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         }
         else
         {
-            Debug.Log($"Salah!!!, Seharusnya{expectedChar},  bukan {tile.Letter}");
+            Debug.Log($"Salah!!!, Seharusnya {expectedChar}, bukan {tile.Letter}");
         }
     }
 }

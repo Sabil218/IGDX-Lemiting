@@ -53,12 +53,12 @@ public class StirInput : MonoBehaviour
 
         if (IsPointerDown())
         {
-            // Cegah adukan dimulai jika kursor berada di atas elemen UI (Canvas)
+            //Validator Input
             if (UnityEngine.EventSystems.EventSystem.current != null && 
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            //Sentuhan pertama mengenai area sendok
+            //Input checking: If pointer is touching the spoon collider, start dragging
             if (spoonCollider != null && spoonCollider.OverlapPoint(worldPos))
             {
                 isDragging = true;

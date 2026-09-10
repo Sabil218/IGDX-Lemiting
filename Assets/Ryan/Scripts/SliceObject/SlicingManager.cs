@@ -7,7 +7,7 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
     public static SlicingManager instance { get; private set; }
 
     [Header("Slicing References")]
-    [Tooltip("Daftar bahan yang akan dipotong secara berurutan (Bisa berupa Scene Object atau Prefab).")]
+    [Tooltip("Daftar bahan yang akan dipotong secara berurutan")]
     public GameObject[] bahanSlicing;
     
     private int currentSlicingIndex = 0;
@@ -82,7 +82,7 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
         }
         else
         {
-            Debug.Log("[SlicingManager] Seluruh proses Slicing selesai!");
+
             onSlicingComplete?.Invoke();
         }
     }
