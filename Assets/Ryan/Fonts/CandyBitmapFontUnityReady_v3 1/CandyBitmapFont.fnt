@@ -1,0 +1,45 @@
+info face="CandyBitmapFont" size=160 bold=0 italic=0 charset="" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0
+common lineHeight=192 base=152 scaleW=1344 scaleH=1152 pages=1 packed=0 alphaChnl=0 redChnl=0 greenChnl=0 blueChnl=0
+page id=0 file="CandyBitmapFontAtlas.png"
+chars count=40
+char id=32 x=0 y=0 width=0 height=0 xoffset=0 yoffset=0 xadvance=80 page=0 chnl=15
+char id=65 x=24 y=22 width=143 height=147 xoffset=0 yoffset=5 xadvance=155 page=0 chnl=15
+char id=66 x=228 y=21 width=120 height=150 xoffset=0 yoffset=2 xadvance=132 page=0 chnl=15
+char id=67 x=414 y=21 width=131 height=149 xoffset=0 yoffset=3 xadvance=143 page=0 chnl=15
+char id=68 x=613 y=22 width=118 height=147 xoffset=0 yoffset=5 xadvance=130 page=0 chnl=15
+char id=69 x=808 y=21 width=112 height=149 xoffset=0 yoffset=3 xadvance=124 page=0 chnl=15
+char id=70 x=997 y=23 width=118 height=146 xoffset=0 yoffset=6 xadvance=130 page=0 chnl=15
+char id=71 x=1183 y=22 width=129 height=148 xoffset=0 yoffset=4 xadvance=141 page=0 chnl=15
+char id=72 x=32 y=211 width=127 height=154 xoffset=0 yoffset=0 xadvance=139 page=0 chnl=15
+char id=73 x=264 y=213 width=48 height=149 xoffset=0 yoffset=3 xadvance=72 page=0 chnl=15
+char id=74 x=424 y=213 width=112 height=149 xoffset=0 yoffset=3 xadvance=136 page=0 chnl=15
+char id=75 x=611 y=214 width=122 height=148 xoffset=0 yoffset=4 xadvance=134 page=0 chnl=15
+char id=76 x=806 y=213 width=116 height=149 xoffset=0 yoffset=3 xadvance=128 page=0 chnl=15
+char id=77 x=984 y=214 width=143 height=147 xoffset=0 yoffset=5 xadvance=157 page=0 chnl=15
+char id=78 x=1187 y=213 width=121 height=149 xoffset=0 yoffset=3 xadvance=133 page=0 chnl=15
+char id=79 x=26 y=407 width=140 height=146 xoffset=0 yoffset=6 xadvance=152 page=0 chnl=15
+char id=80 x=231 y=406 width=113 height=148 xoffset=0 yoffset=4 xadvance=125 page=0 chnl=15
+char id=81 x=409 y=405 width=142 height=149 xoffset=0 yoffset=3 xadvance=156 page=0 chnl=15
+char id=82 x=614 y=405 width=115 height=149 xoffset=0 yoffset=3 xadvance=127 page=0 chnl=15
+char id=83 x=807 y=406 width=113 height=148 xoffset=0 yoffset=4 xadvance=125 page=0 chnl=15
+char id=84 x=997 y=406 width=118 height=147 xoffset=0 yoffset=5 xadvance=130 page=0 chnl=15
+char id=85 x=1189 y=408 width=117 height=143 xoffset=0 yoffset=9 xadvance=129 page=0 chnl=15
+char id=86 x=25 y=597 width=142 height=149 xoffset=0 yoffset=3 xadvance=154 page=0 chnl=15
+char id=87 x=204 y=599 width=168 height=146 xoffset=0 yoffset=6 xadvance=182 page=0 chnl=15
+char id=88 x=400 y=597 width=159 height=149 xoffset=0 yoffset=3 xadvance=171 page=0 chnl=15
+char id=89 x=596 y=598 width=152 height=147 xoffset=0 yoffset=5 xadvance=164 page=0 chnl=15
+char id=90 x=800 y=598 width=128 height=148 xoffset=0 yoffset=4 xadvance=140 page=0 chnl=15
+char id=48 x=34 y=790 width=123 height=147 xoffset=0 yoffset=5 xadvance=135 page=0 chnl=15
+char id=49 x=249 y=789 width=78 height=150 xoffset=0 yoffset=2 xadvance=102 page=0 chnl=15
+char id=50 x=425 y=790 width=109 height=148 xoffset=0 yoffset=4 xadvance=121 page=0 chnl=15
+char id=51 x=614 y=789 width=115 height=149 xoffset=0 yoffset=3 xadvance=127 page=0 chnl=15
+char id=52 x=807 y=790 width=113 height=148 xoffset=0 yoffset=4 xadvance=125 page=0 chnl=15
+char id=53 x=37 y=981 width=117 height=149 xoffset=0 yoffset=3 xadvance=129 page=0 chnl=15
+char id=54 x=227 y=982 width=121 height=148 xoffset=0 yoffset=4 xadvance=133 page=0 chnl=15
+char id=55 x=418 y=981 width=123 height=149 xoffset=0 yoffset=3 xadvance=135 page=0 chnl=15
+char id=56 x=612 y=980 width=119 height=151 xoffset=0 yoffset=1 xadvance=131 page=0 chnl=15
+char id=57 x=804 y=980 width=119 height=151 xoffset=0 yoffset=1 xadvance=131 page=0 chnl=15
+char id=43 x=1009 y=817 width=93 height=93 xoffset=0 yoffset=59 xadvance=117 page=0 chnl=15
+char id=61 x=1201 y=824 width=93 height=80 xoffset=0 yoffset=72 xadvance=117 page=0 chnl=15
+char id=45 x=1009 y=1037 width=93 height=37 xoffset=0 yoffset=115 xadvance=117 page=0 chnl=15
+kernings count=0

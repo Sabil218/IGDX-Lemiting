@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 055a5bf1b1300864faf3b11ed6100be7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - atlasTexture: {instanceID: 0}
+  - fontMapJson: {fileID: 4900000, guid: 58a079938c76e3b4b82710c4e764af22, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

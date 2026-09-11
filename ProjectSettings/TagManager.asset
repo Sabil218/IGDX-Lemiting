@@ -8,6 +8,8 @@ TagManager:
   - CuttingBoard
   - Ground
   - Enemy
+  - Wajan
+  - BahanMentah
   layers:
   - Default
   - TransparentFX
@@ -18,11 +20,11 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - Ingredients
   - CuttingBoard
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
