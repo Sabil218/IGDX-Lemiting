@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 17855fd8cdbaf9e47a2a043f01764688
+guid: a21a19d8077233d49b4e4ab17bc4dab9
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -134,112 +134,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites:
-    - serializedVersion: 2
-      name: Item Cut_kunyit_0
-      rect:
-        serializedVersion: 2
-        x: 3
-        y: 9
-        width: 542
-        height: 266
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 0ac09557331d4774ead3c499165ae0ae
-      internalID: 1097347812
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Item Cut_kunyit_1
-      rect:
-        serializedVersion: 2
-        x: 558
-        y: 4
-        width: 396
-        height: 266
-      alignment: 9
-      pivot: {x: 0.6843, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 7d1daa5e62f9f2b42b7e07b50fb76a08
-      internalID: 721775983
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Item Cut_kunyit_2
-      rect:
-        serializedVersion: 2
-        x: 970
-        y: 2
-        width: 228
-        height: 221
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 03cdf3818dcdd294893e9cf191584e1e
-      internalID: -697328439
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Item Cut_kunyit_3
-      rect:
-        serializedVersion: 2
-        x: 1205
-        y: 37
-        width: 270
-        height: 233
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: b2d604150eb511245b5944e8ed3e7344
-      internalID: -2055420576
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Item Cut_kunyit_4
-      rect:
-        serializedVersion: 2
-        x: 1494
-        y: 36
-        width: 220
-        height: 183
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: fee81375e9d661e40b230d3ecb31973a
-      internalID: -1110320343
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
+    sprites: []
     outline: []
     physicsShape: []
     bones: []
@@ -250,12 +145,7 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable:
-      Item Cut_kunyit_0: 1097347812
-      Item Cut_kunyit_1: 721775983
-      Item Cut_kunyit_2: -697328439
-      Item Cut_kunyit_3: -2055420576
-      Item Cut_kunyit_4: -1110320343
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

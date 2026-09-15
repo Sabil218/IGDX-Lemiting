@@ -56,11 +56,24 @@ public class CandyBitmapTextUGUI : MonoBehaviour
 
     public void Refresh()
     {
+        // [MODIFICATION]: Check if the internal Unity C++ object has been destroyed.
+        // If yes, abort execution immediately to prevent MissingReferenceException.
+        if (this == null) return;
+
         EnsureLoaded();
         Rebuild();
     }
 
     private void OnEnable() => Refresh();
+
+    // [MODIFICATION]: Unsubscribe the function from the delayCall queue when the component 
+    // is disabled or destroyed. This prevents zombie executions in the Editor.
+    private void OnDisable()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall -= Refresh;
+#endif
+    }
 
     // [MODIFICATION]: Modified OnValidate to prevent "SendMessage cannot be called..." warnings.
     // Previously executed directly: private void OnValidate() => Refresh();

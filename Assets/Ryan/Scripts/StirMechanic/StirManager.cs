@@ -149,8 +149,9 @@ public class StirManager : MonoBehaviour, ICookingPhase
             spoonTransform.position = panCenter + new Vector3(newX, newY, 0);
 
             // Rotasi Dinamis Sendok
-            float spoonOrientAngle = currentOrbitAngle - 90f; 
-            spoonTransform.rotation = Quaternion.Euler(0, 0, spoonOrientAngle);
+            // Rotasi dinamis dimatikan agar sprite sendok tidak terbalik dan mempertahankan perspektif 2D-nya
+            // float spoonOrientAngle = currentOrbitAngle - 90f; 
+            // spoonTransform.rotation = Quaternion.Euler(0, 0, spoonOrientAngle);
         }
 
         if (CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
@@ -185,18 +186,31 @@ public class StirManager : MonoBehaviour, ICookingPhase
         // Cegah error matematika (NaN) jika objek kebetulan berada persis di titik 0,0,0
         if (localPos.sqrMagnitude < 0.001f) 
         {
-            target.Rotate(Vector3.forward, spinAngle);
             return;
         }
 
         float unSquashedY = squash != 0 ? localPos.y / squash : localPos.y;
         
+        // Simpan radius asli untuk mencegah objek terlempar keluar dari wajan (floating-point drift)
+        float originalRadius = Mathf.Sqrt(localPos.x * localPos.x + unSquashedY * unSquashedY);
+
         float rotX = localPos.x * cos - unSquashedY * sin;
         float rotY = localPos.x * sin + unSquashedY * cos;
+        
+        // Normalisasi dan aplikasikan kembali radius asli agar tetap di jalur orbit
+        float currentRadius = Mathf.Sqrt(rotX * rotX + rotY * rotY);
+        if (currentRadius > 0.0001f)
+        {
+            rotX = (rotX / currentRadius) * originalRadius;
+            rotY = (rotY / currentRadius) * originalRadius;
+        }
+
         float newY = rotY * squash;
         
         target.position = panCenter + new Vector3(rotX, newY, -0.1f);
-        target.Rotate(Vector3.forward, spinAngle); 
+        
+        // Rotasi pada sumbu sendiri (spin) dihilangkan agar bahan makanan tidak terlihat berputar-putar seperti gasing
+        // target.Rotate(Vector3.forward, spinAngle); 
     }
 
     private void HandleStirProgress(float progress)

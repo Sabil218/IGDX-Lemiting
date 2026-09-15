@@ -54,9 +54,13 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     private void Awake()
     {
-        instance = this;
         Camera.main.transparencySortMode = TransparencySortMode.CustomAxis;
         Camera.main.transparencySortAxis = new Vector3(0, 1, 0);
+    }
+
+    private void OnEnable()
+    {
+        instance = this;
     }
 
     public void StartPhase()
