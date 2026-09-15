@@ -1,10 +1,14 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 
 public class SceneLoader : MonoBehaviour
 {
+    // =========================================
+    // LOADING SCREEN
+    // =========================================
+
     [Header("Loading Screen")]
     public GameObject loadingPanel;
     public Slider loadingBar;
@@ -14,9 +18,49 @@ public class SceneLoader : MonoBehaviour
 
     private float previousAudioVolume;
 
-    public void LoadLevel01()
+
+    // =========================================
+    // LOAD SCENE - UNTUK LEVEL SELECT
+    // =========================================
+    // Contoh:
+    // LoadScene("Level1")
+    // LoadScene("Level4")
+    // LoadScene("Level5")
+    // =========================================
+
+    public void LoadScene(string sceneName)
     {
-        loadingPanel.SetActive(true);
+        Debug.Log("Mencoba membuka scene: " + sceneName);
+
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            Debug.LogError("Nama Scene belum diisi!");
+            return;
+        }
+
+        SceneManager.LoadScene(sceneName);
+    }
+
+
+    // =========================================
+    // LOAD SCENE DENGAN LOADING SCREEN
+    // =========================================
+    // Bisa digunakan untuk Level Select
+    // maupun Next Level jika nanti dibutuhkan.
+    // =========================================
+
+    public void LoadSceneWithLoading(string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            Debug.LogError("Nama Scene belum diisi!");
+            return;
+        }
+
+        if (loadingPanel != null)
+        {
+            loadingPanel.SetActive(true);
+        }
 
         if (loadingBar != null)
         {
@@ -26,33 +70,23 @@ public class SceneLoader : MonoBehaviour
         // Simpan volume sebelum loading
         previousAudioVolume = AudioListener.volume;
 
-        // Matikan semua suara selama loading
+        // Matikan suara selama loading
         AudioListener.volume = 0f;
 
-        StartCoroutine(LoadLevelAsync("Level1"));
+        StartCoroutine(LoadSceneAsync(sceneName));
     }
 
-    public void LoadMainMenu()
-    {
-        SceneManager.LoadScene("Mainmenu");
-    }
 
-    public void LoadLevelSelect()
-    {
-        PlayerPrefs.SetInt("OpenLevelSelect", 1);
-        PlayerPrefs.Save();
+    // =========================================
+    // ASYNC LOADING
+    // =========================================
 
-        SceneManager.LoadScene("Mainmenu");
-    }
-
-    public void RetryLevel()
+    private IEnumerator LoadSceneAsync(string sceneName)
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+        Debug.Log("Loading scene: " + sceneName);
 
-    private IEnumerator LoadLevelAsync(string sceneName)
-    {
-        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+        AsyncOperation operation =
+            SceneManager.LoadSceneAsync(sceneName);
 
         operation.allowSceneActivation = false;
 
@@ -62,7 +96,8 @@ public class SceneLoader : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            float progress = Mathf.Clamp01(timer / loadingDuration);
+            float progress =
+                Mathf.Clamp01(timer / loadingDuration);
 
             if (loadingBar != null)
             {
@@ -77,7 +112,7 @@ public class SceneLoader : MonoBehaviour
             loadingBar.value = 1f;
         }
 
-        // Tunggu scene selesai loading
+        // Tunggu sampai scene selesai dimuat
         while (operation.progress < 0.9f)
         {
             yield return null;
@@ -85,13 +120,51 @@ public class SceneLoader : MonoBehaviour
 
         yield return new WaitForSeconds(0.2f);
 
-        // Masuk ke level
+        // Aktifkan scene baru
         operation.allowSceneActivation = true;
 
-        // Tunggu sampai scene benar-benar aktif
         yield return null;
 
-        // Nyalakan kembali audio
+        // Kembalikan volume
         AudioListener.volume = previousAudioVolume;
+    }
+
+
+    // =========================================
+    // MAIN MENU - LOGIC LAMA
+    // =========================================
+
+    public void LoadMainMenu()
+    {
+        SceneManager.LoadScene("Mainmenu");
+    }
+
+
+    // =========================================
+    // LEVEL SELECT - LOGIC LAMA
+    // =========================================
+    // Digunakan dari Win Condition.
+    // Mainmenu akan otomatis membuka
+    // Level Select setelah scene dimuat.
+    // =========================================
+
+    public void LoadLevelSelect()
+    {
+        PlayerPrefs.SetInt("OpenLevelSelect", 1);
+        PlayerPrefs.Save();
+
+        SceneManager.LoadScene("Mainmenu");
+    }
+
+
+    // =========================================
+    // RETRY LEVEL
+    // =========================================
+
+    public void RetryLevel()
+    {
+        SceneManager.LoadScene(
+            SceneManager.GetActiveScene().name
+        );
     }
 }
