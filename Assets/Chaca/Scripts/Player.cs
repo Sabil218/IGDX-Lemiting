@@ -24,6 +24,7 @@ public class Player : MonoBehaviour
     private Transform currentAttackTarget;
 
     public bool IsDead { get; private set; }
+    public bool IsBubbleTrapped { get; private set; }
 
     private void Awake()
     {
@@ -45,7 +46,7 @@ public class Player : MonoBehaviour
 
     public IEnumerator Attack(Transform enemy)
     {
-        if (IsDead)
+        if (IsDead || IsBubbleTrapped)
         {
             yield break;
         }
@@ -143,12 +144,36 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void SetBubbleTrapped(bool trapped)
+    {
+        if (IsDead)
+            return;
+
+        IsBubbleTrapped = trapped;
+
+        if (animator != null)
+        {
+            animator.SetBool("isBubbleTrapped", trapped);
+        }
+
+        if (trapped)
+        {
+            if (animator != null)
+            {
+                animator.ResetTrigger("Hurt");
+                animator.SetTrigger("Hurt");
+            }
+        }
+    }
+
     public IEnumerator MoveTo(Transform target)
     {
         if (target == null)
         {
             yield break;
         }
+
+        SetBubbleTrapped(false);
 
         float fixedY = transform.position.y;
 
@@ -194,10 +219,12 @@ public class Player : MonoBehaviour
             return;
 
         IsDead = true;
+        IsBubbleTrapped = false;
 
         if (animator != null)
         {
             animator.SetBool("isRun", false);
+            animator.SetBool("isBubbleTrapped", false);
         }
     }
 
@@ -205,6 +232,7 @@ public class Player : MonoBehaviour
     {
         currentHearts = maxHearts;
         IsDead = false;
+        IsBubbleTrapped = false;
         currentAttackTarget = null;
 
         if (healthUI != null)
@@ -215,6 +243,7 @@ public class Player : MonoBehaviour
         if (animator != null)
         {
             animator.SetBool("isRun", false);
+            animator.SetBool("isBubbleTrapped", false);
             animator.ResetTrigger("Hurt");
             animator.ResetTrigger("Attack");
         }
