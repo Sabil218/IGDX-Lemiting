@@ -1,0 +1,655 @@
+fileFormatVersion: 2
+guid: d7b6b661239e735468e138516d3e39f8
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Ikan_Atk_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2880
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a2e83e2a3980924b85fa47f7c846c24
+      internalID: 132379202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_1
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 2880
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8118abc5ec78b5e4e9623a450c8eb811
+      internalID: 141175712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_2
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 2880
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 07be8dd36fed7f74baa7641682267c22
+      internalID: 515712841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_3
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 2880
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6902bde43f8711648bec5759a5b2240f
+      internalID: 1404278311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_4
+      rect:
+        serializedVersion: 2
+        x: 2880
+        y: 2880
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 56b73fa92aa1594458bb132b8bfbb337
+      internalID: 2142054658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_5
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2160
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 276af0318347e674f98d6cbdb801a549
+      internalID: 1177995226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_6
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 2160
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b6c98561eca9c5f46ba4c84a97898e4f
+      internalID: 1847377958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_7
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 2160
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b8a3d2f63009b64cb39200029ce9716
+      internalID: 932602803
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_8
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 2160
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40e212be66c1cf74fb4411f5becb0633
+      internalID: -1887921414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_9
+      rect:
+        serializedVersion: 2
+        x: 2880
+        y: 2160
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60795ba63d82f074ebbca0da1f985943
+      internalID: -103992982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6bfddf776d1cc4498fa79789fd381f2
+      internalID: 1522725969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_11
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 45b2f950bb81a9247aafb3749e8261ab
+      internalID: 1717006893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_12
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2cbec9b5fcbdb554b882ec4490f8730f
+      internalID: 1211195227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_13
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 063b0103f97aeb949a88df44502dc361
+      internalID: 576782743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_14
+      rect:
+        serializedVersion: 2
+        x: 2880
+        y: 1440
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 37da3e71695b9d845bc6bbe733472f2a
+      internalID: -526279253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b45b4616680041c479a378e03129a840
+      internalID: 364510377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_16
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf86c9db18901ea4b9c6cb107c9dafaa
+      internalID: -1920629410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_17
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ebe588bfd9cb4bd46af39e5c23f19527
+      internalID: 1731955639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_18
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4666c1315b0a9ff4d8e773629934fadd
+      internalID: -220896711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_19
+      rect:
+        serializedVersion: 2
+        x: 2880
+        y: 720
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35bd8e836b7a1e34582112b6c61ed35c
+      internalID: 1784855044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_20
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ca1f12b04441919478165a8d6218f834
+      internalID: -1278177483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_21
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 0
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c58933ddd4fed8f4396ca2895a0460cb
+      internalID: 1203883715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_22
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 0
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 27bc73c96b39dc4409bb36144b6d80a1
+      internalID: -396695912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ikan_Atk_23
+      rect:
+        serializedVersion: 2
+        x: 2160
+        y: 0
+        width: 720
+        height: 720
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3720474434481c24ea8ab0ac4dbc974d
+      internalID: 1886577014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      Ikan_Atk_0: 132379202
+      Ikan_Atk_1: 141175712
+      Ikan_Atk_10: 1522725969
+      Ikan_Atk_11: 1717006893
+      Ikan_Atk_12: 1211195227
+      Ikan_Atk_13: 576782743
+      Ikan_Atk_14: -526279253
+      Ikan_Atk_15: 364510377
+      Ikan_Atk_16: -1920629410
+      Ikan_Atk_17: 1731955639
+      Ikan_Atk_18: -220896711
+      Ikan_Atk_19: 1784855044
+      Ikan_Atk_2: 515712841
+      Ikan_Atk_20: -1278177483
+      Ikan_Atk_21: 1203883715
+      Ikan_Atk_22: -396695912
+      Ikan_Atk_23: 1886577014
+      Ikan_Atk_3: 1404278311
+      Ikan_Atk_4: 2142054658
+      Ikan_Atk_5: 1177995226
+      Ikan_Atk_6: 1847377958
+      Ikan_Atk_7: 932602803
+      Ikan_Atk_8: -1887921414
+      Ikan_Atk_9: -103992982
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -82,6 +82,11 @@ public class BattleManager : MonoBehaviour
 
         RemoveQuiz();
 
+        if (player != null)
+        {
+            player.SetBubbleTrapped(false);
+        }
+
         currentEnemy = SpawnCurrentEnemy();
 
         if (currentEnemy == null)
@@ -305,6 +310,11 @@ public class BattleManager : MonoBehaviour
 
         RemoveQuiz();
 
+        if (player != null)
+        {
+            player.SetBubbleTrapped(false);
+        }
+
         if (currentEnemy != null)
         {
             yield return StartCoroutine(
@@ -481,6 +491,8 @@ public class BattleManager : MonoBehaviour
 
         if (target == null)
             yield break;
+
+        player.SetBubbleTrapped(false);
 
         float playerY =
             player.transform.position.y;

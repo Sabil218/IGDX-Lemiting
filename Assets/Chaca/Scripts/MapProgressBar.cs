@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class MapProgressBar : MonoBehaviour
 {
@@ -11,13 +10,10 @@ public class MapProgressBar : MonoBehaviour
     public Transform finishPoint;
 
     [Header("PROGRESS BAR")]
-    public RectTransform progressBar;
+    public RectTransform background;
     public RectTransform fillMask;
     public RectTransform fill;
     public RectTransform characterIcon;
-
-    [Header("TOGGLE")]
-    public Toggle progressToggle;
 
     [Header("SETTINGS")]
     public bool onlyMoveForward = true;
@@ -29,20 +25,17 @@ public class MapProgressBar : MonoBehaviour
 
     void Start()
     {
+        if (startPoint == null || finishPoint == null || background == null || fillMask == null)
+            return;
+
         startX = startPoint.position.x;
         finishX = finishPoint.position.x;
 
-        barWidth = progressBar.rect.width;
+        barWidth = background.rect.width;
 
         currentProgress = 0f;
 
         UpdateVisual();
-
-        if (progressToggle != null)
-        {
-            progressToggle.isOn = true;
-            progressToggle.onValueChanged.AddListener(SetProgressBarVisible);
-        }
     }
 
     void Update()
@@ -83,17 +76,18 @@ public class MapProgressBar : MonoBehaviour
 
         if (characterIcon != null)
         {
-            Vector2 iconPosition = characterIcon.anchoredPosition;
-            iconPosition.x = barWidth * currentProgress;
-            characterIcon.anchoredPosition = iconPosition;
-        }
-    }
+            Vector3 progressEndWorldPosition = fillMask.TransformPoint(
+                new Vector3(
+                    visibleWidth,
+                    fillMask.rect.height,
+                    0f
+                )
+            );
 
-    void SetProgressBarVisible(bool isVisible)
-    {
-        if (progressBar != null)
-        {
-            progressBar.gameObject.SetActive(isVisible);
+            Vector3 iconLocalPosition =
+                background.parent.InverseTransformPoint(progressEndWorldPosition);
+
+            characterIcon.localPosition = iconLocalPosition;
         }
     }
 }

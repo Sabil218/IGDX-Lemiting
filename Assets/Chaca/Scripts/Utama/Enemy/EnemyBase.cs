@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public abstract class EnemyBase : MonoBehaviour, IDamageable
@@ -85,7 +84,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         foreach (Collider2D col in colliders)
         {
-            col.enabled = false;
+            if (col != null)
+            {
+                col.enabled = false;
+            }
         }
 
         if (animator != null)
@@ -97,8 +99,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         {
             battleManager.EnemyDefeated();
         }
-
-        StartCoroutine(FadeOut());
     }
 
     protected virtual void DropItem()
@@ -117,89 +117,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         );
     }
 
-    private IEnumerator FadeOut()
-    {
-        SpriteRenderer[] renderers =
-            GetComponentsInChildren<SpriteRenderer>();
-
-        if (
-            renderers == null ||
-            renderers.Length == 0
-        )
-        {
-            Destroy(gameObject);
-            yield break;
-        }
-
-        Color[] originalColors =
-            new Color[renderers.Length];
-
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i] != null)
-            {
-                originalColors[i] =
-                    renderers[i].color;
-            }
-        }
-
-        float timer = 0f;
-
-        while (timer < fadeDuration)
-        {
-            timer += Time.deltaTime;
-
-            float progress =
-                Mathf.Clamp01(
-                    timer / fadeDuration
-                );
-
-            float alpha =
-                Mathf.Lerp(
-                    1f,
-                    0f,
-                    progress
-                );
-
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] == null)
-                    continue;
-
-                Color color =
-                    originalColors[i];
-
-                color.a =
-                    originalColors[i].a *
-                    alpha;
-
-                renderers[i].color =
-                    color;
-            }
-
-            yield return null;
-        }
-
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i] == null)
-                continue;
-
-            Color color =
-                originalColors[i];
-
-            color.a = 0f;
-
-            renderers[i].color =
-                color;
-        }
-
-        Destroy(gameObject);
-    }
-
-    protected bool HasParameter(
-        string parameterName
-    )
+    protected bool HasParameter(string parameterName)
     {
         if (animator == null)
             return false;
