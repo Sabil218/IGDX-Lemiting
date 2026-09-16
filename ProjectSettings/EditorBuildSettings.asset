@@ -15,6 +15,21 @@ EditorBuildSettings:
     path: Assets/Scenes/Level1.unity
     guid: b2a6452fedc33d04885a9585a0614278
   - enabled: 1
+    path: Assets/Scenes/Level2.unity
+    guid: 1f63312d3565f0043b9e79d37fdd84b9
+  - enabled: 1
+    path: Assets/Scenes/Level3.unity
+    guid: 90c891dbdbbe0304c8f91c7e9339f020
+  - enabled: 1
     path: Assets/Scenes/Level4.unity
     guid: c60522b22a580104396ba1cca1ab778c
+  - enabled: 1
+    path: Assets/Scenes/Level5.unity
+    guid: 63ff4df7b285e6f44988abbd5859abdd
+  - enabled: 1
+    path: Assets/Scenes/Level6.unity
+    guid: d61e2f9b92958214cbad0ff33e8b6756
+  - enabled: 1
+    path: Assets/Scenes/Minigame_manado.unity
+    guid: 45b45c9a6d8866a47bba2324c49999de
   m_configObjects: {}
