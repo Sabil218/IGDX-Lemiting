@@ -193,7 +193,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 35, y: -5.7489033}
+  m_AnchoredPosition: {x: 66, y: -5.7489033}
   m_SizeDelta: {x: 21, y: 492.21}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7063809180805697130
@@ -445,9 +445,9 @@ MonoBehaviour:
     - {fileID: 5820542767945981124}
     ejectedFragment: {fileID: 7738483673134071749}
     knockbackDirection: {x: 5, y: 0.25}
-    tiltAngle: 10
+    tiltAngle: 15
     moveNonEjected: 0
-    secondaryKnockbackDirection: {x: -2, y: -0.25}
+    secondaryKnockbackDirection: {x: -2, y: -0.5}
     secondaryTiltAngle: 0
     cutSprite: {fileID: -1460588883, guid: 1c16499b3ac0861489abf6ad197c94f9, type: 3}
   - sliceLine: {fileID: 4164683977803642009}
@@ -462,9 +462,9 @@ MonoBehaviour:
     secondaryKnockbackDirection: {x: -0.25, y: -0.1}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.2
-  knockbackDistance: 0.5
-  knockbackDuration: 0.15
+  perpDistanceTolerance: 0.3
+  knockbackDistance: 0.9
+  knockbackDuration: 0.2
 --- !u!114 &6257348788947633756
 MonoBehaviour:
   m_ObjectHideFlags: 0

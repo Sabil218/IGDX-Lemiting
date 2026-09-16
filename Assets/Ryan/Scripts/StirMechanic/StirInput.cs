@@ -9,14 +9,12 @@ public class StirInput : MonoBehaviour
 
     [Header("Stir Settings")]
     [SerializeField] private float requiredRotations = 3f;
-    private bool requireClockwise = true;
+    [Tooltip("If false, player can stir in any circular direction (clockwise or counter-clockwise)")]
+    [SerializeField] private bool requireClockwise = false;
     [SerializeField] private float minimumMoveDelta = 0.2f;
 
-    [Header("Stir Zone & Spoon (World Space)")]
+    [Header("Stir Zone (World Space)")]
     [SerializeField] private Collider2D stirZoneCollider;
-
-    [Tooltip("Masukkan komponen Collider2D dari sendok ke sini agar drag HANYA dimulai dari sendok.")]
-    [SerializeField] private Collider2D spoonCollider;
 
     public GameObject StirZoneObject => stirZoneCollider != null ? stirZoneCollider.gameObject : null;
 
@@ -58,8 +56,8 @@ public class StirInput : MonoBehaviour
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            //Input checking: If pointer is touching the spoon collider, start dragging
-            if (spoonCollider != null && spoonCollider.OverlapPoint(worldPos))
+            //Input checking: Start dragging if touching the stir zone (pan)
+            if (stirZoneCollider != null && stirZoneCollider.OverlapPoint(worldPos))
             {
                 isDragging = true;
                 previousDirection = (worldPos - GetCenterWorldPos()).normalized;
@@ -76,7 +74,8 @@ public class StirInput : MonoBehaviour
 
             float angleDelta = Vector2.SignedAngle(previousDirection, currentDirection);
 
-            float progressDelta = requireClockwise ? -angleDelta : angleDelta;
+            // Allow any direction if requireClockwise is false, otherwise strictly check direction
+            float progressDelta = requireClockwise ? -angleDelta : Mathf.Abs(angleDelta);
 
             if (Mathf.Abs(angleDelta) > 0.5f && Mathf.Abs(angleDelta) < 90f)
             {
@@ -120,4 +119,29 @@ public class StirInput : MonoBehaviour
     private bool IsPointerHeld() => Input.touchCount > 0 ? (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Stationary) : Input.GetMouseButton(0);
     private bool IsPointerUp() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Ended : Input.GetMouseButtonUp(0);
     private Vector2 GetPointerScreenPos() => Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+
+    private void OnDrawGizmos()
+    {
+        if (stirZoneCollider != null)
+        {
+            Gizmos.color = new Color(0f, 1f, 0f, 0.4f); // Semi-transparent green
+            Bounds bounds = stirZoneCollider.bounds;
+            Gizmos.DrawWireCube(bounds.center, bounds.size);
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (stirZoneCollider != null)
+        {
+            Gizmos.color = Color.green; // Solid green when selected
+            Bounds bounds = stirZoneCollider.bounds;
+            Gizmos.DrawWireCube(bounds.center, bounds.size);
+            
+            // Draw a crosshair in the center
+            float crosshairSize = 0.5f;
+            Gizmos.DrawLine(bounds.center - Vector3.left * crosshairSize, bounds.center + Vector3.left * crosshairSize);
+            Gizmos.DrawLine(bounds.center - Vector3.up * crosshairSize, bounds.center + Vector3.up * crosshairSize);
+        }
+    }
 }

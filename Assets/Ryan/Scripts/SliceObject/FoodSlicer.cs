@@ -32,6 +32,8 @@ public class FoodSlicer : MonoBehaviour
 
     [Header("Slicing Mechanics")]
     [SerializeField] private SlicePhase[] slicePhases;
+    [Tooltip("Delay before the first guideline appears (seconds)")]
+    [SerializeField] private float initialGuidelineDelay = 0.5f;
 
     [Header("Slice Validation Tolerances")]
     [Tooltip("Toleransi jarak menyamping kursor dengan garis potong.")]
@@ -92,7 +94,8 @@ public class FoodSlicer : MonoBehaviour
         {
             if (slicePhases[i].sliceLine != null)
             {
-                slicePhases[i].sliceLine.gameObject.SetActive(i == 0);
+                // Always disable initially, we will delay the first one
+                slicePhases[i].sliceLine.gameObject.SetActive(false);
                 slicePhases[i].sliceLine.fillAmount = 1f;
             }
 
@@ -128,6 +131,21 @@ public class FoodSlicer : MonoBehaviour
             {
                 src.SetActive(true);
             }
+        }
+
+        if (slicePhases.Length > 0 && slicePhases[0].sliceLine != null)
+        {
+            StartCoroutine(DelayShowFirstGuideline());
+        }
+    }
+
+    private IEnumerator DelayShowFirstGuideline()
+    {
+        yield return new WaitForSeconds(initialGuidelineDelay);
+        // Ensure we are still on the first phase before activating
+        if (currentPhaseIndex == 0 && slicePhases.Length > 0 && slicePhases[0].sliceLine != null)
+        {
+            slicePhases[0].sliceLine.gameObject.SetActive(true);
         }
     }
 
@@ -401,11 +419,43 @@ public class FoodSlicer : MonoBehaviour
     //Delay before notifying manager
     private IEnumerator DelayNextGameState()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.25f);
 
         if (SlicingManager.instance != null)
         {
             SlicingManager.instance.BahanSelesaiDipotong();
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (slicePhases == null) return;
+
+        Gizmos.color = Color.cyan;
+        foreach (var phase in slicePhases)
+        {
+            if (phase != null && phase.sliceLine != null)
+            {
+                RectTransform rectT = phase.sliceLine.rectTransform;
+                Vector3 linePos = rectT.position;
+                
+                float worldHeight = rectT.rect.height * rectT.lossyScale.y;
+                // The current script checks perpDistanceTolerance * 1.5f as the half-width
+                float actualWidth = perpDistanceTolerance * 1.5f * 2f; 
+
+                // Draw a box rotated to match the line
+                Matrix4x4 rotationMatrix = Matrix4x4.TRS(linePos, rectT.rotation, Vector3.one);
+                
+                // Save the old matrix
+                Matrix4x4 oldMatrix = Gizmos.matrix;
+                Gizmos.matrix = rotationMatrix;
+                
+                // Draw the bounding box
+                Gizmos.DrawWireCube(Vector3.zero, new Vector3(actualWidth, worldHeight, 0.1f));
+                
+                // Restore the old matrix
+                Gizmos.matrix = oldMatrix;
+            }
         }
     }
 }

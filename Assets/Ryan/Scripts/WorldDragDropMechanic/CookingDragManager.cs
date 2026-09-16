@@ -17,8 +17,8 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
     [Tooltip("Daftar bahan makanan (Prefab atau objek di dalam Scene yang nonaktif)")]
     public GameObject[] sequentialIngredients;
     public IngredientDropCutscene dropCutscene;
-    [Tooltip("Target area wajan (Harus memiliki Collider2D)")]
-    public Collider2D targetDropArea;
+    [Tooltip("Target area wajan")]
+    public Transform targetDropArea;
 
     [Header("Global Events")]
     public UnityEvent OnStepCompleted;

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,23 +12,29 @@ public class StirManager : MonoBehaviour, ICookingPhase
     [Tooltip("Spoon Object")]
     [SerializeField] private Transform spoonTransform;
 
-    [Header("Orbit Settings")]
-    [Tooltip("Seberapa dekat jarak orbit sendok ke pinggiran panci")]
-    public float orbitMultiplier = 0.75f;
-    private Vector2 dynamicOrbitRadii;
+    [Header("Shuffle Settings")]
+    [Tooltip("Seberapa jauh bahan bisa bergerak dari pusat panci saat diaduk")]
+    public float panBoundaryMultiplier = 0.75f;
+    private Dictionary<Transform, Vector3> ingredientTargets = new Dictionary<Transform, Vector3>();
+    private List<Vector3> originalPositions = new List<Vector3>();
+    private bool initializedPositions = false;
 
     [Header("Visuals to Toggle")]
     [SerializeField] private float ingredientSpeedMultiplier = 0.5f;
     [SerializeField] private GameObject[] stirVisuals;
 
     [Header("Phase Specific Visuals")]
-    [SerializeField] private Sprite[] phaseCookingStages;
+    [SerializeField] private LayeredCookingStage[] phaseCookingStages;
+
+    [Header("Animation")]
+    [SerializeField] private Animator spoonAnimator;
+    private float stirTimeout = 0.15f;
+    private float lastStirTime = -1f;
 
     [Header("Progress")]
     [SerializeField] private Image progressBarFill;
     [SerializeField] private float completionDelay = 1.0f;
 
-    private float currentOrbitAngle = 0f;
 
     // Mengambil PUSAT WAJAN secara visual (akurat dari gambar kuah)
     private Vector3 GetTruePanCenter()
@@ -60,27 +67,14 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
     private void Start()
     {
-        if (spoonTransform != null)
-        {
-            Vector3 center = GetTruePanCenter();
-            Vector3 offset = spoonTransform.position - center;
-
-            CalculateDynamicOrbit();
-
-            float normalizedX = dynamicOrbitRadii.x != 0f ? offset.x / dynamicOrbitRadii.x : 0f;
-            float normalizedY = dynamicOrbitRadii.y != 0f ? offset.y / dynamicOrbitRadii.y : 0f;
-            currentOrbitAngle = Mathf.Atan2(normalizedY, normalizedX) * Mathf.Rad2Deg;
-        }
-    }
-
-    private void CalculateDynamicOrbit()
-    {
-        Vector2 extents = GetTruePanExtents();
-        dynamicOrbitRadii = new Vector2(extents.x * orbitMultiplier, extents.y * orbitMultiplier);
+        // Setup logic can go here if needed in the future
     }
 
     public void StartPhase()
     {
+        initializedPositions = false;
+        originalPositions.Clear();
+        ingredientTargets.Clear();
         SetVisualsActive(true);
     }
 
@@ -103,7 +97,16 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
         if (isActive && CookingVisualController.Instance != null && phaseCookingStages != null && phaseCookingStages.Length > 0)
         {
-            CookingVisualController.Instance.SetTransitionSprites(phaseCookingStages);
+            CookingVisualController.Instance.SetLayeredTransitionStages(phaseCookingStages);
+        }
+    }
+
+    private void Update()
+    {
+        if (spoonAnimator != null)
+        {
+            bool isActivelyStirring = Time.time - lastStirTime < stirTimeout;
+            spoonAnimator.SetBool("isStirring", isActivelyStirring);
         }
     }
 
@@ -132,35 +135,21 @@ public class StirManager : MonoBehaviour, ICookingPhase
     {
         Vector3 panCenter = GetTruePanCenter();
         Vector2 extents = GetTruePanExtents();
-        
-        // Hitung rasio oval sejati wajan
-        float squash = extents.x != 0 ? extents.y / extents.x : 1f;
 
-        if (spoonTransform != null)
-        {
-            currentOrbitAngle += angleDelta;
-            float rad = currentOrbitAngle * Mathf.Deg2Rad;
-
-            CalculateDynamicOrbit();
-
-            // Gerak Elips Sendok
-            float newX = Mathf.Cos(rad) * dynamicOrbitRadii.x;
-            float newY = Mathf.Sin(rad) * dynamicOrbitRadii.y;
-            spoonTransform.position = panCenter + new Vector3(newX, newY, 0);
-
-            // Rotasi Dinamis Sendok
-            // Rotasi dinamis dimatikan agar sprite sendok tidak terbalik dan mempertahankan perspektif 2D-nya
-            // float spoonOrientAngle = currentOrbitAngle - 90f; 
-            // spoonTransform.rotation = Quaternion.Euler(0, 0, spoonOrientAngle);
-        }
+        // Catat waktu stir terakhir untuk memicu animasi
+        lastStirTime = Time.time;
 
         if (CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
         {
             Transform rawContainer = CookingVisualController.Instance.rawIngredientsContainer;
 
-            float angleRad = angleDelta * ingredientSpeedMultiplier * Mathf.Deg2Rad;
-            float cos = Mathf.Cos(angleRad);
-            float sin = Mathf.Sin(angleRad);
+            if (!initializedPositions)
+            {
+                InitializePositions(rawContainer);
+            }
+
+            // Seberapa cepat bahan bergerak bergeser berdasarkan kecepatan putaran adukan (angleDelta)
+            float moveAmount = Mathf.Abs(angleDelta) * ingredientSpeedMultiplier * 0.005f;
 
             foreach (Transform rootItem in rawContainer)
             {
@@ -168,49 +157,63 @@ public class StirManager : MonoBehaviour, ICookingPhase
                 {
                     foreach (Transform piece in rootItem)
                     {
-                        ApplyOvalOrbit(piece, panCenter, cos, sin, squash, angleDelta * ingredientSpeedMultiplier);
+                        ProcessShuffle(piece, moveAmount);
                     }
                 }
                 else
                 {
-                    ApplyOvalOrbit(rootItem, panCenter, cos, sin, squash, angleDelta * ingredientSpeedMultiplier);
+                    ProcessShuffle(rootItem, moveAmount);
                 }
             }
         }
     }
 
-    private void ApplyOvalOrbit(Transform target, Vector3 panCenter, float cos, float sin, float squash, float spinAngle)
+    private void InitializePositions(Transform rawContainer)
     {
-        Vector3 localPos = target.position - panCenter;
-        
-        // Cegah error matematika (NaN) jika objek kebetulan berada persis di titik 0,0,0
-        if (localPos.sqrMagnitude < 0.001f) 
+        foreach (Transform rootItem in rawContainer)
         {
-            return;
+            if (rootItem.childCount > 0)
+            {
+                foreach (Transform piece in rootItem)
+                {
+                    originalPositions.Add(piece.position);
+                }
+            }
+            else
+            {
+                originalPositions.Add(rootItem.position);
+            }
+        }
+        initializedPositions = true;
+    }
+
+    private void ProcessShuffle(Transform piece, float moveAmount)
+    {
+        // Jika piece belum punya target tujuan, berikan target baru secara acak
+        if (!ingredientTargets.ContainsKey(piece))
+        {
+            AssignNewTarget(piece);
         }
 
-        float unSquashedY = squash != 0 ? localPos.y / squash : localPos.y;
-        
-        // Simpan radius asli untuk mencegah objek terlempar keluar dari wajan (floating-point drift)
-        float originalRadius = Mathf.Sqrt(localPos.x * localPos.x + unSquashedY * unSquashedY);
+        Vector3 targetPos = ingredientTargets[piece];
 
-        float rotX = localPos.x * cos - unSquashedY * sin;
-        float rotY = localPos.x * sin + unSquashedY * cos;
-        
-        // Normalisasi dan aplikasikan kembali radius asli agar tetap di jalur orbit
-        float currentRadius = Mathf.Sqrt(rotX * rotX + rotY * rotY);
-        if (currentRadius > 0.0001f)
+        // Pindahkan piece secara mulus ke arah targetnya
+        piece.position = Vector3.MoveTowards(piece.position, targetPos, moveAmount);
+
+        // Jika piece sudah sangat dekat dengan targetnya, beri target baru lagi agar dia terus bergerak / "shuffle"
+        if (Vector3.Distance(piece.position, targetPos) < 0.1f)
         {
-            rotX = (rotX / currentRadius) * originalRadius;
-            rotY = (rotY / currentRadius) * originalRadius;
+            AssignNewTarget(piece);
         }
+    }
 
-        float newY = rotY * squash;
+    private void AssignNewTarget(Transform piece)
+    {
+        if (originalPositions.Count == 0) return;
         
-        target.position = panCenter + new Vector3(rotX, newY, -0.1f);
-        
-        // Rotasi pada sumbu sendiri (spin) dihilangkan agar bahan makanan tidak terlihat berputar-putar seperti gasing
-        // target.Rotate(Vector3.forward, spinAngle); 
+        // Pilih satu tempat duduk acak dari daftar posisi awal
+        int randomIndex = Random.Range(0, originalPositions.Count);
+        ingredientTargets[piece] = originalPositions[randomIndex];
     }
 
     private void HandleStirProgress(float progress)
@@ -230,6 +233,7 @@ public class StirManager : MonoBehaviour, ICookingPhase
     private IEnumerator DelayedTransition()
     {
         yield return new WaitForSeconds(completionDelay);
+        SetVisualsActive(false);
         if (CookingManager.instance != null) CookingManager.instance.NextStep();
     }
 }
