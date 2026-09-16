@@ -4,7 +4,6 @@ public class BubbleTrap : MonoBehaviour
 {
     [Header("Bubble Settings")]
     public int damage = 1;
-    public float duration = 2f;
 
     private Player trappedPlayer;
 
@@ -17,11 +16,6 @@ public class BubbleTrap : MonoBehaviour
             trappedPlayer.TakeDamage(damage);
             trappedPlayer.SetBubbleTrapped(true);
         }
-    }
-
-    private void Start()
-    {
-        Destroy(gameObject, duration);
     }
 
     private void OnDestroy()
