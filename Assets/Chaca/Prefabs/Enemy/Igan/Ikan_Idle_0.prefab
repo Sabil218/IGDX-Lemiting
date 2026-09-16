@@ -120,17 +120,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b605401f50dd09b4b907d9355f8e6437, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHearts: 3
-  currentHearts: 3
+  maxHearts: 1
+  currentHearts: 1
   damage: 1
   animator: {fileID: 1156399060645230426}
   battleManager: {fileID: 0}
   player: {fileID: 0}
-  fadeDuration: 1
-  dropItemPrefab: {fileID: 0}
+  fadeDuration: 0.25
+  dropItemPrefabs:
+  - {fileID: 250603646198813530, guid: 30272266b22091740ad0e1e5abddbf7d, type: 3}
   dropHeight: 0.5
+  dropSpread: 0.35
+  dropVelocity: 2
+  dropGravity: 3
+  singleDropForwardVelocity: 1.5
   bubblePrefab: {fileID: 5600785016766296875, guid: ad8a3956b99f95c44b231c7ec836c4be, type: 3}
-  attackDelay: 0.5
 --- !u!61 &4009961617000390407
 BoxCollider2D:
   m_ObjectHideFlags: 0

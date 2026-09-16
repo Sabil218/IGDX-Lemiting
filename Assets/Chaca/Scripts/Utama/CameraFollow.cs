@@ -2,8 +2,14 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
+    [Header("Target")]
     public Transform target;
+
+    [Header("Follow")]
     public float speed = 5f;
+
+    [Header("Camera Bounds")]
+    public BoxCollider2D cameraBounds;
 
     private Vector3 offset;
     private bool isFollowing;
@@ -26,8 +32,42 @@ public class CameraFollow : MonoBehaviour
         if (!isFollowing)
             return;
 
+        float targetX =
+            target.position.x + offset.x;
+
+        if (cameraBounds != null)
+        {
+            Camera cam = GetComponent<Camera>();
+
+            if (cam != null && cam.orthographic)
+            {
+                float halfWidth =
+                    cam.orthographicSize * cam.aspect;
+
+                float minX =
+                    cameraBounds.bounds.min.x + halfWidth;
+
+                float maxX =
+                    cameraBounds.bounds.max.x - halfWidth;
+
+                targetX = Mathf.Clamp(
+                    targetX,
+                    minX,
+                    maxX
+                );
+            }
+            else
+            {
+                targetX = Mathf.Clamp(
+                    targetX,
+                    cameraBounds.bounds.min.x,
+                    cameraBounds.bounds.max.x
+                );
+            }
+        }
+
         Vector3 targetPosition = new Vector3(
-            target.position.x + offset.x,
+            targetX,
             transform.position.y,
             transform.position.z
         );

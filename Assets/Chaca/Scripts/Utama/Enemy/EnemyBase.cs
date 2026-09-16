@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public abstract class EnemyBase : MonoBehaviour, IDamageable
@@ -18,24 +19,34 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public float fadeDuration = 1f;
 
     [Header("Item Drop")]
-    public GameObject dropItemPrefab;
-    public float dropHeight = 0.5f;
+    public GameObject[] dropItemPrefabs;
+    public float dropHeight = 0.1f;
+    public float dropSpread = 0.35f;
+    public float dropVelocity = 2f;
+    public float dropGravity = 3f;
 
     protected bool isDead;
     protected bool isAttacking;
 
-    public bool IsDead => isDead;
-    public bool IsAttacking => isAttacking;
+    public bool IsDead
+    {
+        get { return isDead; }
+    }
 
     protected virtual void Awake()
     {
         currentHearts = maxHearts;
+
+        isDead = false;
+        isAttacking = false;
 
         if (animator == null)
         {
             animator = GetComponent<Animator>();
         }
     }
+
+    public abstract void Attack();
 
     public virtual void TakeDamage(int amount)
     {
@@ -44,29 +55,11 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         currentHearts -= amount;
 
-        if (currentHearts < 0)
-        {
-            currentHearts = 0;
-        }
-
         if (currentHearts <= 0)
         {
+            currentHearts = 0;
             Die();
-            return;
         }
-
-        TriggerHurt();
-    }
-
-    protected virtual void TriggerHurt()
-    {
-        if (animator == null)
-            return;
-
-        if (!HasParameter("Hurt"))
-            return;
-
-        animator.SetTrigger("Hurt");
     }
 
     protected virtual void Die()
@@ -77,64 +70,190 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         isDead = true;
         isAttacking = false;
 
-        DropItem();
-
-        Collider2D[] colliders =
-            GetComponentsInChildren<Collider2D>();
-
-        foreach (Collider2D col in colliders)
-        {
-            if (col != null)
-            {
-                col.enabled = false;
-            }
-        }
-
         if (animator != null)
         {
             animator.enabled = false;
+        }
+
+        StartCoroutine(FadeOut());
+    }
+
+    private IEnumerator FadeOut()
+    {
+        SpriteRenderer[] sprites =
+            GetComponentsInChildren<SpriteRenderer>();
+
+        Color[] originalColors =
+            new Color[sprites.Length];
+
+        for (int i = 0; i < sprites.Length; i++)
+        {
+            if (sprites[i] != null)
+            {
+                originalColors[i] =
+                    sprites[i].color;
+            }
+        }
+
+        DropItems();
+
+        float elapsed = 0f;
+
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            float progress =
+                Mathf.Clamp01(
+                    elapsed / fadeDuration
+                );
+
+            float alpha =
+                Mathf.Lerp(
+                    1f,
+                    0f,
+                    progress
+                );
+
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                if (sprites[i] == null)
+                    continue;
+
+                Color color =
+                    originalColors[i];
+
+                color.a =
+                    originalColors[i].a * alpha;
+
+                sprites[i].color = color;
+            }
+
+            yield return null;
+        }
+
+        for (int i = 0; i < sprites.Length; i++)
+        {
+            if (sprites[i] == null)
+                continue;
+
+            Color color =
+                originalColors[i];
+
+            color.a = 0f;
+
+            sprites[i].color = color;
         }
 
         if (battleManager != null)
         {
             battleManager.EnemyDefeated();
         }
+
+        Destroy(gameObject);
     }
 
-    protected virtual void DropItem()
+    protected virtual void DropItems()
     {
-        if (dropItemPrefab == null)
+        if (dropItemPrefabs == null)
             return;
 
-        Vector3 spawnPosition =
-            transform.position +
-            Vector3.up * dropHeight;
+        if (dropItemPrefabs.Length == 0)
+            return;
 
-        Instantiate(
-            dropItemPrefab,
-            spawnPosition,
-            Quaternion.identity
-        );
-    }
+        SpriteRenderer spriteRenderer =
+            GetComponentInChildren<SpriteRenderer>();
 
-    protected bool HasParameter(string parameterName)
-    {
-        if (animator == null)
-            return false;
+        Vector3 centerPosition =
+            transform.position;
 
-        foreach (
-            AnimatorControllerParameter parameter
-            in animator.parameters
-        )
+        if (spriteRenderer != null)
         {
-            if (parameter.name == parameterName)
-            {
-                return true;
-            }
+            centerPosition =
+                spriteRenderer.bounds.center;
         }
 
-        return false;
+        centerPosition.y += dropHeight;
+
+        int itemCount =
+            dropItemPrefabs.Length;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            if (dropItemPrefabs[i] == null)
+                continue;
+
+            float horizontalOffset = 0f;
+
+            if (itemCount == 1)
+            {
+                horizontalOffset = 0f;
+            }
+            else if (itemCount == 2)
+            {
+                if (i == 0)
+                {
+                    horizontalOffset = -dropSpread;
+                }
+                else
+                {
+                    horizontalOffset = dropSpread;
+                }
+            }
+            else
+            {
+                horizontalOffset =
+                    Random.Range(
+                        -dropSpread,
+                        dropSpread
+                    );
+            }
+
+            SpawnDropItem(
+                centerPosition,
+                horizontalOffset,
+                dropItemPrefabs[i]
+            );
+        }
     }
 
-    public abstract void Attack();
+    private void SpawnDropItem(
+        Vector3 centerPosition,
+        float horizontalOffset,
+        GameObject itemPrefab
+    )
+    {
+        Vector3 spawnPosition =
+            centerPosition +
+            new Vector3(
+                horizontalOffset,
+                0f,
+                0f
+            );
+
+        GameObject item =
+            Instantiate(
+                itemPrefab,
+                spawnPosition,
+                Quaternion.identity
+            );
+
+        Rigidbody2D rb =
+            item.GetComponent<Rigidbody2D>();
+
+        if (rb != null)
+        {
+            rb.gravityScale =
+                dropGravity;
+
+            float horizontalVelocity =
+                horizontalOffset * 2f;
+
+            rb.velocity =
+                new Vector2(
+                    horizontalVelocity,
+                    dropVelocity
+                );
+        }
+    }
 }

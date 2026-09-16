@@ -10,35 +10,41 @@ public class QuizManager : MonoBehaviour
     public Transform spawnPoint;
 
     private List<GameObject> availableQuiz = new List<GameObject>();
-
     private GameObject currentQuiz;
+
+    private bool quizActive;
 
     private void Awake()
     {
         availableQuiz.AddRange(quizPrefabs);
-    }
-
-    private void Start()
-    {
-        SpawnRandomQuiz();
+        quizActive = false;
     }
 
     public void SpawnRandomQuiz()
     {
-        if (availableQuiz.Count == 0)
+        if (quizActive)
         {
-            Debug.Log("Semua quiz sudah dipakai.");
             return;
         }
 
-        if (currentQuiz != null)
+        if (availableQuiz.Count == 0)
         {
-            Destroy(currentQuiz);
+            return;
         }
 
-        int randomIndex = Random.Range(0, availableQuiz.Count);
+        int randomIndex = Random.Range(
+            0,
+            availableQuiz.Count
+        );
 
-        GameObject quizPrefab = availableQuiz[randomIndex];
+        GameObject quizPrefab =
+            availableQuiz[randomIndex];
+
+        if (quizPrefab == null)
+        {
+            availableQuiz.RemoveAt(randomIndex);
+            return;
+        }
 
         currentQuiz = Instantiate(
             quizPrefab,
@@ -47,8 +53,9 @@ public class QuizManager : MonoBehaviour
             spawnPoint
         );
 
-        // Hapus quiz dari daftar agar tidak muncul lagi
         availableQuiz.RemoveAt(randomIndex);
+
+        quizActive = true;
     }
 
     public void RemoveQuiz()
@@ -58,6 +65,19 @@ public class QuizManager : MonoBehaviour
             Destroy(currentQuiz);
             currentQuiz = null;
         }
+
+        quizActive = false;
+    }
+
+    public void StopQuiz()
+    {
+        if (currentQuiz != null)
+        {
+            Destroy(currentQuiz);
+            currentQuiz = null;
+        }
+
+        quizActive = false;
     }
 
     public bool HasQuizRemaining()
@@ -65,9 +85,22 @@ public class QuizManager : MonoBehaviour
         return availableQuiz.Count > 0;
     }
 
+    public bool IsQuizActive()
+    {
+        return quizActive;
+    }
+
     public void ResetQuiz()
     {
+        if (currentQuiz != null)
+        {
+            Destroy(currentQuiz);
+            currentQuiz = null;
+        }
+
         availableQuiz.Clear();
         availableQuiz.AddRange(quizPrefabs);
+
+        quizActive = false;
     }
 }

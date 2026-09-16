@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 public class Ikan : EnemyBase
@@ -6,35 +5,35 @@ public class Ikan : EnemyBase
     [Header("Bubble Attack")]
     public GameObject bubblePrefab;
 
-    public float attackDelay = 0.5f;
+    private GameObject currentBubble;
 
     public override void Attack()
     {
         if (isDead || isAttacking)
             return;
 
-        StartCoroutine(AttackRoutine());
-    }
-
-    private IEnumerator AttackRoutine()
-    {
         isAttacking = true;
 
         if (animator != null)
         {
             animator.SetTrigger("Attack");
         }
-
-        yield return new WaitForSeconds(attackDelay);
-
-        SpawnBubbleOnPlayer();
-
-        isAttacking = false;
     }
 
-    private void SpawnBubbleOnPlayer()
+    // Animation Event
+    public void SpawnBubbleEvent()
     {
-        if (bubblePrefab == null || player == null)
+        if (isDead)
+            return;
+
+        if (bubblePrefab == null)
+            return;
+
+        if (player == null)
+            return;
+
+        // Kalau masih ada bubble lama, jangan buat baru
+        if (currentBubble != null)
             return;
 
         GameObject bubble = Instantiate(
@@ -43,12 +42,29 @@ public class Ikan : EnemyBase
             Quaternion.identity
         );
 
-        BubbleTrap bubbleTrap = bubble.GetComponent<BubbleTrap>();
-        Player playerScript = player.GetComponent<Player>();
+        currentBubble = bubble;
+
+        BubbleTrap bubbleTrap =
+            bubble.GetComponent<BubbleTrap>();
+
+        Player playerScript =
+            player.GetComponent<Player>();
 
         if (bubbleTrap != null && playerScript != null)
         {
             bubbleTrap.SetPlayer(playerScript);
         }
+    }
+
+    // Animation Event
+    public void ReleaseBubbleEvent()
+    {
+        if (currentBubble != null)
+        {
+            Destroy(currentBubble);
+            currentBubble = null;
+        }
+
+        isAttacking = false;
     }
 }
