@@ -143,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca34e0dfa53842a419f6284923e023fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  travelTime: 2
+  travelTime: 1
   arcHeight: 3
   throwRotation: -90
   fallRotation: -35
