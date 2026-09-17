@@ -658,15 +658,15 @@ MonoBehaviour:
     - {fileID: 3667224241985822346}
     - {fileID: 6785821593226136201}
     ejectedFragment: {fileID: 2035981573429155294}
-    knockbackDirection: {x: -2, y: 0}
+    knockbackDirection: {x: -4, y: 0}
     tiltAngle: 10
     moveNonEjected: 1
-    secondaryKnockbackDirection: {x: -0.5, y: -0.1}
+    secondaryKnockbackDirection: {x: 0.25, y: -0.3}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.2
-  knockbackDistance: 0.5
-  knockbackDuration: 0.15
+  perpDistanceTolerance: 0.25
+  knockbackDistance: 0.2
+  knockbackDuration: 0.2
 --- !u!114 &2106615739267096990
 MonoBehaviour:
   m_ObjectHideFlags: 0

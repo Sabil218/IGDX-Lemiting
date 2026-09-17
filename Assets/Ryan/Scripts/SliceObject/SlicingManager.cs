@@ -2,64 +2,74 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(IngredientTransitionManager))]
 public class SlicingManager : MonoBehaviour, ICookingPhase
 {
     public static SlicingManager instance { get; private set; }
 
     [Header("Slicing References")]
     [Tooltip("Daftar bahan yang akan dipotong secara berurutan")]
-    public GameObject[] bahanSlicing;
+    [SerializeField] private GameObject[] bahanSlicing;
+    
+    [Tooltip("Titik kemunculan bahan yang akan dipotong. Jika kosong, akan menggunakan posisi objek ini.")]
+    [SerializeField] private Transform spawnPoint;
     
     private int currentSlicingIndex = 0;
     
     //Prefab reference for cleanup
     private GameObject currentSpawnedBahan;
 
+    private IngredientTransitionManager transitionManager;
+
     [Header("Events")]
     [Tooltip("Event ini akan dipanggil saat seluruh bahan selesai dipotong.")]
-    public UnityEvent onSlicingComplete;
+    [SerializeField] private UnityEvent onSlicingComplete;
 
     //Initialize Singleton
     private void Awake()
     {
         instance = this;
+        transitionManager = GetComponent<IngredientTransitionManager>();
     }
 
     //Start Slicing Phase
     public void StartPhase()
     {
-        currentSlicingIndex = 0;
-        TampilkanBahanPotong();
-    }
+        if (currentSpawnedBahan != null && currentSpawnedBahan.scene.IsValid()) return; 
 
-    //Show Current Ingredient
-    private void TampilkanBahanPotong()
-    {
+        currentSlicingIndex = 0;
+        
         foreach (GameObject bahan in bahanSlicing)
         {
             if (bahan != null && bahan.scene.IsValid()) bahan.SetActive(false);
         }
 
-        if (currentSpawnedBahan != null)
-        {
-            Destroy(currentSpawnedBahan);
-            currentSpawnedBahan = null;
-        }
+        SpawnAndTransitionNext(null);
+    }
 
+    private void SpawnAndTransitionNext(GameObject oldIngredient)
+    {
         if (currentSlicingIndex < bahanSlicing.Length)
         {
             GameObject bahanAktif = bahanSlicing[currentSlicingIndex];
+            GameObject newIngredientObj = null;
+
             if (bahanAktif != null)
             {
+                Transform targetSpawn = spawnPoint != null ? spawnPoint : transform;
+                
                 if (!bahanAktif.scene.IsValid())
                 {
-                    currentSpawnedBahan = Instantiate(bahanAktif, transform.position, transform.rotation, transform);
-                    currentSpawnedBahan.SetActive(true);
+                    newIngredientObj = Instantiate(bahanAktif, targetSpawn.position, targetSpawn.rotation, transform);
                 }
                 else
                 {
-                    bahanAktif.SetActive(true);
+                    newIngredientObj = bahanAktif;
                 }
+                
+                currentSpawnedBahan = newIngredientObj;
+
+                transitionManager.TransitionToNextIngredient(oldIngredient, newIngredientObj, targetSpawn.position);
             }
         }
     }
@@ -73,17 +83,22 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
     //Delay before next ingredient
     private IEnumerator JedaGantiBahanSlicing()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.35f);
+        
+        GameObject oldIngredient = currentSpawnedBahan;
         currentSlicingIndex++;
 
         if (currentSlicingIndex < bahanSlicing.Length)
         {
-            TampilkanBahanPotong();
+            SpawnAndTransitionNext(oldIngredient);
         }
         else
         {
-
-            onSlicingComplete?.Invoke();
+            // Transition out the last ingredient before completing the phase
+            Transform targetSpawn = spawnPoint != null ? spawnPoint : transform;
+            transitionManager.TransitionToNextIngredient(oldIngredient, null, targetSpawn.position, () => {
+                onSlicingComplete?.Invoke();
+            });
         }
     }
 }
