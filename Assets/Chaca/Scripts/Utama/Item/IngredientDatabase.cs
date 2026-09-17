@@ -15,8 +15,13 @@ public class IngredientDatabase : ScriptableObject
 
     public bool IsCollected(string ingredientName)
     {
+        string searchName = ingredientName.Trim();
+
         IngredientData ingredient = ingredients.Find(
-            x => x.ingredientName == ingredientName
+            x => x.ingredientName.Trim().Equals(
+                searchName,
+                System.StringComparison.OrdinalIgnoreCase
+            )
         );
 
         if (ingredient == null)
@@ -27,8 +32,13 @@ public class IngredientDatabase : ScriptableObject
 
     public void CollectIngredient(string ingredientName)
     {
+        string searchName = ingredientName.Trim();
+
         IngredientData ingredient = ingredients.Find(
-            x => x.ingredientName == ingredientName
+            x => x.ingredientName.Trim().Equals(
+                searchName,
+                System.StringComparison.OrdinalIgnoreCase
+            )
         );
 
         if (ingredient != null)

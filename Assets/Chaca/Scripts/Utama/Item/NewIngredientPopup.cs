@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class NewIngredientPopup : MonoBehaviour
 {
@@ -28,17 +29,58 @@ public class NewIngredientPopup : MonoBehaviour
     private RectTransform basket2Rect;
     private RectTransform basket3Rect;
 
-    private void Start()
+    private void Awake()
     {
         basket1Rect = basket1.GetComponent<RectTransform>();
         basket2Rect = basket2.GetComponent<RectTransform>();
         basket3Rect = basket3.GetComponent<RectTransform>();
 
-        popupPanel.SetActive(false);
+        HidePopup();
+    }
 
-        basket1.SetActive(false);
-        basket2.SetActive(false);
-        basket3.SetActive(false);
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(
+        Scene scene,
+        LoadSceneMode mode)
+    {
+        HidePopup();
+    }
+
+    private void HidePopup()
+    {
+        if (popupPanel != null)
+            popupPanel.SetActive(false);
+
+        if (basket1 != null)
+            basket1.SetActive(false);
+
+        if (basket2 != null)
+            basket2.SetActive(false);
+
+        if (basket3 != null)
+            basket3.SetActive(false);
+
+        if (basket1Rect != null)
+            basket1Rect.localScale = Vector3.zero;
+
+        if (basket2Rect != null)
+            basket2Rect.localScale = Vector3.zero;
+
+        if (basket3Rect != null)
+            basket3Rect.localScale = Vector3.zero;
+
+        StopAllCoroutines();
+
+        Time.timeScale = 1f;
     }
 
     public void ShowAfterItemDisappear(
@@ -86,15 +128,30 @@ public class NewIngredientPopup : MonoBehaviour
 
     private IEnumerator BasketSequence()
     {
-        yield return StartCoroutine(BounceBasket(basket1, basket1Rect));
+        yield return StartCoroutine(
+            BounceBasket(
+                basket1,
+                basket1Rect
+            )
+        );
 
         yield return new WaitForSecondsRealtime(basketDelay);
 
-        yield return StartCoroutine(BounceBasket(basket2, basket2Rect));
+        yield return StartCoroutine(
+            BounceBasket(
+                basket2,
+                basket2Rect
+            )
+        );
 
         yield return new WaitForSecondsRealtime(basketDelay);
 
-        yield return StartCoroutine(BounceBasket(basket3, basket3Rect));
+        yield return StartCoroutine(
+            BounceBasket(
+                basket3,
+                basket3Rect
+            )
+        );
     }
 
     private IEnumerator BounceBasket(
@@ -160,7 +217,8 @@ public class NewIngredientPopup : MonoBehaviour
                 }
             }
 
-            basketRect.localScale = Vector3.one * scale;
+            basketRect.localScale =
+                Vector3.one * scale;
 
             yield return null;
         }
@@ -181,12 +239,6 @@ public class NewIngredientPopup : MonoBehaviour
 
     public void ClosePopup()
     {
-        popupPanel.SetActive(false);
-
-        basket1.SetActive(false);
-        basket2.SetActive(false);
-        basket3.SetActive(false);
-
-        Time.timeScale = 1f;
+        HidePopup();
     }
 }

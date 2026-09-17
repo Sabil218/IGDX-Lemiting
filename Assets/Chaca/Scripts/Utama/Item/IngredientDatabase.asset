@@ -16,14 +16,14 @@ MonoBehaviour:
   - ingredientName: Ayam_Merah
     collected: 0
   - ingredientName: Bawang Merah
-    collected: 1
+    collected: 0
   - ingredientName: Bawang Putih
-    collected: 1
+    collected: 0
   - ingredientName: Igan
     collected: 0
   - ingredientName: Jahe
-    collected: 1
+    collected: 0
   - ingredientName: Kunyit
-    collected: 1
+    collected: 0
   - ingredientName: Serai
     collected: 0
