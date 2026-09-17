@@ -187,7 +187,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
             if (itemCount == 1)
             {
-                horizontalOffset = 0f;
+                horizontalOffset = -0.8f;
             }
             else if (itemCount == 2)
             {
@@ -212,7 +212,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             SpawnDropItem(
                 centerPosition,
                 horizontalOffset,
-                dropItemPrefabs[i]
+                dropItemPrefabs[i],
+                itemCount == 1
             );
         }
     }
@@ -220,7 +221,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     private void SpawnDropItem(
         Vector3 centerPosition,
         float horizontalOffset,
-        GameObject itemPrefab
+        GameObject itemPrefab,
+        bool singleItem
     )
     {
         Vector3 spawnPosition =
@@ -246,8 +248,17 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             rb.gravityScale =
                 dropGravity;
 
-            float horizontalVelocity =
-                horizontalOffset * 2f;
+            float horizontalVelocity;
+
+            if (singleItem)
+            {
+                horizontalVelocity = -3.2f;
+            }
+            else
+            {
+                horizontalVelocity =
+                    horizontalOffset * 2f;
+            }
 
             rb.velocity =
                 new Vector2(

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bb87138d62db9e48aa455756a7c6391, type: 3}
+  m_Name: IngredientDatabase
+  m_EditorClassIdentifier: 
+  ingredients:
+  - ingredientName: Ayam_Merah
+    collected: 0
+  - ingredientName: Bawang Merah
+    collected: 0
+  - ingredientName: Bawang Putih
+    collected: 0
+  - ingredientName: Igan
+    collected: 0
+  - ingredientName: Jahe
+    collected: 0
+  - ingredientName: Kunyit
+    collected: 0
+  - ingredientName: Serai
+    collected: 0

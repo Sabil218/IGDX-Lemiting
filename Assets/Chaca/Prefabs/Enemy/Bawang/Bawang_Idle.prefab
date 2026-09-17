@@ -174,13 +174,12 @@ MonoBehaviour:
   player: {fileID: 0}
   fadeDuration: 0.25
   dropItemPrefabs:
-  - {fileID: 2842242789577590011, guid: cb81540bd578a274ba56fda247ab330f, type: 3}
-  - {fileID: 3490963927237716696, guid: b7c203741835cce45932ec45af2581ee, type: 3}
+  - {fileID: 1316689203086545232, guid: b7c203741835cce45932ec45af2581ee, type: 3}
+  - {fileID: 4157744158089025177, guid: cb81540bd578a274ba56fda247ab330f, type: 3}
   dropHeight: 0
   dropSpread: 0.35
   dropVelocity: 2
   dropGravity: 3
-  singleDropForwardVelocity: 1.5
   projectilePrefab: {fileID: 3534371067087831754, guid: 0fe407a89ff9b3646bc5df561f202d64, type: 3}
   projectileSpawnPoint: {fileID: 7559014071810974620}
   projectileDelay: 0.4

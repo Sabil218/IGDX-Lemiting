@@ -10,9 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 970984461596185688}
   - component: {fileID: 3881293769085244345}
-  - component: {fileID: 4031640864497187123}
-  - component: {fileID: 3048015783679486559}
   - component: {fileID: 7638507311725467071}
+  - component: {fileID: 6086122408684559628}
   m_Layer: 0
   m_Name: Ayam_Merah
   m_TagString: Untagged
@@ -88,8 +87,35 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!58 &4031640864497187123
-CircleCollider2D:
+--- !u!50 &7638507311725467071
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4171739885907018165}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 4
+--- !u!61 &6086122408684559628
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -120,48 +146,19 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.024133474, y: 0}
+  m_Offset: {x: 0.34404254, y: 0.07992917}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 3, y: 3}
+    newSize: {x: 3, y: 3}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
   serializedVersion: 2
-  m_Radius: 1.4069191
---- !u!114 &3048015783679486559
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4171739885907018165}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04d8f59e38adab34ea145108e21aeb66, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!50 &7638507311725467071
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4171739885907018165}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 4
+  m_Size: {x: 2.311915, y: 0.921841}
+  m_EdgeRadius: 0
 --- !u!1 &4525075984375477302
 GameObject:
   m_ObjectHideFlags: 0
@@ -172,6 +169,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7482342747238735229}
   - component: {fileID: 4330057794954125167}
+  - component: {fileID: 6133664522691979832}
   m_Layer: 0
   m_Name: PickupTrigger
   m_TagString: Untagged
@@ -226,7 +224,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.02757883, y: -0.07239765}
+  m_Offset: {x: 0.021074295, y: 0.02490747}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -237,5 +235,20 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 3.0409374, y: 2.2893758}
+  m_Size: {x: 2.2763968, y: 1.2844543}
   m_EdgeRadius: 0
+--- !u!114 &6133664522691979832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4525075984375477302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04d8f59e38adab34ea145108e21aeb66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ingredientName: Ayam
+  ingredientUISprite: {fileID: 21300000, guid: 0accafc922899e046864f78a89e62296, type: 3}
+  ingredientDatabase: {fileID: 11400000, guid: 1fbe162abfe74074fbb7056c97a1d64e, type: 2}
