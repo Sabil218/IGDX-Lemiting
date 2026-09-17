@@ -38,9 +38,13 @@ public class PlatingCutscene : MonoBehaviour
 
     [Header("Exit Animation")]
     public Vector3 wajanExitOffset = new Vector3(10f, 0f, 0f);
-    public float exitDuration = 0.5f;
-    public Vector3 plateTargetScale = new Vector3(1.5f, 1.5f, 1f);
-    public float zoomDuration = 0.6f;
+    public float exitDuration = 1.5f; // Diperlambat dari 0.5 ke 1.5
+    public Vector3 plateTargetScale = new Vector3(2f, 2f, 1f); // Diperbesar
+    
+    [Tooltip("Opsional: Titik tengah layar tempat piring akan bergerak saat dizoom. Kosongkan jika piring tidak perlu pindah.")]
+    public Transform plateCenterPoint;
+    
+    public float zoomDuration = 1.0f; // Diperlambat sedikit agar lebih dramatis
 
     public Transform wajanMeetPoint;
     public Transform piringMeetPoint;
@@ -142,6 +146,10 @@ public class PlatingCutscene : MonoBehaviour
         Vector3 wajanExitTarget = wajanExitStart + wajanExitOffset;
 
         Vector3 piringStartScale = piring != null ? piring.localScale : Vector3.one;
+        Vector3 piringStartPos = piring != null ? piring.position : Vector3.zero;
+        
+        // Tentukan target posisi piring (jika plateCenterPoint ada, bergerak ke situ, jika tidak, tetap di tempat)
+        Vector3 piringTargetPos = plateCenterPoint != null ? plateCenterPoint.position : piringStartPos;
 
         while (elapsed < exitDuration || elapsed < zoomDuration)
         {
@@ -157,12 +165,17 @@ public class PlatingCutscene : MonoBehaviour
             {
                 float tZoom = Mathf.SmoothStep(0, 1, elapsed / zoomDuration);
                 piring.localScale = Vector3.Lerp(piringStartScale, plateTargetScale, tZoom);
+                piring.position = Vector3.Lerp(piringStartPos, piringTargetPos, tZoom);
             }
 
             yield return null;
         }
 
         if (wajan != null) wajan.position = wajanExitTarget;
-        if (piring != null) piring.localScale = plateTargetScale;
+        if (piring != null) 
+        {
+            piring.localScale = plateTargetScale;
+            piring.position = piringTargetPos;
+        }
     }
 }

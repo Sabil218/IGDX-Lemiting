@@ -18,12 +18,11 @@ public class WorldObjectDraggable : MonoBehaviour
     public bool isCookingIngredient = false;
 
     [Header("Drag Visuals")]
-    [SerializeField] private int draggingSortingOrder = 10;
+    [Tooltip("Berapa banyak Sorting Order akan dinaikkan saat didrag agar tampil di depan")]
+    [SerializeField] private int sortingOrderBoost = 10;
 
-    private SpriteRenderer spriteRenderer;
-    private UnityEngine.Rendering.SortingGroup sortingGroup;
+    private SpriteRenderer[] allRenderers;
     private Collider2D myCollider;
-    private int originalSortingOrder;
     private Vector3 originalPosition;
 
     public bool isConsumed { get; private set; }
@@ -40,24 +39,22 @@ public class WorldObjectDraggable : MonoBehaviour
     private void Awake()
     {
         mainCamera = Camera.main;
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        sortingGroup = GetComponent<UnityEngine.Rendering.SortingGroup>();
         myCollider = GetComponent<Collider2D>();
         
-        if (sortingGroup != null) 
-            originalSortingOrder = sortingGroup.sortingOrder;
-        else if (spriteRenderer != null) 
-            originalSortingOrder = spriteRenderer.sortingOrder;
-
         if (rootToDrag == null) rootToDrag = transform; // Auto assign if empty
+        
+        // Ambil SEMUA SpriteRenderer di objek ini dan anak-anaknya
+        allRenderers = rootToDrag.GetComponentsInChildren<SpriteRenderer>(true);
     }
 
-    private void SetSortingOrder(int order)
+    private void BoostSortingOrder(bool boost)
     {
-        if (sortingGroup != null)
-            sortingGroup.sortingOrder = order;
-        else if (spriteRenderer != null)
-            spriteRenderer.sortingOrder = order;
+        int offset = boost ? sortingOrderBoost : -sortingOrderBoost;
+        foreach (var sr in allRenderers)
+        {
+            if (sr != null)
+                sr.sortingOrder += offset;
+        }
     }
 
     //Handle drag state
@@ -93,14 +90,14 @@ public class WorldObjectDraggable : MonoBehaviour
                 zOffset = rootToDrag.position.z;
                 dragOffset = rootToDrag.position - (Vector3)mouseWorldPos;
 
-                SetSortingOrder(draggingSortingOrder);
+                BoostSortingOrder(true);
             }
         }
 
         if (Input.GetMouseButtonUp(0) && isDragging)
         {
             isDragging = false;
-            SetSortingOrder(originalSortingOrder);
+            BoostSortingOrder(false);
 
             Collider2D[] hits = Physics2D.OverlapPointAll(transform.position);
             bool droppedInZone = false;
