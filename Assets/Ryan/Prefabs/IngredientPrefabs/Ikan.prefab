@@ -271,7 +271,7 @@ Transform:
   m_GameObject: {fileID: 1873960097989795352}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -368,7 +368,7 @@ MonoBehaviour:
     secondaryKnockbackDirection: {x: -0.2, y: -0.1}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.2
+  perpDistanceTolerance: 0.3
   knockbackDistance: 0.5
   knockbackDuration: 0.15
 --- !u!114 &6989568034494043665

@@ -1,4 +1,15 @@
 using UnityEngine;
+using System.Collections.Generic;
+
+[System.Serializable]
+public struct LayeredCookingStage
+{
+    [Tooltip("GameObject Base/Bawah yang sudah diletakkan di scene (misal: kuah merah). Disable saja di Inspector, script akan mengatur alpha-nya.")]
+    public SpriteRenderer baseRenderer;
+    
+    [Tooltip("GameObject Front/Atas yang sudah diletakkan di scene (misal: ayam matang). Disable saja di Inspector, script akan mengatur alpha-nya.")]
+    public SpriteRenderer frontRenderer;
+}
 
 public class CookingVisualController : MonoBehaviour
 {
@@ -8,36 +19,58 @@ public class CookingVisualController : MonoBehaviour
     [Tooltip("Wajan utama (SpriteRenderer atau Image)")]
     public SpriteRenderer panRenderer;
     
-    [Tooltip("SpriteRenderer untuk makanan dasar (Base) di dalam wajan")]
+    [Tooltip("SpriteRenderer untuk makanan dasar (Base) di dalam wajan (Layer 1)")]
     public SpriteRenderer foodContentRenderer;
 
-    [Tooltip("SpriteRenderer untuk overlay makanan (Transisi saat diaduk)")]
-    public SpriteRenderer overlayRenderer;
+    [Tooltip("SpriteRenderer untuk overlay makanan depan (Layer 3)")]
+    public SpriteRenderer frontOverlayRenderer;
 
     [Tooltip("Container isi makanan mentah yang jatuh dari fase sebelumnya (akan memudar saat diaduk)")]
     public Transform rawIngredientsContainer;
 
-    [Header("Visual States")]
-    [Tooltip("Daftar sprite untuk makanan (0=Mentah, 1=Layu, 2=Matang, dll)")]
-    public Sprite[] cookingStages;
+    [Header("Visual States (Diisi dari StirManager saat runtime)")]
+    [Tooltip("Daftar stage yang sudah di-setup. Tidak perlu diisi manual di sini.")]
+    public LayeredCookingStage[] layeredCookingStages;
 
-    public void SetTransitionSprites(Sprite[] newStages)
+    // Daftar renderer yang aktif untuk transisi (langsung dari scene, bukan clone)
+    private List<SpriteRenderer> activeBaseRenderers = new List<SpriteRenderer>();
+    private List<SpriteRenderer> activeFrontRenderers = new List<SpriteRenderer>();
+
+    /// <summary>
+    /// Dipanggil oleh StirManager saat fase stir dimulai.
+    /// Mengambil referensi langsung ke GameObject yang sudah ada di scene.
+    /// TIDAK ada Instantiate — hanya enable dan atur alpha.
+    /// </summary>
+    public void SetLayeredTransitionStages(LayeredCookingStage[] newStages)
     {
-        cookingStages = newStages;
-        
-        // Reset Alpha agar kuah dasar tidak langsung nge-pop/muncul seketika di awal fase mengaduk
-        if (foodContentRenderer != null)
+        layeredCookingStages = newStages;
+        activeBaseRenderers.Clear();
+        activeFrontRenderers.Clear();
+
+        for (int i = 0; i < newStages.Length; i++)
         {
-            Color c = foodContentRenderer.color;
-            c.a = 0f;
-            foodContentRenderer.color = c;
+            // Base renderer
+            if (newStages[i].baseRenderer != null)
+            {
+                SpriteRenderer bsr = newStages[i].baseRenderer;
+                bsr.gameObject.SetActive(true);   // Aktifkan GameObject
+                bsr.enabled = true;
+                bsr.color = new Color(1f, 1f, 1f, 0f); // Mulai dari transparan
+                activeBaseRenderers.Add(bsr);
+            }
+
+            // Front renderer
+            if (newStages[i].frontRenderer != null)
+            {
+                SpriteRenderer fsr = newStages[i].frontRenderer;
+                fsr.gameObject.SetActive(true);   // Aktifkan GameObject
+                fsr.enabled = true;
+                fsr.color = new Color(1f, 1f, 1f, 0f); // Mulai dari transparan
+                activeFrontRenderers.Add(fsr);
+            }
         }
-        if (overlayRenderer != null)
-        {
-            Color c = overlayRenderer.color;
-            c.a = 0f;
-            overlayRenderer.color = c;
-        }
+
+        Debug.Log($"[CookingVisual] SetLayeredTransitionStages: {newStages.Length} stages, base={activeBaseRenderers.Count}, front={activeFrontRenderers.Count}");
     }
 
     private void Awake()
@@ -53,79 +86,102 @@ public class CookingVisualController : MonoBehaviour
     }
 
     // Set sprite langsung tanpa transisi (Biasanya dipanggil dari luar saat mulai fase baru)
-    public void SetFoodVisual(Sprite newFoodSprite)
+    public void SetFoodVisual(int stageIndex)
     {
-        if (foodContentRenderer != null && newFoodSprite != null)
-        {
-            foodContentRenderer.sprite = newFoodSprite;
-            
-            Color c = foodContentRenderer.color;
-            c.a = 1f;
-            foodContentRenderer.color = c;
+        if (layeredCookingStages == null || stageIndex < 0 || stageIndex >= layeredCookingStages.Length) return;
 
-            // Sembunyikan overlay
-            if (overlayRenderer != null)
-            {
-                Color overlayC = overlayRenderer.color;
-                overlayC.a = 0f;
-                overlayRenderer.color = overlayC;
-            }
+        // Sembunyikan semua stage dulu
+        for (int i = 0; i < layeredCookingStages.Length; i++)
+        {
+            if (layeredCookingStages[i].baseRenderer != null)
+                layeredCookingStages[i].baseRenderer.color = new Color(1f, 1f, 1f, 0f);
+            if (layeredCookingStages[i].frontRenderer != null)
+                layeredCookingStages[i].frontRenderer.color = new Color(1f, 1f, 1f, 0f);
+        }
+
+        // Tampilkan stage yang diminta
+        if (layeredCookingStages[stageIndex].baseRenderer != null)
+        {
+            layeredCookingStages[stageIndex].baseRenderer.gameObject.SetActive(true);
+            layeredCookingStages[stageIndex].baseRenderer.color = Color.white;
+        }
+        if (layeredCookingStages[stageIndex].frontRenderer != null)
+        {
+            layeredCookingStages[stageIndex].frontRenderer.gameObject.SetActive(true);
+            layeredCookingStages[stageIndex].frontRenderer.color = Color.white;
         }
     }
 
     public void SetCookingStage(int stageIndex)
     {
-        if (cookingStages != null && stageIndex >= 0 && stageIndex < cookingStages.Length)
-        {
-            SetFoodVisual(cookingStages[stageIndex]);
-        }
+        SetFoodVisual(stageIndex);
     }
 
-    // --- LOGIKA PROGRESS ADUKAN (Dipindahkan dari StirManager) ---
+    // --- LOGIKA PROGRESS ADUKAN ---
     public void UpdateStirProgress(float progress)
     {
-        // 1. Pudarkan bahan mentah yang jatuh
+        int stageCount = layeredCookingStages != null ? layeredCookingStages.Length : 0;
+        
+        // Scaled progress membagi 0->1 menjadi beberapa transisi berurutan.
+        // Cth 2 stage: 0->1 (Raw ke Stage 0), 1->2 (Stage 0 ke Stage 1)
+        float scaledProgress = progress * (stageCount == 0 ? 1 : stageCount); 
+
+        // 1. Pudarkan bahan mentah yang jatuh (Hanya aktif selama interval pertama 0 -> 1)
         if (rawIngredientsContainer != null)
         {
+            float rawAlpha = 1f;
+            if (scaledProgress < 1f) rawAlpha = 1f - scaledProgress;
+            else rawAlpha = 0f;
+
             foreach (SpriteRenderer sr in rawIngredientsContainer.GetComponentsInChildren<SpriteRenderer>())
             {
                 Color colorA = sr.color; 
-                colorA.a = 1f - progress; 
+                colorA.a = rawAlpha; 
                 sr.color = colorA;
             }
         }
 
-        // 2. Transisi Sprite Makanan di wajan (Base ke Overlay)
-        if (foodContentRenderer != null && overlayRenderer != null && cookingStages != null && cookingStages.Length > 0)
+        if (stageCount == 0) return;
+
+        // 2. Transisi stage makanan secara berurutan
+        for (int i = 0; i < stageCount; i++)
         {
-            int stageCount = cookingStages.Length;
-            if (stageCount > 1)
+            float targetAlpha = 0f;
+            float peakProgress = i + 1f;
+
+            if (scaledProgress >= i && scaledProgress <= peakProgress)
             {
-                // Hitung index fase saat ini berdasarkan progress
-                float scaledProgress = progress * (stageCount - 1);
-                int stageIndex = Mathf.Clamp(Mathf.FloorToInt(scaledProgress), 0, stageCount - 1);
-                int nextStageIndex = Mathf.Clamp(stageIndex + 1, 0, stageCount - 1);
-                
-                // Hitung sisa pecahan untuk alpha transisi (0.0 ke 1.0 di antara dua stage)
-                float localStageProgress = scaledProgress - stageIndex;
-
-                foodContentRenderer.sprite = cookingStages[stageIndex];
-                overlayRenderer.sprite = cookingStages[nextStageIndex];
-
-                // Base memudar masuk di awal (0% -> 100% pada 25% progress pertama), Overlay memudar masuk perlahan
-                Color colorBase = foodContentRenderer.color; 
-                colorBase.a = Mathf.Clamp01(progress * 4f); 
-                foodContentRenderer.color = colorBase;
-
-                Color colorOverlay = overlayRenderer.color; 
-                colorOverlay.a = localStageProgress; 
-                overlayRenderer.color = colorOverlay;
+                // Sedang Fade IN
+                targetAlpha = scaledProgress - i;
+            }
+            else if (scaledProgress > peakProgress && scaledProgress <= peakProgress + 1f)
+            {
+                // Sedang Fade OUT ke stage berikutnya
+                targetAlpha = 1f - (scaledProgress - peakProgress);
             }
             else
             {
-                // Jika hanya ada 1 gambar, tidak ada transisi
-                foodContentRenderer.sprite = cookingStages[0]; 
-                overlayRenderer.sprite = cookingStages[0];
+                targetAlpha = 0f;
+            }
+
+            // Pastikan stage terakhir tetap full opacity di akhir
+            if (i == stageCount - 1 && progress >= 1f)
+            {
+                targetAlpha = 1f;
+            }
+
+            if (i < activeBaseRenderers.Count && activeBaseRenderers[i] != null)
+            {
+                Color c = activeBaseRenderers[i].color;
+                c.a = targetAlpha;
+                activeBaseRenderers[i].color = c;
+            }
+
+            if (i < activeFrontRenderers.Count && activeFrontRenderers[i] != null)
+            {
+                Color c = activeFrontRenderers[i].color;
+                c.a = targetAlpha;
+                activeFrontRenderers[i].color = c;
             }
         }
     }

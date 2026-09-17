@@ -118,7 +118,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 35, y: -5.7489033}
+  m_AnchoredPosition: {x: 60, y: -5.7489033}
   m_SizeDelta: {x: 21, y: 492.21}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2065780966621885292
@@ -380,7 +380,7 @@ Transform:
   m_GameObject: {fileID: 4868564562864005814}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.04, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -459,8 +459,8 @@ MonoBehaviour:
     resultObjects:
     - {fileID: 9136900093939310221}
     ejectedFragment: {fileID: 1080488540996780398}
-    knockbackDirection: {x: 5, y: 0}
-    tiltAngle: 10
+    knockbackDirection: {x: 5, y: 0.25}
+    tiltAngle: 20
     moveNonEjected: 0
     secondaryKnockbackDirection: {x: -3, y: -0.1}
     secondaryTiltAngle: -5
@@ -471,13 +471,13 @@ MonoBehaviour:
     - {fileID: 3143434505397561387}
     - {fileID: 2746431142234546940}
     ejectedFragment: {fileID: 9100762688531695331}
-    knockbackDirection: {x: -4, y: 0}
+    knockbackDirection: {x: -4, y: 0.25}
     tiltAngle: 10
     moveNonEjected: 1
     secondaryKnockbackDirection: {x: -0.2, y: -0.1}
-    secondaryTiltAngle: -3
+    secondaryTiltAngle: 5
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.2
+  perpDistanceTolerance: 0.3
   knockbackDistance: 0.75
   knockbackDuration: 0.2
 --- !u!114 &6806122418018392024

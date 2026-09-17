@@ -12,6 +12,10 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         public string targetWord;
         [Tooltip("Objek bahan makanan")]
         public Transform ingredientObject;
+        [Tooltip("Matikan rotasi saat jatuh (Cocok untuk Ayam/Daging agar tidak terbalik)")]
+        public bool disableRotation;
+        [Tooltip("Jatuhkan persis di tengah wajan tanpa sebaran acak (Cocok untuk bahan utama).")]
+        public bool dropInCenter;
     }
 
     [Header("Spelling Rounds")]
@@ -22,14 +26,26 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     [Header("Spelling Cutscene")]
     [Tooltip("Referensi skrip cutscene")]
     public IngredientDropCutscene dropCutscene;
-    [Tooltip("Target area wajan (Harus memiliki Collider2D)")]
-    public Collider2D targetDropArea;
+    [Tooltip("Target area wajan (Pusat jatuhnya bahan)")]
+    public Transform targetDropArea;
     [Tooltip("Container tempat potongan akan dijatuhkan (Di dalam Wajan Global)")]
     public Transform panContentContainer;
 
     [Header("Events")]
     [Tooltip("Event ini dipanggil saat seluruh ronde ejaan tamat.")]
     public UnityEngine.Events.UnityEvent onSpellingComplete;
+
+    [Tooltip("Event ini dipanggil saat bawang akan mulai jatuh (Gunakan untuk ganti BG/Kamera).")]
+    public UnityEngine.Events.UnityEvent onDropCutsceneStart;
+
+    [Tooltip("Event ini dipanggil setelah cutscene jatuh selesai (Gunakan untuk mematikan kamera wajan/balik ke papan).")]
+    public UnityEngine.Events.UnityEvent onDropCutsceneEnd;
+
+    [Header("Transition Timings")]
+    [Tooltip("Waktu tunggu menikmati bahan di wajan sesudah jatuh, sebelum kamera kembali.")]
+    public float postDropWaitDelay = 0.8f;
+    [Tooltip("Waktu tunggu bergeraknya kamera dari wajan kembali ke papan sebelum soal berikutnya muncul.")]
+    public float cameraReturnDelay = 1.0f;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject AnswerArea;
@@ -45,6 +61,8 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     private string currentWord;
     private Transform currentIngredient;
+    private bool currentDisableRotation;
+    private bool currentDropInCenter;
 
     // Store Spelled Word
     private BoardDropZone mainWordDisplay;
@@ -106,14 +124,16 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                 }
             }
 
-            LoadRound(round.targetWord, activeIngredient);
+            LoadRound(round.targetWord, activeIngredient, round.disableRotation, round.dropInCenter);
         }
     }
 
-    public void LoadRound(string word, Transform ingredient)
+    public void LoadRound(string word, Transform ingredient, bool disableRotation, bool dropInCenter = false)
     {
         currentWord = word.ToUpper();
         currentIngredient = ingredient;
+        currentDisableRotation = disableRotation;
+        currentDropInCenter = dropInCenter;
 
         ClearContainer(targetBoardContainer);
         ClearLetterPool();
@@ -244,7 +264,10 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
         if (dropCutscene != null && currentIngredient != null && targetDropArea != null)
         {
-            dropCutscene.Play(currentIngredient, targetDropArea, panContentContainer, () =>
+            // Trigger event untuk pindah kamera & background
+            onDropCutsceneStart?.Invoke();
+
+            dropCutscene.Play(currentIngredient, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
             {
                 // Bagian ini sekarang hanya memanggil next round tanpa menghapus objek bahan!
                 AdvanceSpellingRound();
@@ -257,6 +280,22 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    private System.Collections.IEnumerator WaitForCameraBlend()
+    {
+        if (Camera.main != null)
+        {
+            Cinemachine.CinemachineBrain brain = Camera.main.GetComponent<Cinemachine.CinemachineBrain>();
+            if (brain != null)
+            {
+                yield return null; 
+                while (brain.IsBlending)
+                {
+                    yield return null;
+                }
+            }
+        }
+    }
+
     private void AdvanceSpellingRound()
     {
         currentSpellingIndex++;
@@ -265,10 +304,22 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     private System.Collections.IEnumerator ResetCameraAndNextRound()
     {
-        yield return new WaitForSeconds(0.8f);
+        // Tunggu bentar setelah jatuhnya selesai (menikmati bahan di wajan)
+        yield return new WaitForSeconds(postDropWaitDelay);
 
         if (currentSpellingIndex < spellingRounds.Length)
         {
+            onDropCutsceneEnd?.Invoke(); // Matikan kamera wajan di sini agar loop kembali ke atas
+
+            // Tunggu otomatis sampai kamera Cinemachine selesai blending kembali ke papan
+            yield return StartCoroutine(WaitForCameraBlend());
+
+            // Tunggu tambahan delay manual jika diperlukan
+            if (cameraReturnDelay > 0f)
+            {
+                yield return new WaitForSeconds(cameraReturnDelay); 
+            }
+
             Canvas canvas = GetComponentInChildren<Canvas>(true);
             if (canvas != null)
             {
@@ -281,6 +332,7 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         }
         else
         {
+            // Do NOT invoke onDropCutsceneEnd so the camera stays locked on the pan
             onSpellingComplete?.Invoke();
         }
     }
