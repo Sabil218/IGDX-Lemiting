@@ -84,6 +84,9 @@ public class AudioManager : MonoBehaviour
     {
         float volume = musicSlider.value;
 
+        PlayerPrefs.SetFloat("MusicVolume", volume);
+        PlayerPrefs.Save();
+
         if (volume <= 0.0001f)
         {
             audioMixer.SetFloat("MusicVolume", -80f);
@@ -97,6 +100,9 @@ public class AudioManager : MonoBehaviour
     public void SetSFXVolume()
     {
         float volume = sfxSlider.value;
+
+        PlayerPrefs.SetFloat("SFXVolume", volume);
+        PlayerPrefs.Save();
 
         if (volume <= 0.0001f)
         {
