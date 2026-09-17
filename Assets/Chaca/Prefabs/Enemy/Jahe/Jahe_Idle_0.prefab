@@ -157,5 +157,13 @@ MonoBehaviour:
   animator: {fileID: 6170296354498949192}
   battleManager: {fileID: 0}
   player: {fileID: 0}
+  fadeDuration: 0.25
+  dropItemPrefabs:
+  - {fileID: 4096280589574269522, guid: 3780739a7afd1514dbbc1fa6a5fb6488, type: 3}
+  - {fileID: 6279636691173737879, guid: 6f108562f167f7646a1ac60a4c2b0fbd, type: 3}
+  dropHeight: 0
+  dropSpread: 0.35
+  dropVelocity: 2
+  dropGravity: 3
   projectilePrefab: {fileID: 4734443043960474252, guid: 1cdbf6b2443635d4d9d19c12bbbae0b0, type: 3}
   projectileSpawnPoint: {fileID: 7038081765722936493}

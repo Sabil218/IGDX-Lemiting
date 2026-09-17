@@ -220,7 +220,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 3.6}
+  m_Offset: {x: -0.26115906, y: 1.9153018}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0}
@@ -231,7 +231,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 7.2, y: 7.2}
+  m_Size: {x: 3.619826, y: 3.2833786}
   m_EdgeRadius: 0
 --- !u!114 &9161187665876184396
 MonoBehaviour:
@@ -251,10 +251,13 @@ MonoBehaviour:
   animator: {fileID: 802667681396234749}
   battleManager: {fileID: 0}
   player: {fileID: 0}
-  fadeDuration: 1
-  dropItemPrefab: {fileID: 1620786023582190230, guid: e9840ca0cb455ee438f77334b13ce6b2, type: 3}
-  dropChance: 1
-  dropPoint: {fileID: 0}
+  fadeDuration: 0.25
+  dropItemPrefabs:
+  - {fileID: 5938408165240260481, guid: e9840ca0cb455ee438f77334b13ce6b2, type: 3}
+  dropHeight: 0.5
+  dropSpread: 0.35
+  dropVelocity: 2
+  dropGravity: 3
   projectilePrefab: {fileID: 5566658933700240316, guid: 0c959392c224ba742b70556fa6b6b8e6, type: 3}
   projectileSpawnPoint: {fileID: 5938881094621750511}
   attackDuration: 1

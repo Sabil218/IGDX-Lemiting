@@ -7,6 +7,7 @@ public class MainMenuUI : MonoBehaviour
     public GameObject optionPanel;
     public GameObject levelSelectPanel;
     public GameObject cutsceneManager;
+    public GameObject creditPanel; // TAMBAHAN
 
     [Header("Pages")]
     public GameObject levelSelectPage;
@@ -42,6 +43,9 @@ public class MainMenuUI : MonoBehaviour
         optionPanel.SetActive(false);
         levelSelectPanel.SetActive(false);
 
+        // TAMBAHAN
+        creditPanel.SetActive(false);
+
         // Kondisi awal halaman
         SetLevelSelectActive();
 
@@ -71,6 +75,23 @@ public class MainMenuUI : MonoBehaviour
     public void CloseOption()
     {
         optionPanel.SetActive(false);
+    }
+
+
+    // =================================
+    // CREDIT
+    // =================================
+
+    public void OpenCredit()
+    {
+        // Buka Credit Panel
+        creditPanel.SetActive(true);
+    }
+
+    public void CloseCredit()
+    {
+        // Tutup Credit Panel
+        creditPanel.SetActive(false);
     }
 
 
