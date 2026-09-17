@@ -31,19 +31,27 @@ public class ItemPickup : MonoBehaviour
         bool alreadyCollected =
             ingredientDatabase.IsCollected(ingredientName);
 
-        if (!alreadyCollected)
-        {
-            ingredientDatabase.CollectIngredient(ingredientName);
+        GameObject item = transform.root.gameObject;
 
-            if (newIngredientPopup != null)
-            {
-                newIngredientPopup.ShowIngredient(
-                    ingredientName,
-                    ingredientUISprite
-                );
-            }
+        if (alreadyCollected)
+        {
+            Destroy(item);
+            return;
         }
 
-        Destroy(transform.root.gameObject);
+        ingredientDatabase.CollectIngredient(ingredientName);
+
+        if (newIngredientPopup != null)
+        {
+            newIngredientPopup.ShowAfterItemDisappear(
+                item,
+                ingredientName,
+                ingredientUISprite
+            );
+        }
+        else
+        {
+            Destroy(item);
+        }
     }
 }
