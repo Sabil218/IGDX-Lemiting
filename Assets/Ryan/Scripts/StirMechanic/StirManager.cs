@@ -35,6 +35,9 @@ public class StirManager : MonoBehaviour, ICookingPhase
     [SerializeField] private Image progressBarFill;
     [SerializeField] private float completionDelay = 1.0f;
 
+    [Header("Camera Transition")]
+    [Tooltip("Virtual Camera untuk phase ini. Biarkan kosong jika tidak pakai kamera khusus.")]
+    public GameObject stirVirtualCamera;
 
     // Mengambil PUSAT WAJAN secara visual (akurat dari gambar kuah)
     private Vector3 GetTruePanCenter()
@@ -72,6 +75,11 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
     public void StartPhase()
     {
+        if (stirVirtualCamera != null)
+        {
+            stirVirtualCamera.SetActive(true);
+        }
+
         initializedPositions = false;
         originalPositions.Clear();
         ingredientTargets.Clear();

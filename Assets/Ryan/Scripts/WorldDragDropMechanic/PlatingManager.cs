@@ -9,34 +9,37 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
     public PlatingCutscene cutscenePlayer;
     
     [Tooltip("Draggable item wajan untuk menghidupkan/mematikan drag")]
-    public IngredientDraggable wajanDraggable;
+    public WorldObjectDraggable wajanDraggable;
     
     [Tooltip("Drop zone piring untuk mendeteksi wajan")]
     public CookingDropZone piringDropZone;
 
-    [Header("Phase Transition")]
-    [Tooltip("Background baru (meja dapur) yang akan ditampilkan")]
-    public GameObject newBackground;
+    [Header("Camera Transition")]
+    [Tooltip("Virtual Camera untuk phase ini. Biarkan kosong jika tidak pakai kamera khusus.")]
+    public GameObject platingVirtualCamera;
 
     [Header("Events")]
     public UnityEvent OnPhaseComplete;
 
     public void StartPhase()
     {
+        // 1. Pindah Kamera (Jika ada)
+        if (platingVirtualCamera != null)
+        {
+            platingVirtualCamera.SetActive(true);
+        }
+
         // [AUTO CLEAR] Mencari otomatis CookedDummy di scene dan mematikannya 
         GameObject autoDummy = GameObject.Find("CookedDummy");
         if (autoDummy != null)
         {
             autoDummy.SetActive(false);
         }
-        
-        if (newBackground != null) newBackground.SetActive(true);
 
         // 2. Setup Cutscene & Nonaktifkan interaksi sementara
         if (cutscenePlayer != null)
         {
             cutscenePlayer.gameObject.SetActive(true);
-            cutscenePlayer.SetupInitialPositions();
         }
         
         if (wajanDraggable != null) wajanDraggable.enabled = false;

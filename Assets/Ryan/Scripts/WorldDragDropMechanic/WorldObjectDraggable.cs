@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
-public class IngredientDraggable : MonoBehaviour
+public class WorldObjectDraggable : MonoBehaviour
 {
     [Header("Hierarchy Options")]
     [Tooltip("Jika diisi, objek ini yang akan pindah posisinya (berguna jika script ada di child). Jika kosong, ia menggerakkan dirinya sendiri.")]
@@ -14,10 +14,14 @@ public class IngredientDraggable : MonoBehaviour
     [Tooltip("Jika true, objek kembali ke posisi awal setelah drop berhasil (tidak di-consume).")]
     public bool returnAfterDrop = false;
 
+    [Tooltip("Centang ini jika ini adalah bahan mentah yang masuk ke wajan (supaya parent-nya pindah ke wajan)")]
+    public bool isCookingIngredient = false;
+
     [Header("Drag Visuals")]
     [SerializeField] private int draggingSortingOrder = 10;
 
     private SpriteRenderer spriteRenderer;
+    private UnityEngine.Rendering.SortingGroup sortingGroup;
     private Collider2D myCollider;
     private int originalSortingOrder;
     private Vector3 originalPosition;
@@ -37,10 +41,23 @@ public class IngredientDraggable : MonoBehaviour
     {
         mainCamera = Camera.main;
         spriteRenderer = GetComponent<SpriteRenderer>();
+        sortingGroup = GetComponent<UnityEngine.Rendering.SortingGroup>();
         myCollider = GetComponent<Collider2D>();
-        if (spriteRenderer != null) originalSortingOrder = spriteRenderer.sortingOrder;
+        
+        if (sortingGroup != null) 
+            originalSortingOrder = sortingGroup.sortingOrder;
+        else if (spriteRenderer != null) 
+            originalSortingOrder = spriteRenderer.sortingOrder;
 
         if (rootToDrag == null) rootToDrag = transform; // Auto assign if empty
+    }
+
+    private void SetSortingOrder(int order)
+    {
+        if (sortingGroup != null)
+            sortingGroup.sortingOrder = order;
+        else if (spriteRenderer != null)
+            spriteRenderer.sortingOrder = order;
     }
 
     //Handle drag state
@@ -76,14 +93,14 @@ public class IngredientDraggable : MonoBehaviour
                 zOffset = rootToDrag.position.z;
                 dragOffset = rootToDrag.position - (Vector3)mouseWorldPos;
 
-                if (spriteRenderer != null) spriteRenderer.sortingOrder = draggingSortingOrder;
+                SetSortingOrder(draggingSortingOrder);
             }
         }
 
         if (Input.GetMouseButtonUp(0) && isDragging)
         {
             isDragging = false;
-            if (spriteRenderer != null) spriteRenderer.sortingOrder = originalSortingOrder;
+            SetSortingOrder(originalSortingOrder);
 
             Collider2D[] hits = Physics2D.OverlapPointAll(transform.position);
             bool droppedInZone = false;
@@ -137,7 +154,7 @@ public class IngredientDraggable : MonoBehaviour
         }
 
         // Jika wajan global aktif, jadikan item ini anak dari wadah bahan mentah
-        if (CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
+        if (isCookingIngredient && CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
         {
             rootToDrag.SetParent(CookingVisualController.Instance.rawIngredientsContainer, true);
             

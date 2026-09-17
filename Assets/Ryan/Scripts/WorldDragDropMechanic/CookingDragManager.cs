@@ -106,7 +106,7 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         }
     }
 
-    private void HandleItemDropped(IngredientDraggable item)
+    private void HandleItemDropped(WorldObjectDraggable item)
     {
         if (spawnSequentially)
         {

@@ -9,14 +9,24 @@ public class PlatingCutscene : MonoBehaviour
     public Transform piring;
 
     [Header("Sprite Swaps")]
+    [Tooltip("Target wajan yang sprite-nya akan diganti")]
     public SpriteRenderer wajanRenderer;
+    [Tooltip("Gambar wajan kosong/kotor setelah makanan dituang")]
     public Sprite wajanKosongSprite;
     
+    [Tooltip("Object-object makanan (seperti Matang/SetengahMatang) di dalam wajan yang harus disembunyikan saat dituang")]
+    public GameObject[] objectsToHideOnDrop;
+
+    [Tooltip("Target piring yang sprite-nya akan diganti")]
     public SpriteRenderer piringRenderer;
+    [Tooltip("Gambar piring yang sudah ada makanannya")]
     public Sprite piringIsiSprite;
 
+    [Tooltip("Object-object yang harus dimunculkan saat dituang (misalnya ServedFood)")]
+    public GameObject[] objectsToShowOnDrop;
+
     [Header("Entry Animation")]
-    public Vector3 wajanStartOffset = new Vector3(10f, 0f, 0f); // Dari kanan
+    public Vector3 wajanStartOffset = new Vector3(-10f, 0f, 0f); // Dari kiri
     public Vector3 piringStartOffset = new Vector3(0f, 8f, 0f); // Dari atas
     public float entryDuration = 0.8f;
 
@@ -32,21 +42,14 @@ public class PlatingCutscene : MonoBehaviour
     public Vector3 plateTargetScale = new Vector3(1.5f, 1.5f, 1f);
     public float zoomDuration = 0.6f;
 
-    private Vector3 wajanDefaultPos;
-    private Vector3 piringDefaultPos;
+    public Transform wajanMeetPoint;
+    public Transform piringMeetPoint;
+
     private Camera mainCamera;
 
     private void Awake()
     {
         mainCamera = Camera.main;
-        if (wajan != null) wajanDefaultPos = wajan.position;
-        if (piring != null) piringDefaultPos = piring.position;
-    }
-
-    public void SetupInitialPositions()
-    {
-        if (wajan != null) wajan.position = wajanDefaultPos + wajanStartOffset;
-        if (piring != null) piring.position = piringDefaultPos + piringStartOffset;
     }
 
     public void PlayEntryAnimation(Action onComplete)
@@ -56,36 +59,37 @@ public class PlatingCutscene : MonoBehaviour
 
     private IEnumerator EntrySequence(Action onComplete)
     {
-        Vector3 wStart = wajan != null ? wajan.position : Vector3.zero;
-        Vector3 pStart = piring != null ? piring.position : Vector3.zero;
-
-        // 1. Wajan masuk duluan
-        if (wajan != null)
+        if (wajan == null || piring == null || wajanMeetPoint == null || piringMeetPoint == null)
         {
-            float elapsed = 0f;
-            while (elapsed < entryDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0, 1, elapsed / entryDuration);
-                wajan.position = Vector3.Lerp(wStart, wajanDefaultPos, t);
-                yield return null;
-            }
-            wajan.position = wajanDefaultPos;
+            Debug.LogWarning("Referensi Wajan, Piring, atau Meet Point ada yang kosong di PlatingCutscene!");
+            yield break;
         }
 
-        // 2. Piring menyusul masuk
-        if (piring != null)
+        // 1. Set posisi awal (di luar layar / offset berdasarkan titik kumpul)
+        Vector3 wTarget = wajanMeetPoint.position;
+        Vector3 pTarget = piringMeetPoint.position;
+
+        Vector3 wStart = wTarget + wajanStartOffset;
+        Vector3 pStart = pTarget + piringStartOffset;
+
+        wajan.position = wStart;
+        piring.position = pStart;
+
+        // 2. Animasi meluncur dari luar layar ke titik kumpul
+        float elapsed = 0f;
+        while (elapsed < entryDuration)
         {
-            float elapsed = 0f;
-            while (elapsed < entryDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0, 1, elapsed / entryDuration);
-                piring.position = Vector3.Lerp(pStart, piringDefaultPos, t);
-                yield return null;
-            }
-            piring.position = piringDefaultPos;
+            elapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / entryDuration);
+
+            wajan.position = Vector3.Lerp(wStart, wTarget, t);
+            piring.position = Vector3.Lerp(pStart, pTarget, t);
+
+            yield return null;
         }
+
+        wajan.position = wTarget;
+        piring.position = pTarget;
 
         onComplete?.Invoke();
     }
@@ -99,7 +103,6 @@ public class PlatingCutscene : MonoBehaviour
     {
         // 1. Play Effects
         if (dropEffect != null) dropEffect.Play();
-        // StartCoroutine(ScreenShake()); // Dinonaktifkan (terlalu bergetar)
 
         // 2. Sprite Swaps
         if (wajanRenderer != null && wajanKosongSprite != null)
@@ -107,6 +110,22 @@ public class PlatingCutscene : MonoBehaviour
 
         if (piringRenderer != null && piringIsiSprite != null)
             piringRenderer.sprite = piringIsiSprite;
+            
+        if (objectsToHideOnDrop != null)
+        {
+            foreach(var obj in objectsToHideOnDrop)
+            {
+                if (obj != null) obj.SetActive(false);
+            }
+        }
+
+        if (objectsToShowOnDrop != null)
+        {
+            foreach(var obj in objectsToShowOnDrop)
+            {
+                if (obj != null) obj.SetActive(true);
+            }
+        }
 
         yield return new WaitForSeconds(postDropDelay);
 
@@ -116,67 +135,34 @@ public class PlatingCutscene : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private IEnumerator ScreenShake()
-    {
-        if (mainCamera == null) yield break;
-
-        Vector3 originalCamPos = mainCamera.transform.position;
-        float elapsed = 0f;
-
-        while (elapsed < shakeDuration)
-        {
-            float x = UnityEngine.Random.Range(-1f, 1f) * shakeIntensity;
-            float y = UnityEngine.Random.Range(-1f, 1f) * shakeIntensity;
-
-            mainCamera.transform.position = originalCamPos + new Vector3(x, y, 0);
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        mainCamera.transform.position = originalCamPos;
-    }
-
     private IEnumerator ExitSequence()
     {
         float elapsed = 0f;
+        Vector3 wajanExitStart = wajan != null ? wajan.position : Vector3.zero;
+        Vector3 wajanExitTarget = wajanExitStart + wajanExitOffset;
 
-        // Wajan keluar frame
-        if (wajan != null)
+        Vector3 piringStartScale = piring != null ? piring.localScale : Vector3.one;
+
+        while (elapsed < exitDuration || elapsed < zoomDuration)
         {
-            Vector3 wStart = wajan.position;
-            Vector3 wExit = wajan.position + wajanExitOffset;
+            elapsed += Time.deltaTime;
 
-            while (elapsed < exitDuration)
+            if (elapsed < exitDuration && wajan != null)
             {
-                elapsed += Time.deltaTime;
-                wajan.position = Vector3.Lerp(wStart, wExit, Mathf.SmoothStep(0, 1, elapsed / exitDuration));
-                yield return null;
-            }
-            wajan.gameObject.SetActive(false);
-        }
-
-        // Piring Zoom & ke Tengah
-        elapsed = 0f;
-        if (piring != null)
-        {
-            Vector3 pStartPos = piring.position;
-            Vector3 pStartScale = piring.localScale;
-            Vector3 pTargetPos = Vector3.zero; // Tengah layar
-
-            while (elapsed < zoomDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0, 1, elapsed / zoomDuration);
-
-                piring.position = Vector3.Lerp(pStartPos, pTargetPos, t);
-                piring.localScale = Vector3.Lerp(pStartScale, plateTargetScale, t);
-
-                yield return null;
+                float tWajan = Mathf.SmoothStep(0, 1, elapsed / exitDuration);
+                wajan.position = Vector3.Lerp(wajanExitStart, wajanExitTarget, tWajan);
             }
 
-            piring.position = pTargetPos;
-            piring.localScale = plateTargetScale;
+            if (elapsed < zoomDuration && piring != null)
+            {
+                float tZoom = Mathf.SmoothStep(0, 1, elapsed / zoomDuration);
+                piring.localScale = Vector3.Lerp(piringStartScale, plateTargetScale, tZoom);
+            }
+
+            yield return null;
         }
+
+        if (wajan != null) wajan.position = wajanExitTarget;
+        if (piring != null) piring.localScale = plateTargetScale;
     }
 }
