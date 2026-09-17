@@ -6,6 +6,13 @@ using System.Collections;
 public class SceneLoader : MonoBehaviour
 {
     // =========================================
+    // SINGLETON
+    // =========================================
+
+    public static SceneLoader instance;
+
+
+    // =========================================
     // LOADING SCREEN
     // =========================================
 
@@ -14,64 +21,53 @@ public class SceneLoader : MonoBehaviour
     public Slider loadingBar;
 
     [Header("Loading Settings")]
-    public float loadingDuration = 3f;
+    public float loadingDuration = 1f;
 
     private float previousAudioVolume;
+    private bool isLoading = false;
 
 
     // =========================================
-    // LOAD SCENE - UNTUK LEVEL SELECT
-    // =========================================
-    // Contoh:
-    // LoadScene("Level1")
-    // LoadScene("Level4")
-    // LoadScene("Level5")
+    // AWAKE
     // =========================================
 
-    public void LoadScene(string sceneName)
+    private void Awake()
     {
-        Debug.Log("Mencoba membuka scene: " + sceneName);
-
-        if (string.IsNullOrEmpty(sceneName))
+        // Mencegah SceneLoader menjadi lebih dari satu
+        if (instance != null && instance != this)
         {
-            Debug.LogError("Nama Scene belum diisi!");
+            Destroy(gameObject);
             return;
         }
 
-        SceneManager.LoadScene(sceneName);
+        instance = this;
+
+        // SceneLoader tetap hidup ketika pindah scene
+        DontDestroyOnLoad(gameObject);
+
+        // Loading panel disembunyikan saat awal
+        if (loadingPanel != null)
+        {
+            loadingPanel.SetActive(false);
+        }
     }
 
 
     // =========================================
-    // LOAD SCENE DENGAN LOADING SCREEN
-    // =========================================
-    // Bisa digunakan untuk Level Select
-    // maupun Next Level jika nanti dibutuhkan.
+    // LOAD SCENE
+    // SEMUA PERPINDAHAN SCENE
     // =========================================
 
-    public void LoadSceneWithLoading(string sceneName)
+    public void LoadScene(string sceneName)
     {
+        if (isLoading)
+            return;
+
         if (string.IsNullOrEmpty(sceneName))
         {
             Debug.LogError("Nama Scene belum diisi!");
             return;
         }
-
-        if (loadingPanel != null)
-        {
-            loadingPanel.SetActive(true);
-        }
-
-        if (loadingBar != null)
-        {
-            loadingBar.value = 0f;
-        }
-
-        // Simpan volume sebelum loading
-        previousAudioVolume = AudioListener.volume;
-
-        // Matikan suara selama loading
-        AudioListener.volume = 0f;
 
         StartCoroutine(LoadSceneAsync(sceneName));
     }
@@ -83,18 +79,54 @@ public class SceneLoader : MonoBehaviour
 
     private IEnumerator LoadSceneAsync(string sceneName)
     {
+        isLoading = true;
+
         Debug.Log("Loading scene: " + sceneName);
+
+
+        // =========================================
+        // TAMPILKAN LOADING SCREEN
+        // =========================================
+
+        if (loadingPanel != null)
+        {
+            loadingPanel.SetActive(true);
+        }
+
+        if (loadingBar != null)
+        {
+            loadingBar.value = 0f;
+        }
+
+
+        // =========================================
+        // MATIKAN AUDIO SELAMA LOADING
+        // =========================================
+
+        previousAudioVolume = AudioListener.volume;
+
+        AudioListener.volume = 0f;
+
+
+        // =========================================
+        // LOAD SCENE
+        // =========================================
 
         AsyncOperation operation =
             SceneManager.LoadSceneAsync(sceneName);
 
         operation.allowSceneActivation = false;
 
+
+        // =========================================
+        // ANIMASI LOADING BAR
+        // =========================================
+
         float timer = 0f;
 
         while (timer < loadingDuration)
         {
-            timer += Time.deltaTime;
+            timer += Time.unscaledDeltaTime;
 
             float progress =
                 Mathf.Clamp01(timer / loadingDuration);
@@ -107,45 +139,62 @@ public class SceneLoader : MonoBehaviour
             yield return null;
         }
 
-        if (loadingBar != null)
-        {
-            loadingBar.value = 1f;
-        }
 
-        // Tunggu sampai scene selesai dimuat
+        // =========================================
+        // TUNGGU SCENE SELESAI DIMUAT
+        // =========================================
+
         while (operation.progress < 0.9f)
         {
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.2f);
 
-        // Aktifkan scene baru
+        // Loading bar penuh
+        if (loadingBar != null)
+        {
+            loadingBar.value = 1f;
+        }
+
+        yield return new WaitForSecondsRealtime(0.2f);
+
+
+        // =========================================
+        // KEMBALIKAN AUDIO SEBELUM SCENE AKTIF
+        // =========================================
+
+        AudioListener.volume = previousAudioVolume;
+
+
+        // =========================================
+        // AKTIFKAN SCENE BARU
+        // =========================================
+
         operation.allowSceneActivation = true;
 
         yield return null;
 
-        // Kembalikan volume
-        AudioListener.volume = previousAudioVolume;
+
+        // =========================================
+        // SELESAI
+        // =========================================
+
+        isLoading = false;
     }
 
 
     // =========================================
-    // MAIN MENU - LOGIC LAMA
+    // MAIN MENU
     // =========================================
 
     public void LoadMainMenu()
     {
-        SceneManager.LoadScene("Mainmenu");
+        LoadScene("Mainmenu");
     }
 
 
     // =========================================
-    // LEVEL SELECT - LOGIC LAMA
-    // =========================================
-    // Digunakan dari Win Condition.
-    // Mainmenu akan otomatis membuka
-    // Level Select setelah scene dimuat.
+    // LEVEL SELECT
     // =========================================
 
     public void LoadLevelSelect()
@@ -153,7 +202,7 @@ public class SceneLoader : MonoBehaviour
         PlayerPrefs.SetInt("OpenLevelSelect", 1);
         PlayerPrefs.Save();
 
-        SceneManager.LoadScene("Mainmenu");
+        LoadScene("Mainmenu");
     }
 
 
@@ -163,7 +212,7 @@ public class SceneLoader : MonoBehaviour
 
     public void RetryLevel()
     {
-        SceneManager.LoadScene(
+        LoadScene(
             SceneManager.GetActiveScene().name
         );
     }
