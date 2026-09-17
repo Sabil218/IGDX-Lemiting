@@ -134,4 +134,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 9
-  maxLifetime: 5
+  hitDistance: 0.5
+  damage: 1

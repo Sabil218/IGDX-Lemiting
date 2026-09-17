@@ -189,7 +189,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1315314374346776997}
   m_Father: {fileID: 3283421945538617274}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &861182191268472982
@@ -252,3 +253,65 @@ MonoBehaviour:
   ingredientName: Bawang Merah
   ingredientUISprite: {fileID: 21300000, guid: e1f373cb574844b42a466b6c2dc00b28, type: 3}
   ingredientDatabase: {fileID: 11400000, guid: 1fbe162abfe74074fbb7056c97a1d64e, type: 2}
+--- !u!1001 &532201483733085308
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4378239178140220503}
+    m_Modifications:
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8539925987777211811, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_Name
+      value: GlowEffect
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+--- !u!4 &1315314374346776997 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1522829215311793625, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+  m_PrefabInstance: {fileID: 532201483733085308}
+  m_PrefabAsset: {fileID: 0}
