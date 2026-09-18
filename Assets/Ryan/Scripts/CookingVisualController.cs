@@ -32,17 +32,19 @@ public class CookingVisualController : MonoBehaviour
     [Tooltip("Daftar stage yang sudah di-setup. Tidak perlu diisi manual di sini.")]
     public LayeredCookingStage[] layeredCookingStages;
 
-    // Daftar renderer yang aktif untuk transisi (langsung dari scene, bukan clone)
     private List<SpriteRenderer> activeBaseRenderers = new List<SpriteRenderer>();
     private List<SpriteRenderer> activeFrontRenderers = new List<SpriteRenderer>();
 
-    /// <summary>
-    /// Dipanggil oleh StirManager saat fase stir dimulai.
-    /// Mengambil referensi langsung ke GameObject yang sudah ada di scene.
-    /// TIDAK ada Instantiate — hanya enable dan atur alpha.
-    /// </summary>
     public void SetLayeredTransitionStages(LayeredCookingStage[] newStages)
     {
+        // Sembunyikan visual dari fase sebelumnya sebelum ditimpa!
+        foreach (SpriteRenderer r in activeBaseRenderers) {
+            if (r != null) r.color = new Color(1f, 1f, 1f, 0f);
+        }
+        foreach (SpriteRenderer r in activeFrontRenderers) {
+            if (r != null) r.color = new Color(1f, 1f, 1f, 0f);
+        }
+
         layeredCookingStages = newStages;
         activeBaseRenderers.Clear();
         activeFrontRenderers.Clear();
@@ -90,7 +92,6 @@ public class CookingVisualController : MonoBehaviour
     {
         if (layeredCookingStages == null || stageIndex < 0 || stageIndex >= layeredCookingStages.Length) return;
 
-        // Sembunyikan semua stage dulu
         for (int i = 0; i < layeredCookingStages.Length; i++)
         {
             if (layeredCookingStages[i].baseRenderer != null)
@@ -99,7 +100,6 @@ public class CookingVisualController : MonoBehaviour
                 layeredCookingStages[i].frontRenderer.color = new Color(1f, 1f, 1f, 0f);
         }
 
-        // Tampilkan stage yang diminta
         if (layeredCookingStages[stageIndex].baseRenderer != null)
         {
             layeredCookingStages[stageIndex].baseRenderer.gameObject.SetActive(true);
@@ -122,11 +122,8 @@ public class CookingVisualController : MonoBehaviour
     {
         int stageCount = layeredCookingStages != null ? layeredCookingStages.Length : 0;
         
-        // Scaled progress membagi 0->1 menjadi beberapa transisi berurutan.
-        // Cth 2 stage: 0->1 (Raw ke Stage 0), 1->2 (Stage 0 ke Stage 1)
         float scaledProgress = progress * (stageCount == 0 ? 1 : stageCount); 
 
-        // 1. Pudarkan bahan mentah yang jatuh (Hanya aktif selama interval pertama 0 -> 1)
         if (rawIngredientsContainer != null)
         {
             float rawAlpha = 1f;
@@ -143,7 +140,6 @@ public class CookingVisualController : MonoBehaviour
 
         if (stageCount == 0) return;
 
-        // 2. Transisi stage makanan secara berurutan
         for (int i = 0; i < stageCount; i++)
         {
             float targetAlpha = 0f;
@@ -156,7 +152,6 @@ public class CookingVisualController : MonoBehaviour
             }
             else if (scaledProgress > peakProgress && scaledProgress <= peakProgress + 1f)
             {
-                // Sedang Fade OUT ke stage berikutnya
                 targetAlpha = 1f - (scaledProgress - peakProgress);
             }
             else
@@ -164,7 +159,6 @@ public class CookingVisualController : MonoBehaviour
                 targetAlpha = 0f;
             }
 
-            // Pastikan stage terakhir tetap full opacity di akhir
             if (i == stageCount - 1 && progress >= 1f)
             {
                 targetAlpha = 1f;

@@ -46,6 +46,15 @@ public class PlatingCutscene : MonoBehaviour
     
     public float zoomDuration = 1.0f; // Diperlambat sedikit agar lebih dramatis
 
+    [Header("Final Presentation")]
+    [Tooltip("Object yang akan dimunculkan setelah piring selesai di-zoom (teks, background final, dll)")]
+    public GameObject[] finalUIObjects;
+    
+    [Tooltip("Opsional: Jika ingin 'final_alas' meluncur masuk otomatis, masukkan object-nya ke sini")]
+    public Transform finalAlasObject;
+    [Tooltip("Titik tujuan berhentinya final_alas (AlasFinalPos)")]
+    public Transform finalAlasTargetPos;
+
     public Transform wajanMeetPoint;
     public Transform piringMeetPoint;
 
@@ -136,6 +145,15 @@ public class PlatingCutscene : MonoBehaviour
         // 3. Play Exit Animation
         yield return StartCoroutine(ExitSequence());
 
+        // 4. Show Final UI / Objects
+        if (finalUIObjects != null)
+        {
+            foreach(var obj in finalUIObjects)
+            {
+                if (obj != null) obj.SetActive(true);
+            }
+        }
+
         onComplete?.Invoke();
     }
 
@@ -151,6 +169,15 @@ public class PlatingCutscene : MonoBehaviour
         // Tentukan target posisi piring (jika plateCenterPoint ada, bergerak ke situ, jika tidak, tetap di tempat)
         Vector3 piringTargetPos = plateCenterPoint != null ? plateCenterPoint.position : piringStartPos;
 
+        // Setup animasi final_alas jika ada
+        Vector3 alasStartPos = finalAlasObject != null ? finalAlasObject.position : Vector3.zero;
+        Vector3 alasTargetPos = finalAlasTargetPos != null ? finalAlasTargetPos.position : alasStartPos;
+        
+        if (finalAlasObject != null)
+        {
+            finalAlasObject.gameObject.SetActive(true); // Nyalakan alas saat animasi mulai
+        }
+
         while (elapsed < exitDuration || elapsed < zoomDuration)
         {
             elapsed += Time.deltaTime;
@@ -161,11 +188,20 @@ public class PlatingCutscene : MonoBehaviour
                 wajan.position = Vector3.Lerp(wajanExitStart, wajanExitTarget, tWajan);
             }
 
-            if (elapsed < zoomDuration && piring != null)
+            if (elapsed < zoomDuration)
             {
                 float tZoom = Mathf.SmoothStep(0, 1, elapsed / zoomDuration);
-                piring.localScale = Vector3.Lerp(piringStartScale, plateTargetScale, tZoom);
-                piring.position = Vector3.Lerp(piringStartPos, piringTargetPos, tZoom);
+                
+                if (piring != null)
+                {
+                    piring.localScale = Vector3.Lerp(piringStartScale, plateTargetScale, tZoom);
+                    piring.position = Vector3.Lerp(piringStartPos, piringTargetPos, tZoom);
+                }
+
+                if (finalAlasObject != null)
+                {
+                    finalAlasObject.position = Vector3.Lerp(alasStartPos, alasTargetPos, tZoom);
+                }
             }
 
             yield return null;
@@ -176,6 +212,10 @@ public class PlatingCutscene : MonoBehaviour
         {
             piring.localScale = plateTargetScale;
             piring.position = piringTargetPos;
+        }
+        if (finalAlasObject != null)
+        {
+            finalAlasObject.position = alasTargetPos;
         }
     }
 }
