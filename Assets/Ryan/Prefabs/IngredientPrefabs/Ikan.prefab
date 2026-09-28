@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7011898603179879448}
   - component: {fileID: 325038213110198766}
   m_Layer: 0
-  m_Name: TomatSlice2
+  m_Name: MidSlice
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -170,7 +170,7 @@ GameObject:
   - component: {fileID: 5547084593052946774}
   - component: {fileID: 1774117646753585473}
   m_Layer: 0
-  m_Name: TomatSlice1
+  m_Name: RightSlice
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -272,7 +272,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_LocalScale: {x: 1.1, y: 1.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3637919848671110483}
@@ -350,26 +350,27 @@ MonoBehaviour:
     resultObjects:
     - {fileID: 1177518180083007898}
     ejectedFragment: {fileID: 5547084593052946774}
-    knockbackDirection: {x: 4, y: 0}
+    knockbackDirection: {x: 7, y: 0}
     tiltAngle: 10
     moveNonEjected: 0
     secondaryKnockbackDirection: {x: -0.2, y: -0.1}
     secondaryTiltAngle: -3
-    cutSprite: {fileID: -1239186714, guid: 5704bb8ccb8614a4aaa968229694e6c7, type: 3}
+    cutSprite: {fileID: -419044357, guid: 24bc08abbaa9f354c8adac2b296550a9, type: 3}
   - sliceLine: {fileID: 5229896152040917213}
     sourceObject: {fileID: 1873960097989795352}
     resultObjects:
     - {fileID: 698556667642157527}
     - {fileID: 5020771244645499033}
-    ejectedFragment: {fileID: 7011898603179879448}
-    knockbackDirection: {x: -5, y: 0}
+    ejectedFragment: {fileID: 1559215685531148860}
+    knockbackDirection: {x: -6, y: 0}
     tiltAngle: 10
     moveNonEjected: 1
-    secondaryKnockbackDirection: {x: -0.2, y: -0.1}
+    secondaryKnockbackDirection: {x: 1, y: -0.1}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
+  initialGuidelineDelay: 0.5
   perpDistanceTolerance: 0.3
-  knockbackDistance: 0.5
+  knockbackDistance: 0.8
   knockbackDuration: 0.15
 --- !u!114 &6989568034494043665
 MonoBehaviour:
@@ -383,7 +384,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bff56d51452a524396c4a47621d73e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minimumDistance: 0.05
+  minimumDistance: 0.1
 --- !u!1 &2323255080123679048
 GameObject:
   m_ObjectHideFlags: 0
@@ -573,7 +574,7 @@ GameObject:
   - component: {fileID: 1559215685531148860}
   - component: {fileID: 516190411376028549}
   m_Layer: 0
-  m_Name: TomatSlice3
+  m_Name: LeftSlice
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

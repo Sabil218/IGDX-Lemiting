@@ -5,23 +5,23 @@ using UnityEngine.Events;
 public class CookingDropZone : MonoBehaviour
 {
     [Header("Validation")]
-    public string acceptedTag = "BahanMentah";
+    [SerializeField] private string acceptedTag = "BahanMentah";
 
     [Header("Capacity")]
-    public int requiredItemCount = 1;
+    [SerializeField] private int requiredItemCount = 1;
 
     [Header("Visual Feedback (Tercampur)")]
     [Tooltip("Memutar efek cipratan setiap kali objek masuk ke wajan (Opsional).")]
-    public ParticleSystem splashEffect;
+    [SerializeField] private ParticleSystem splashEffect;
     [Tooltip("SpriteRenderer kuah wajan yang ingin diubah warnanya/gambarnya (Opsional).")]
-    public SpriteRenderer targetSpriteRenderer;
+    [SerializeField] private SpriteRenderer targetSpriteRenderer;
     [Tooltip("Gambar pengganti secara bertahap. Indeks 0 saat bahan ke-1 masuk, indeks 1 saat bahan ke-2, dst.")]
-    public Sprite[] progressiveSprites;
+    [SerializeField] private Sprite[] progressiveSprites;
 
     [Header("Events")]
     [Tooltip("Dipanggil saat satu item berhasil di-drop. Menerima item yang di-drop sebagai parameter.")]
-    public UnityEvent<IngredientDraggable> OnItemDropped;
-    public System.Action<IngredientDraggable> OnItemDroppedAction;
+    public UnityEvent<WorldObjectDraggable> OnItemDropped;
+    public System.Action<WorldObjectDraggable> OnItemDroppedAction;
     public UnityEvent OnAllItemsReceived;
 
     private int currentItemCount = 0;
@@ -33,7 +33,7 @@ public class CookingDropZone : MonoBehaviour
     }
 
     //Process dropped item tanpa consume (untuk skenario wajan -> piring)
-    public void HandleDropNoConsume(IngredientDraggable draggableItem)
+    public void HandleDropNoConsume(WorldObjectDraggable draggableItem)
     {
         if (draggableItem == null) return;
 
@@ -63,7 +63,7 @@ public class CookingDropZone : MonoBehaviour
     }
 
     //Process valid dropped items
-    public void HandleDrop(IngredientDraggable draggableItem)
+    public void HandleDrop(WorldObjectDraggable draggableItem)
     {
         if (draggableItem == null || draggableItem.isConsumed) return;
 

@@ -142,7 +142,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3673852012517163539, guid: 0430d4dc9eaf6824d9fb66615ef240f3, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4544740158816356750, guid: 0430d4dc9eaf6824d9fb66615ef240f3, type: 3}
       propertyPath: backgroundImage

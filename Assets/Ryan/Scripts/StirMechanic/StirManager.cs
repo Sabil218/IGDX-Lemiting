@@ -32,9 +32,19 @@ public class StirManager : MonoBehaviour, ICookingPhase
     private float lastStirTime = -1f;
 
     [Header("Progress")]
+    [Tooltip("Reference to the green Fill Image for the liquid")]
     [SerializeField] private Image progressBarFill;
+    [Tooltip("The stirring icon UI that moves along the bar")]
+    [SerializeField] private RectTransform progressIcon;
+    [Tooltip("An empty RectTransform placed at the left end of the bar")]
+    [SerializeField] private RectTransform progressStartPoint;
+    [Tooltip("An empty RectTransform placed at the right end of the bar")]
+    [SerializeField] private RectTransform progressEndPoint;
     [SerializeField] private float completionDelay = 1.0f;
 
+    [Header("Camera Transition")]
+    [Tooltip("Virtual Camera untuk phase ini. Biarkan kosong jika tidak pakai kamera khusus.")]
+    public GameObject stirVirtualCamera;
 
     // Mengambil PUSAT WAJAN secara visual (akurat dari gambar kuah)
     private Vector3 GetTruePanCenter()
@@ -72,6 +82,11 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
     public void StartPhase()
     {
+        if (stirVirtualCamera != null)
+        {
+            stirVirtualCamera.SetActive(true);
+        }
+
         initializedPositions = false;
         originalPositions.Clear();
         ingredientTargets.Clear();
@@ -118,7 +133,9 @@ public class StirManager : MonoBehaviour, ICookingPhase
             stirInput.OnStirProgress += HandleStirProgress;
             stirInput.OnStirCompleted += HandleStirCompleted;
         }
+        
         if (progressBarFill != null) progressBarFill.fillAmount = 0f;
+        if (progressIcon != null && progressStartPoint != null) progressIcon.position = progressStartPoint.position;
     }
 
     private void OnDisable()
@@ -219,6 +236,11 @@ public class StirManager : MonoBehaviour, ICookingPhase
     private void HandleStirProgress(float progress)
     {
         if (progressBarFill != null) progressBarFill.fillAmount = progress;
+        
+        if (progressIcon != null && progressStartPoint != null && progressEndPoint != null)
+        {
+            progressIcon.position = Vector3.Lerp(progressStartPoint.position, progressEndPoint.position, progress);
+        }
 
         if (CookingVisualController.Instance != null)
             CookingVisualController.Instance.UpdateStirProgress(progress);
@@ -227,6 +249,12 @@ public class StirManager : MonoBehaviour, ICookingPhase
     private void HandleStirCompleted()
     {
         if (progressBarFill != null) progressBarFill.fillAmount = 1f;
+        
+        if (progressIcon != null && progressEndPoint != null)
+        {
+            progressIcon.position = progressEndPoint.position;
+        }
+
         StartCoroutine(DelayedTransition());
     }
 

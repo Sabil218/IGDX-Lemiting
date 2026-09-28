@@ -128,6 +128,40 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    [Header("Profanity Filter")]
+    [Tooltip("Daftar kata terlarang agar tidak muncul secara tidak sengaja saat diacak")]
+    public string[] forbiddenWords = new string[] { "NIGA", "NIGGA", "FUCK", "SHIT", "CUNT", "ANJING", "ASU", "KONTOL", "MEMEK", "NGENTOT", "PELACUR", "BABI", "PORN", "SEX" };
+
+    private bool ContainsForbiddenWord(string text)
+    {
+        if (forbiddenWords == null || forbiddenWords.Length == 0) return false;
+        
+        string upperText = text.ToUpper();
+        foreach (string badWord in forbiddenWords)
+        {
+            if (string.IsNullOrEmpty(badWord)) continue;
+            if (upperText.Contains(badWord.ToUpper())) return true;
+        }
+        return false;
+    }
+
+    private bool WillFormForbiddenWord(string shuffled, string targetWord)
+    {
+        if (ContainsForbiddenWord(shuffled)) return true;
+
+        string currentRemaining = shuffled;
+        foreach (char c in targetWord)
+        {
+            int index = currentRemaining.IndexOf(c);
+            if (index >= 0)
+            {
+                currentRemaining = currentRemaining.Remove(index, 1);
+                if (ContainsForbiddenWord(currentRemaining)) return true;
+            }
+        }
+        return false;
+    }
+
     public void LoadRound(string word, Transform ingredient, bool disableRotation, bool dropInCenter = false)
     {
         currentWord = word.ToUpper();
@@ -154,12 +188,14 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
         string cleanTargetWord = new string(charactersToSpawn.ToArray());
         int attempts = 0;
+        string shuffledString;
         do
         {
             ShuffleList(charactersToSpawn);
+            shuffledString = new string(charactersToSpawn.ToArray());
             attempts++;
         }
-        while (new string(charactersToSpawn.ToArray()) == cleanTargetWord && attempts < 10);
+        while ((shuffledString == cleanTargetWord || WillFormForbiddenWord(shuffledString, cleanTargetWord)) && attempts < 50);
 
         Transform currentRow = null;
 
