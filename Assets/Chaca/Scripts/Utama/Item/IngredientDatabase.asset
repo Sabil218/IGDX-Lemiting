@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: IngredientDatabase
   m_EditorClassIdentifier: 
   ingredients:
-  - ingredientName: Ayam_Merah
+  - ingredientName: Ayam
     collected: 0
   - ingredientName: Bawang Merah
     collected: 0
   - ingredientName: Bawang Putih
     collected: 0
-  - ingredientName: Igan
+  - ingredientName: Ikan
     collected: 0
   - ingredientName: Jahe
     collected: 0

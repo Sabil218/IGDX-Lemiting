@@ -4776,18 +4776,6 @@ RectTransform:
   m_AnchoredPosition: {x: -976, y: -442}
   m_SizeDelta: {x: 2400, y: 1080.4688}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3125217357770678315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6858542027878658371}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0459d01a7f4f6e49bf824dd9d1bdf86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &3140157669120594991
 GameObject:
   m_ObjectHideFlags: 0
@@ -6028,8 +6016,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 460, y: -42}
-  m_SizeDelta: {x: 495.073, y: 250.671}
+  m_AnchoredPosition: {x: 542.58246, y: -18}
+  m_SizeDelta: {x: 660.238, y: 250.671}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4595311894688168771
 MonoBehaviour:
@@ -6598,8 +6586,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -261, y: 423}
-  m_SizeDelta: {x: 300, y: 300}
+  m_AnchoredPosition: {x: -343, y: 416}
+  m_SizeDelta: {x: 588.54, y: 411.978}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5283777516912682332
 MonoBehaviour:
@@ -6621,7 +6609,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sagu
+  m_text: Ikan Teri
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c87c6eb10c7d86e4083c2440c9109b6c, type: 2}
   m_sharedMaterial: {fileID: -4323058806226904134, guid: c87c6eb10c7d86e4083c2440c9109b6c, type: 2}
@@ -6648,15 +6636,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 200
-  m_fontSizeBase: 200
+  m_fontSize: 164
+  m_fontSizeBase: 164
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -7805,23 +7793,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!1 &6858542027878658371
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8717003302368335492}
-  - component: {fileID: 3125217357770678315}
-  m_Layer: 0
-  m_Name: BattleItemCollector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!61 &6866751637487371465
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -8513,8 +8484,8 @@ MonoBehaviour:
   quizManager: {fileID: 307967022818159609}
   quizDelay: 2
   moveSpeed: 5
-  winningPanel: {fileID: 0}
-  loosePanel: {fileID: 0}
+  winningPanel: {fileID: 5783556230967786403}
+  loosePanel: {fileID: 1314440696667481037}
   cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 6640503575598341738}
 --- !u!114 &8145248285048734385
@@ -9006,21 +8977,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!4 &8717003302368335492
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6858542027878658371}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1026.7137, y: 405.12857, z: -2.3847902}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8774905205791655087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9041,7 +8997,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 9b90445dda1b74f4798d582be3bccda9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 984266e18378e5847bbfca7caa44d8d0, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9317,6 +9273,5 @@ SceneRoots:
   - {fileID: 5858295056796082369}
   - {fileID: 6132628338492884920}
   - {fileID: 925875385684589595}
-  - {fileID: 8717003302368335492}
   - {fileID: 8229853947073201770}
   - {fileID: 2364157788093748360}

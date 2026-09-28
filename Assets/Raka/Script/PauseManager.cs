@@ -11,14 +11,16 @@ public class PauseManager : MonoBehaviour
 
     public void PauseGame()
     {
-        pausePanel.SetActive(true);
         Time.timeScale = 0f;
+
+        pausePanel.SetActive(true);
     }
 
     public void ResumeGame()
     {
-        pausePanel.SetActive(false);
         Time.timeScale = 1f;
+
+        pausePanel.SetActive(false);
     }
 
     public void ChangeMusicVolume()
@@ -41,9 +43,9 @@ public class PauseManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        if (SceneLoader.instance != null)
+        if (LoadingManager.instance != null)
         {
-            SceneLoader.instance.LoadMainMenu();
+            LoadingManager.instance.LoadScene("Mainmenu");
         }
     }
 }

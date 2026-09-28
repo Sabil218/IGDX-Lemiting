@@ -1761,9 +1761,9 @@ MonoBehaviour:
   quizManager: {fileID: 522388689}
   quizDelay: 2
   moveSpeed: 5
-  winningPanel: {fileID: 0}
-  loosePanel: {fileID: 0}
-  cameraFollow: {fileID: 0}
+  winningPanel: {fileID: 5305311708642212689}
+  loosePanel: {fileID: 855338155445625663}
+  cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 707097325}
 --- !u!4 &1272540546
 Transform:
@@ -4871,7 +4871,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 460, y: -42}
+  m_AnchoredPosition: {x: 460, y: -68}
   m_SizeDelta: {x: 495.073, y: 250.671}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &2855434186825536262
@@ -4994,18 +4994,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3310733119713012628}
   m_CullTransparentMesh: 1
---- !u!114 &3125217357770678315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6858542027878658371}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0459d01a7f4f6e49bf824dd9d1bdf86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &3155542872619605926
 GameObject:
   m_ObjectHideFlags: 0
@@ -6956,8 +6944,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 200
-  m_fontSizeBase: 200
+  m_fontSize: 164
+  m_fontSizeBase: 164
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7977,7 +7965,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -261, y: 423}
+  m_AnchoredPosition: {x: -201, y: 423}
   m_SizeDelta: {x: 300, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6804716154996787142
@@ -7988,23 +7976,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4876570399141437954}
   m_CullTransparentMesh: 1
---- !u!1 &6858542027878658371
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8717003302368335492}
-  - component: {fileID: 3125217357770678315}
-  m_Layer: 0
-  m_Name: BattleItemCollector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!1 &6888696878743124862
 GameObject:
   m_ObjectHideFlags: 0
@@ -9005,21 +8976,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!4 &8717003302368335492
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6858542027878658371}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1026.7137, y: 405.12857, z: -2.3847902}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8762299257947159841
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9316,6 +9272,5 @@ SceneRoots:
   - {fileID: 5858295056796082369}
   - {fileID: 6132628338492884920}
   - {fileID: 925875385684589595}
-  - {fileID: 8717003302368335492}
   - {fileID: 8229853947073201770}
   - {fileID: 2364157788093748360}

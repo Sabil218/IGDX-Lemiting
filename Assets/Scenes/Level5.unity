@@ -1763,9 +1763,9 @@ MonoBehaviour:
   quizManager: {fileID: 522388689}
   quizDelay: 2
   moveSpeed: 5
-  winningPanel: {fileID: 0}
-  loosePanel: {fileID: 0}
-  cameraFollow: {fileID: 0}
+  winningPanel: {fileID: 263045546508278506}
+  loosePanel: {fileID: 4744546473564537476}
+  cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 707097325}
 --- !u!4 &1272540546
 Transform:
@@ -4045,9 +4045,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -261, y: 423}
-  m_SizeDelta: {x: 300, y: 300}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -488, y: 184}
+  m_SizeDelta: {x: 710.121, y: 497.085}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!1 &1497892722612596027
 GameObject:
   m_ObjectHideFlags: 0
@@ -4245,7 +4245,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sagu
+  m_text: Kacang Tanah
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c87c6eb10c7d86e4083c2440c9109b6c, type: 2}
   m_sharedMaterial: {fileID: -4323058806226904134, guid: c87c6eb10c7d86e4083c2440c9109b6c, type: 2}
@@ -4272,15 +4272,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 200
-  m_fontSizeBase: 200
+  m_fontSize: 164
+  m_fontSizeBase: 164
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -4899,7 +4899,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 9b90445dda1b74f4798d582be3bccda9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a76116d7a857e3a42b9d906bf9fd9a0b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8304,8 +8304,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 460, y: -42}
-  m_SizeDelta: {x: 495.073, y: 250.671}
+  m_AnchoredPosition: {x: 693.3282, y: -36}
+  m_SizeDelta: {x: 961.728, y: 250.671}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7838899036510052945
 MonoBehaviour:
