@@ -187,7 +187,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
             if (itemCount == 1)
             {
-                horizontalOffset = -0.8f;
+                horizontalOffset = 0f;
             }
             else if (itemCount == 2)
             {
@@ -229,7 +229,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             centerPosition +
             new Vector3(
                 horizontalOffset,
-                0f,
+                -0.25f,
                 0f
             );
 
@@ -239,6 +239,29 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
                 spawnPosition,
                 Quaternion.identity
             );
+
+        Collider2D[] enemyColliders =
+            GetComponentsInChildren<Collider2D>();
+
+        Collider2D[] itemColliders =
+            item.GetComponentsInChildren<Collider2D>();
+
+        foreach (Collider2D enemyCollider in enemyColliders)
+        {
+            if (enemyCollider == null)
+                continue;
+
+            foreach (Collider2D itemCollider in itemColliders)
+            {
+                if (itemCollider == null)
+                    continue;
+
+                Physics2D.IgnoreCollision(
+                    enemyCollider,
+                    itemCollider
+                );
+            }
+        }
 
         Rigidbody2D rb =
             item.GetComponent<Rigidbody2D>();
@@ -252,12 +275,18 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
             if (singleItem)
             {
-                horizontalVelocity = -3.2f;
+                horizontalVelocity = -1.5f;
             }
             else
             {
-                horizontalVelocity =
-                    horizontalOffset * 2f;
+                if (horizontalOffset < 0f)
+                {
+                    horizontalVelocity = -1.5f;
+                }
+                else
+                {
+                    horizontalVelocity = 1.5f;
+                }
             }
 
             rb.velocity =
