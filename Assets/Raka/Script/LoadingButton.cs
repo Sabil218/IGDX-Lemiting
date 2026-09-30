@@ -20,6 +20,10 @@ public class LoadingButton : MonoBehaviour
         }
         else if (currentScene == "Level3")
         {
+            LoadingManager.instance.LoadScene("MiniGame1");
+        }
+        else if (currentScene == "MiniGame1")
+        {
             LoadingManager.instance.LoadScene("Level4");
         }
         else if (currentScene == "Level4")
@@ -29,6 +33,10 @@ public class LoadingButton : MonoBehaviour
         else if (currentScene == "Level5")
         {
             LoadingManager.instance.LoadScene("Level6");
+        }
+        else if (currentScene == "Level6")
+        {
+            LoadingManager.instance.LoadScene("MiniGame2");
         }
         else
         {
