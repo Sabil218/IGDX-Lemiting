@@ -4510,6 +4510,7 @@ MonoBehaviour:
   moveSpeed: 5
   winningPanel: {fileID: 2388816643423115240}
   loosePanel: {fileID: 7158556759840051078}
+  levelComplete: {fileID: 211160567}
   cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 1957015588605358519}
 --- !u!4 &3125852925075362036

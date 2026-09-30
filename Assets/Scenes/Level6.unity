@@ -5982,6 +5982,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &4521710551426845814
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7265349097521533671}
+  - component: {fileID: 6519517891560759817}
+  m_Layer: 0
+  m_Name: LevelComplateManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &4564606039297255229
 GameObject:
   m_ObjectHideFlags: 0
@@ -7617,6 +7634,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &6519517891560759817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4521710551426845814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff3f10a1b7e2c764ebae2ef9bb89959c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelNumber: 6
 --- !u!1 &6541694687121015635
 GameObject:
   m_ObjectHideFlags: 0
@@ -8229,6 +8259,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 133.5}
   m_SizeDelta: {x: 955, y: 434}
   m_Pivot: {x: 0.5, y: 0}
+--- !u!4 &7265349097521533671
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4521710551426845814}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1665.737, y: 218.20651, z: -3.537913}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &7347570799603110667
 Transform:
   m_ObjectHideFlags: 0
@@ -8486,6 +8531,7 @@ MonoBehaviour:
   moveSpeed: 5
   winningPanel: {fileID: 5783556230967786403}
   loosePanel: {fileID: 1314440696667481037}
+  levelComplete: {fileID: 6519517891560759817}
   cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 6640503575598341738}
 --- !u!114 &8145248285048734385
@@ -9275,3 +9321,4 @@ SceneRoots:
   - {fileID: 925875385684589595}
   - {fileID: 8229853947073201770}
   - {fileID: 2364157788093748360}
+  - {fileID: 7265349097521533671}

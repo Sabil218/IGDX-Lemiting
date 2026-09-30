@@ -24,6 +24,9 @@ public class BattleManager : MonoBehaviour
     public GameObject winningPanel;
     public GameObject loosePanel;
 
+    [Header("Level Complete")]
+    public LevelComplete levelComplete;
+
     [Header("Camera")]
     public CameraFollow cameraFollow;
 
@@ -629,6 +632,11 @@ public class BattleManager : MonoBehaviour
         if (winTrigger != null)
         {
             winTrigger.SetActive(false);
+        }
+
+        if (levelComplete != null)
+        {
+            levelComplete.CompleteLevel();
         }
 
         if (winningPanel != null)

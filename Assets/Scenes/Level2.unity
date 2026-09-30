@@ -718,7 +718,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff3f10a1b7e2c764ebae2ef9bb89959c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelNumber: 1
+  levelNumber: 2
 --- !u!4 &211160568
 Transform:
   m_ObjectHideFlags: 0
@@ -5502,6 +5502,7 @@ MonoBehaviour:
   moveSpeed: 5
   winningPanel: {fileID: 5986640735782075703}
   loosePanel: {fileID: 1254911522318460249}
+  levelComplete: {fileID: 211160567}
   cameraFollow: {fileID: 1883389705}
   winTrigger: {fileID: 450608008230311420}
 --- !u!114 &3784336335311174381
