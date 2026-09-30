@@ -25,17 +25,17 @@ public class PauseManager : MonoBehaviour
 
     public void ChangeMusicVolume()
     {
-        if (AudioManager.instance != null)
+        if (AudioManager.instance != null && musicSlider != null)
         {
-            AudioManager.instance.SetMusicVolume();
+            AudioManager.instance.SetMusicVolume(musicSlider.value);
         }
     }
 
     public void ChangeSFXVolume()
     {
-        if (AudioManager.instance != null)
+        if (AudioManager.instance != null && sfxSlider != null)
         {
-            AudioManager.instance.SetSFXVolume();
+            AudioManager.instance.SetSFXVolume(sfxSlider.value);
         }
     }
 

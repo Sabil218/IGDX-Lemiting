@@ -1,6 +1,6 @@
+
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class AudioManager : MonoBehaviour
@@ -8,8 +8,6 @@ public class AudioManager : MonoBehaviour
     public static AudioManager instance;
 
     public AudioMixer audioMixer;
-    public Slider musicSlider;
-    public Slider sfxSlider;
 
     [Header("BGM")]
     public AudioClip mainMenuBGM;
@@ -20,7 +18,6 @@ public class AudioManager : MonoBehaviour
 
     private void Awake()
     {
-        // Mencegah AudioManager menjadi lebih dari satu
         if (instance != null && instance != this)
         {
             Destroy(gameObject);
@@ -31,12 +28,18 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         musicSource = GetComponent<AudioSource>();
+
+        // Terapkan volume yang tersimpan
+        float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
+        float sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        ApplyMusicVolume(musicVolume);
+        ApplySFXVolume(sfxVolume);
     }
 
     private void Start()
     {
         PlayBGM();
-
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -45,8 +48,15 @@ public class AudioManager : MonoBehaviour
         PlayBGM();
     }
 
+    // =========================================
+    // BGM
+    // =========================================
+
     public void PlayBGM()
     {
+        if (musicSource == null)
+            return;
+
         string sceneName = SceneManager.GetActiveScene().name;
 
         AudioClip newClip;
@@ -64,9 +74,12 @@ public class AudioManager : MonoBehaviour
             newClip = levelBGM;
         }
 
-        // Kalau musiknya sama, jangan mulai dari awal lagi
         if (musicSource.clip == newClip && musicSource.isPlaying)
+            return;
+
+        if (newClip == null)
         {
+            musicSource.Stop();
             return;
         }
 
@@ -77,15 +90,28 @@ public class AudioManager : MonoBehaviour
 
     public void StopBGM()
     {
-        musicSource.Stop();
+        if (musicSource != null)
+            musicSource.Stop();
     }
 
-    public void SetMusicVolume()
+    // =========================================
+    // MUSIC VOLUME
+    // =========================================
+
+    public void SetMusicVolume(float volume)
     {
-        float volume = musicSlider.value;
+        volume = Mathf.Clamp01(volume);
 
         PlayerPrefs.SetFloat("MusicVolume", volume);
         PlayerPrefs.Save();
+
+        ApplyMusicVolume(volume);
+    }
+
+    private void ApplyMusicVolume(float volume)
+    {
+        if (audioMixer == null)
+            return;
 
         if (volume <= 0.0001f)
         {
@@ -93,16 +119,31 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            audioMixer.SetFloat("MusicVolume", Mathf.Log10(volume) * 20f);
+            audioMixer.SetFloat(
+                "MusicVolume",
+                Mathf.Log10(volume) * 20f
+            );
         }
     }
 
-    public void SetSFXVolume()
+    // =========================================
+    // SFX VOLUME
+    // =========================================
+
+    public void SetSFXVolume(float volume)
     {
-        float volume = sfxSlider.value;
+        volume = Mathf.Clamp01(volume);
 
         PlayerPrefs.SetFloat("SFXVolume", volume);
         PlayerPrefs.Save();
+
+        ApplySFXVolume(volume);
+    }
+
+    private void ApplySFXVolume(float volume)
+    {
+        if (audioMixer == null)
+            return;
 
         if (volume <= 0.0001f)
         {
@@ -110,7 +151,10 @@ public class AudioManager : MonoBehaviour
         }
         else
         {
-            audioMixer.SetFloat("SFXVolume", Mathf.Log10(volume) * 20f);
+            audioMixer.SetFloat(
+                "SFXVolume",
+                Mathf.Log10(volume) * 20f
+            );
         }
     }
 
@@ -119,6 +163,7 @@ public class AudioManager : MonoBehaviour
         if (instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            instance = null;
         }
     }
 }
