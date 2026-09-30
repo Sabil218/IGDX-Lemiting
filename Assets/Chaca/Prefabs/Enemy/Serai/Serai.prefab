@@ -301,9 +301,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4873673439819357761, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6776317276101448041, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8539925987777211811, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
       propertyPath: m_Name
       value: GlowEffect
+      objectReference: {fileID: 0}
+    - target: {fileID: 8539925987777211811, guid: 109a9fde564c147489ec7e48cfde3230, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
