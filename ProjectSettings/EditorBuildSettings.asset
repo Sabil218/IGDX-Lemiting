@@ -21,6 +21,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Level3.unity
     guid: 90c891dbdbbe0304c8f91c7e9339f020
   - enabled: 1
+    path: Assets/Scenes/Minigame_manado.unity
+    guid: 45b45c9a6d8866a47bba2324c49999de
+  - enabled: 1
     path: Assets/Scenes/Level4.unity
     guid: c60522b22a580104396ba1cca1ab778c
   - enabled: 1
@@ -29,9 +32,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Level6.unity
     guid: d61e2f9b92958214cbad0ff33e8b6756
-  - enabled: 1
-    path: Assets/Scenes/Minigame_manado.unity
-    guid: 45b45c9a6d8866a47bba2324c49999de
   - enabled: 1
     path: Assets/Scenes/Minigame_papua.unity
     guid: 22a60c840f66eb246bc34eabbdbb2dac

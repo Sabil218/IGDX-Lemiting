@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 419916389dd52ff4585d97f5a93dc8a7
+guid: 46d3b994405ca2f4291e61e742aa8f72
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -95,49 +95,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites:
-    - serializedVersion: 2
-      name: tes_pause ui_0
-      rect:
-        serializedVersion: 2
-        x: 2
-        y: 242
-        width: 708
-        height: 160
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: ffebd5c41a7e444439d192c7a84763cb
-      internalID: -728954129
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: tes_pause ui_1
-      rect:
-        serializedVersion: 2
-        x: 19
-        y: 5
-        width: 189
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 1a27dde05a5cf2c49907f6d724e53045
-      internalID: -908015105
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
+    sprites: []
     outline: []
     physicsShape: []
     bones: []
@@ -148,9 +106,7 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable:
-      tes_pause ui_0: -728954129
-      tes_pause ui_1: -908015105
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
