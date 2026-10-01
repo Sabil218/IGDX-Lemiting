@@ -9,12 +9,11 @@ public class StirManager : MonoBehaviour, ICookingPhase
     [SerializeField] private StirInput stirInput;
 
     [Header("Scene")]
-    [Tooltip("Spoon Object")]
     [SerializeField] private Transform spoonTransform;
 
     [Header("Shuffle Settings")]
-    [Tooltip("Seberapa jauh bahan bisa bergerak dari pusat panci saat diaduk")]
     public float panBoundaryMultiplier = 0.75f;
+    [SerializeField] private Collider2D stirBoundsCollider;
     private Dictionary<Transform, Vector3> ingredientTargets = new Dictionary<Transform, Vector3>();
     private List<Vector3> originalPositions = new List<Vector3>();
     private bool initializedPositions = false;
@@ -32,23 +31,21 @@ public class StirManager : MonoBehaviour, ICookingPhase
     private float lastStirTime = -1f;
 
     [Header("Progress")]
-    [Tooltip("Reference to the green Fill Image for the liquid")]
     [SerializeField] private Image progressBarFill;
-    [Tooltip("The stirring icon UI that moves along the bar")]
     [SerializeField] private RectTransform progressIcon;
-    [Tooltip("An empty RectTransform placed at the left end of the bar")]
     [SerializeField] private RectTransform progressStartPoint;
-    [Tooltip("An empty RectTransform placed at the right end of the bar")]
     [SerializeField] private RectTransform progressEndPoint;
     [SerializeField] private float completionDelay = 1.0f;
 
     [Header("Camera Transition")]
-    [Tooltip("Virtual Camera untuk phase ini. Biarkan kosong jika tidak pakai kamera khusus.")]
     public GameObject stirVirtualCamera;
 
-    // Mengambil PUSAT WAJAN secara visual (akurat dari gambar kuah)
     private Vector3 GetTruePanCenter()
     {
+        if (stirBoundsCollider != null)
+        {
+            return stirBoundsCollider.bounds.center;
+        }
         if (CookingVisualController.Instance != null && CookingVisualController.Instance.foodContentRenderer != null)
         {
             return CookingVisualController.Instance.foodContentRenderer.bounds.center;
@@ -60,9 +57,12 @@ public class StirManager : MonoBehaviour, ICookingPhase
         return transform.position;
     }
 
-    // Mengambil UKURAN WAJAN secara visual (akurat dari gambar kuah)
     private Vector2 GetTruePanExtents()
     {
+        if (stirBoundsCollider != null)
+        {
+            return stirBoundsCollider.bounds.extents;
+        }
         if (CookingVisualController.Instance != null && CookingVisualController.Instance.foodContentRenderer != null)
         {
             return CookingVisualController.Instance.foodContentRenderer.bounds.extents;
@@ -72,14 +72,14 @@ public class StirManager : MonoBehaviour, ICookingPhase
             Collider2D col = stirInput.StirZoneObject.GetComponent<Collider2D>();
             if (col != null) return col.bounds.extents;
         }
-        return new Vector2(3f, 1f); // Fallback
+        return new Vector2(3f, 1f);
     }
 
     private void Start()
     {
-        // Setup logic can go here if needed in the future
     }
 
+    // Starts the stirring minigame phase and resets all visuals/positions.
     public void StartPhase()
     {
         if (stirVirtualCamera != null)
@@ -116,6 +116,7 @@ public class StirManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    // Toggles the stirring spoon animation based on recent player input.
     private void Update()
     {
         if (spoonAnimator != null)
@@ -148,12 +149,12 @@ public class StirManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    // Triggers the visual shuffling of ingredients inside the pan when the player stirs.
     private void HandleStirred(float angleDelta)
     {
         Vector3 panCenter = GetTruePanCenter();
         Vector2 extents = GetTruePanExtents();
 
-        // Catat waktu stir terakhir untuk memicu animasi
         lastStirTime = Time.time;
 
         if (CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
@@ -165,7 +166,6 @@ public class StirManager : MonoBehaviour, ICookingPhase
                 InitializePositions(rawContainer);
             }
 
-            // Seberapa cepat bahan bergerak bergeser berdasarkan kecepatan putaran adukan (angleDelta)
             float moveAmount = Mathf.Abs(angleDelta) * ingredientSpeedMultiplier * 0.005f;
 
             foreach (Transform rootItem in rawContainer)
@@ -193,20 +193,20 @@ public class StirManager : MonoBehaviour, ICookingPhase
             {
                 foreach (Transform piece in rootItem)
                 {
-                    originalPositions.Add(piece.position);
+                    originalPositions.Add(ClampToPanBounds(piece.position));
                 }
             }
             else
             {
-                originalPositions.Add(rootItem.position);
+                originalPositions.Add(ClampToPanBounds(rootItem.position));
             }
         }
         initializedPositions = true;
     }
 
+    // Moves a specific ingredient piece towards a random target point in the pan to simulate being stirred.
     private void ProcessShuffle(Transform piece, float moveAmount)
     {
-        // Jika piece belum punya target tujuan, berikan target baru secara acak
         if (!ingredientTargets.ContainsKey(piece))
         {
             AssignNewTarget(piece);
@@ -214,10 +214,8 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
         Vector3 targetPos = ingredientTargets[piece];
 
-        // Pindahkan piece secara mulus ke arah targetnya
         piece.position = Vector3.MoveTowards(piece.position, targetPos, moveAmount);
 
-        // Jika piece sudah sangat dekat dengan targetnya, beri target baru lagi agar dia terus bergerak / "shuffle"
         if (Vector3.Distance(piece.position, targetPos) < 0.1f)
         {
             AssignNewTarget(piece);
@@ -226,13 +224,66 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
     private void AssignNewTarget(Transform piece)
     {
-        if (originalPositions.Count == 0) return;
-        
-        // Pilih satu tempat duduk acak dari daftar posisi awal
-        int randomIndex = Random.Range(0, originalPositions.Count);
-        ingredientTargets[piece] = originalPositions[randomIndex];
+        ingredientTargets[piece] = GetRandomPointInBounds(piece.position.z);
     }
 
+    private Vector3 GetRandomPointInBounds(float z)
+    {
+        if (stirBoundsCollider != null)
+        {
+            Bounds bounds = stirBoundsCollider.bounds;
+            for (int attempt = 0; attempt < 30; attempt++)
+            {
+                Vector2 point = new Vector2(
+                    Random.Range(bounds.min.x, bounds.max.x),
+                    Random.Range(bounds.min.y, bounds.max.y)
+                );
+                if (stirBoundsCollider.OverlapPoint(point))
+                {
+                    return new Vector3(point.x, point.y, z);
+                }
+            }
+            return new Vector3(bounds.center.x, bounds.center.y, z);
+        }
+
+        Vector3 center = GetTruePanCenter();
+        Vector2 extents = GetTruePanExtents() * panBoundaryMultiplier;
+        float a = Mathf.Max(extents.x, 0.1f);
+        float b = Mathf.Max(extents.y, 0.1f);
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        float radius = Mathf.Sqrt(Random.Range(0f, 1f));
+        return new Vector3(center.x + Mathf.Cos(angle) * radius * a, center.y + Mathf.Sin(angle) * radius * b, z);
+    }
+
+    // Ensures ingredients don't accidentally fly out of the pan boundaries.
+    private Vector3 ClampToPanBounds(Vector3 worldPos)
+    {
+        if (stirBoundsCollider != null)
+        {
+            Vector2 point2D = new Vector2(worldPos.x, worldPos.y);
+            if (stirBoundsCollider.OverlapPoint(point2D))
+                return worldPos;
+            Vector2 closest = stirBoundsCollider.ClosestPoint(point2D);
+            return new Vector3(closest.x, closest.y, worldPos.z);
+        }
+
+        Vector3 center = GetTruePanCenter();
+        Vector2 extents = GetTruePanExtents() * panBoundaryMultiplier;
+        float dx = worldPos.x - center.x;
+        float dy = worldPos.y - center.y;
+        float aVal = Mathf.Max(extents.x, 0.01f);
+        float bVal = Mathf.Max(extents.y, 0.01f);
+        float ellipseTest = (dx * dx) / (aVal * aVal) + (dy * dy) / (bVal * bVal);
+        if (ellipseTest > 1f)
+        {
+            float scale = 1f / Mathf.Sqrt(ellipseTest);
+            dx *= scale;
+            dy *= scale;
+        }
+        return new Vector3(center.x + dx, center.y + dy, worldPos.z);
+    }
+
+    // Updates the UI progress bar and visually fades between raw/cooked states.
     private void HandleStirProgress(float progress)
     {
         if (progressBarFill != null) progressBarFill.fillAmount = progress;
@@ -246,6 +297,7 @@ public class StirManager : MonoBehaviour, ICookingPhase
             CookingVisualController.Instance.UpdateStirProgress(progress);
     }
 
+    // Called when the stirring circle is fully complete.
     private void HandleStirCompleted()
     {
         if (progressBarFill != null) progressBarFill.fillAmount = 1f;

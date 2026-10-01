@@ -364,7 +364,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -523,7 +523,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -664,9 +664,12 @@ MonoBehaviour:
     secondaryKnockbackDirection: {x: 0.25, y: -0.3}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.25
+  initialGuidelineDelay: 0.5
+  perpDistanceTolerance: 0.5
+  sliceCompletionThreshold: 0.25
   knockbackDistance: 0.2
   knockbackDuration: 0.2
+  customSliceSfx: {fileID: 0}
 --- !u!114 &2106615739267096990
 MonoBehaviour:
   m_ObjectHideFlags: 0

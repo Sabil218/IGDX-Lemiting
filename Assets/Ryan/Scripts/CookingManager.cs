@@ -16,15 +16,12 @@ public class CookingManager : MonoBehaviour
     {
         public string phaseName;
         public GameObject phaseContainer;
-        
-        [Tooltip("Start Event for this phase")]
         public UnityEngine.Events.UnityEvent onPhaseStart;
     }
 
     // ─── Inspector References ───────────────────────────────────────
 
     [Header("Cooking Sequence")]
-    [Tooltip("Urutan memasak")]
     public System.Collections.Generic.List<CookingPhase> cookingSequence = new System.Collections.Generic.List<CookingPhase>();
     private int currentPhaseIndex = 0;
 

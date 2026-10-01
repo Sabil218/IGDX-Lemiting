@@ -143,7 +143,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -369,9 +369,11 @@ MonoBehaviour:
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
   initialGuidelineDelay: 0.5
-  perpDistanceTolerance: 0.3
+  perpDistanceTolerance: 1
+  sliceCompletionThreshold: 0.25
   knockbackDistance: 0.8
   knockbackDuration: 0.15
+  customSliceSfx: {fileID: 0}
 --- !u!114 &6989568034494043665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -522,7 +524,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -90, y: 3.89}
+  m_AnchoredPosition: {x: -117, y: 3.89}
   m_SizeDelta: {x: 25, y: 529.16}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2440940029227415897
@@ -547,7 +549,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

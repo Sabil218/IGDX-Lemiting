@@ -462,9 +462,12 @@ MonoBehaviour:
     secondaryKnockbackDirection: {x: -0.25, y: -0.1}
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
-  perpDistanceTolerance: 0.3
+  initialGuidelineDelay: 0.5
+  perpDistanceTolerance: 0.6
+  sliceCompletionThreshold: 0.25
   knockbackDistance: 0.9
   knockbackDuration: 0.2
+  customSliceSfx: {fileID: 0}
 --- !u!114 &6257348788947633756
 MonoBehaviour:
   m_ObjectHideFlags: 0

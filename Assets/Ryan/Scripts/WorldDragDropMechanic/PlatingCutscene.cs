@@ -9,25 +9,16 @@ public class PlatingCutscene : MonoBehaviour
     public Transform piring;
 
     [Header("Sprite Swaps")]
-    [Tooltip("Target wajan yang sprite-nya akan diganti")]
     public SpriteRenderer wajanRenderer;
-    [Tooltip("Gambar wajan kosong/kotor setelah makanan dituang")]
     public Sprite wajanKosongSprite;
-    
-    [Tooltip("Object-object makanan (seperti Matang/SetengahMatang) di dalam wajan yang harus disembunyikan saat dituang")]
     public GameObject[] objectsToHideOnDrop;
-
-    [Tooltip("Target piring yang sprite-nya akan diganti")]
     public SpriteRenderer piringRenderer;
-    [Tooltip("Gambar piring yang sudah ada makanannya")]
     public Sprite piringIsiSprite;
-
-    [Tooltip("Object-object yang harus dimunculkan saat dituang (misalnya ServedFood)")]
     public GameObject[] objectsToShowOnDrop;
 
     [Header("Entry Animation")]
-    public Vector3 wajanStartOffset = new Vector3(-10f, 0f, 0f); // Dari kiri
-    public Vector3 piringStartOffset = new Vector3(0f, 8f, 0f); // Dari atas
+    public Vector3 wajanStartOffset = new Vector3(-10f, 0f, 0f);
+    public Vector3 piringStartOffset = new Vector3(0f, 8f, 0f);
     public float entryDuration = 0.8f;
 
     [Header("Post-Drop Effects")]
@@ -38,21 +29,15 @@ public class PlatingCutscene : MonoBehaviour
 
     [Header("Exit Animation")]
     public Vector3 wajanExitOffset = new Vector3(10f, 0f, 0f);
-    public float exitDuration = 1.5f; // Diperlambat dari 0.5 ke 1.5
-    public Vector3 plateTargetScale = new Vector3(2f, 2f, 1f); // Diperbesar
-    
-    [Tooltip("Opsional: Titik tengah layar tempat piring akan bergerak saat dizoom. Kosongkan jika piring tidak perlu pindah.")]
+    public float exitDuration = 1.5f;
+    public Vector3 plateTargetScale = new Vector3(2f, 2f, 1f);
     public Transform plateCenterPoint;
     
-    public float zoomDuration = 1.0f; // Diperlambat sedikit agar lebih dramatis
+    public float zoomDuration = 1.0f;
 
     [Header("Final Presentation")]
-    [Tooltip("Object yang akan dimunculkan setelah piring selesai di-zoom (teks, background final, dll)")]
     public GameObject[] finalUIObjects;
-    
-    [Tooltip("Opsional: Jika ingin 'final_alas' meluncur masuk otomatis, masukkan object-nya ke sini")]
     public Transform finalAlasObject;
-    [Tooltip("Titik tujuan berhentinya final_alas (AlasFinalPos)")]
     public Transform finalAlasTargetPos;
 
     public Transform wajanMeetPoint;
@@ -70,6 +55,7 @@ public class PlatingCutscene : MonoBehaviour
         StartCoroutine(EntrySequence(onComplete));
     }
 
+    // Slides the pan and plate into view from off-screen.
     private IEnumerator EntrySequence(Action onComplete)
     {
         if (wajan == null || piring == null || wajanMeetPoint == null || piringMeetPoint == null)
@@ -78,7 +64,6 @@ public class PlatingCutscene : MonoBehaviour
             yield break;
         }
 
-        // 1. Set posisi awal (di luar layar / offset berdasarkan titik kumpul)
         Vector3 wTarget = wajanMeetPoint.position;
         Vector3 pTarget = piringMeetPoint.position;
 
@@ -88,7 +73,6 @@ public class PlatingCutscene : MonoBehaviour
         wajan.position = wStart;
         piring.position = pStart;
 
-        // 2. Animasi meluncur dari luar layar ke titik kumpul
         float elapsed = 0f;
         while (elapsed < entryDuration)
         {
@@ -112,12 +96,11 @@ public class PlatingCutscene : MonoBehaviour
         StartCoroutine(PostDropSequence(onComplete));
     }
 
+    // Plays the food falling effect and updates the sprites (empty pan, full plate).
     private IEnumerator PostDropSequence(Action onComplete)
     {
-        // 1. Play Effects
         if (dropEffect != null) dropEffect.Play();
 
-        // 2. Sprite Swaps
         if (wajanRenderer != null && wajanKosongSprite != null)
             wajanRenderer.sprite = wajanKosongSprite;
 
@@ -142,10 +125,8 @@ public class PlatingCutscene : MonoBehaviour
 
         yield return new WaitForSeconds(postDropDelay);
 
-        // 3. Play Exit Animation
         yield return StartCoroutine(ExitSequence());
 
-        // 4. Show Final UI / Objects
         if (finalUIObjects != null)
         {
             foreach(var obj in finalUIObjects)
@@ -157,6 +138,7 @@ public class PlatingCutscene : MonoBehaviour
         onComplete?.Invoke();
     }
 
+    // Animates the pan leaving the screen and the finished plate zooming in for presentation.
     private IEnumerator ExitSequence()
     {
         float elapsed = 0f;
@@ -166,16 +148,14 @@ public class PlatingCutscene : MonoBehaviour
         Vector3 piringStartScale = piring != null ? piring.localScale : Vector3.one;
         Vector3 piringStartPos = piring != null ? piring.position : Vector3.zero;
         
-        // Tentukan target posisi piring (jika plateCenterPoint ada, bergerak ke situ, jika tidak, tetap di tempat)
         Vector3 piringTargetPos = plateCenterPoint != null ? plateCenterPoint.position : piringStartPos;
 
-        // Setup animasi final_alas jika ada
         Vector3 alasStartPos = finalAlasObject != null ? finalAlasObject.position : Vector3.zero;
         Vector3 alasTargetPos = finalAlasTargetPos != null ? finalAlasTargetPos.position : alasStartPos;
         
         if (finalAlasObject != null)
         {
-            finalAlasObject.gameObject.SetActive(true); // Nyalakan alas saat animasi mulai
+            finalAlasObject.gameObject.SetActive(true);
         }
 
         while (elapsed < exitDuration || elapsed < zoomDuration)

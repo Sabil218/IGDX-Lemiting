@@ -32,24 +32,20 @@ public class IngredientTransitionManager : MonoBehaviour
         isTransitioning = true;
         Coroutine exitCor = null;
 
-        // 1. Exit current ingredient if it exists (Run in background!)
         if (current != null)
         {
             exitCor = StartCoroutine(ExitRoutine(current));
         }
 
-        // 2. Enter next ingredient if it exists (Run simultaneously!)
         if (next != null)
         {
             yield return StartCoroutine(EnterRoutine(next, boardPos));
         }
         else
         {
-            // Give one frame to allow exitCor to actually start if EnterRoutine didn't run
             yield return null;
         }
 
-        // Wait for exit to finish if it takes longer than enter
         if (exitCor != null)
         {
             yield return exitCor;
@@ -87,10 +83,8 @@ public class IngredientTransitionManager : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / exitDuration);
             float curveT = exitEaseCurve.Evaluate(t);
 
-            // Move
             currentIngredient.transform.position = Vector3.LerpUnclamped(startPos, endPos, curveT);
 
-            // Fade Sprites
             for (int i = 0; i < spriteRenderers.Length; i++)
             {
                 if (spriteRenderers[i] != null)
@@ -101,7 +95,6 @@ public class IngredientTransitionManager : MonoBehaviour
                 }
             }
 
-            // Fade UI Graphics (like Guidelines)
             for (int i = 0; i < uiGraphics.Length; i++)
             {
                 if (uiGraphics[i] != null)
@@ -115,15 +108,12 @@ public class IngredientTransitionManager : MonoBehaviour
             yield return null;
         }
 
-        // Clean up
         if (currentIngredient.scene.IsValid())
         {
-            // If it's a pre-placed scene object, just hide it
             currentIngredient.SetActive(false);
         }
         else
         {
-            // If it's an instantiated prefab, destroy it
             Destroy(currentIngredient);
         }
     }
@@ -161,10 +151,8 @@ public class IngredientTransitionManager : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / enterDuration);
             float curveT = enterEaseCurve.Evaluate(t);
 
-            // Move
             newIngredient.transform.position = Vector3.LerpUnclamped(startPos, targetPosition, curveT);
 
-            // Fade in Sprites
             for (int i = 0; i < spriteRenderers.Length; i++)
             {
                 if (spriteRenderers[i] != null)
@@ -175,7 +163,6 @@ public class IngredientTransitionManager : MonoBehaviour
                 }
             }
 
-            // Fade in UI Graphics
             for (int i = 0; i < uiGraphics.Length; i++)
             {
                 if (uiGraphics[i] != null)
@@ -189,7 +176,6 @@ public class IngredientTransitionManager : MonoBehaviour
             yield return null;
         }
 
-        // Ensure exact final state
         newIngredient.transform.position = targetPosition;
         for (int i = 0; i < spriteRenderers.Length; i++)
         {

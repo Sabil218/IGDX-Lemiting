@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Komponen Draggable Letter
-/// </summary>
 [RequireComponent(typeof(CanvasGroup))]
 public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -20,14 +17,13 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
     private Canvas rootCanvas;
     public bool isConsumed { get; private set; }
 
-    // Initialize component references
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
         rectTransform = GetComponent<RectTransform>();
     }
 
-    // Setup tile letter and visual
+    // Sets the letter text and prepares the tile to be dragged.
     public void Initialize(char letter)
     {
         Letter = char.ToUpper(letter);
@@ -52,7 +48,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    // Handle start dragging event
+    // Handles picking up the tile and detaching it from the layout grid.
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -72,7 +68,6 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         transform.SetAsLastSibling();
     }
 
-    // Handle drag movement
     public void OnDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -87,7 +82,6 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    // Handle end dragging event
     public void OnEndDrag(PointerEventData eventData)
     {
         if (isConsumed) return;
@@ -108,7 +102,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
         }
     }
 
-    // Hide and consume tile when placed correctly
+    // Hides and disables the tile after it has been successfully matched on the board.
     public void Consume()
     {
         isConsumed = true;
