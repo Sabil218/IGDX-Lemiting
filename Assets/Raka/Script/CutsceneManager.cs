@@ -8,35 +8,24 @@ public class CutsceneManager : MonoBehaviour
     public GameObject levelSelectPanel;
     public AudioManager audioManager;
 
-    // Menyimpan status hanya selama Play Mode
-    private static bool cutsceneAlreadyPlayed = false;
-
-    // Memastikan status di-reset ketika mulai Play Mode baru
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetStaticData()
-    {
-        cutsceneAlreadyPlayed = false;
-    }
+    private const string CutsceneKey = "LevelSelectCutscenePlayed";
 
     private void Start()
     {
         cutsceneImage.SetActive(false);
 
+        videoPlayer.loopPointReached -= VideoFinished;
         videoPlayer.loopPointReached += VideoFinished;
     }
 
     public void PlayCutscene()
     {
-        // Kalau sudah pernah dimainkan dalam sesi Play ini,
-        // langsung buka Level Select
-        if (cutsceneAlreadyPlayed)
+        // Periksa apakah cutscene sudah pernah diselesaikan
+        if (PlayerPrefs.GetInt(CutsceneKey, 0) == 1)
         {
             levelSelectPanel.SetActive(true);
             return;
         }
-
-        // Tandai sudah dimainkan
-        cutsceneAlreadyPlayed = true;
 
         // Sembunyikan Level Select
         levelSelectPanel.SetActive(false);
@@ -47,26 +36,47 @@ public class CutsceneManager : MonoBehaviour
             audioManager.StopBGM();
         }
 
-        // Tampilkan cutscene
+        // Tampilkan dan putar cutscene
         cutsceneImage.SetActive(true);
 
-        // Putar video dari awal
         videoPlayer.Stop();
         videoPlayer.Play();
     }
 
     private void VideoFinished(VideoPlayer vp)
     {
+        // Tandai cutscene sudah selesai
+        PlayerPrefs.SetInt(CutsceneKey, 1);
+        PlayerPrefs.Save();
+
         // Sembunyikan cutscene
         cutsceneImage.SetActive(false);
 
         // Tampilkan Level Select
         levelSelectPanel.SetActive(true);
 
-        // Nyalakan BGM kembali
+        // Nyalakan kembali BGM
         if (audioManager != null)
         {
             audioManager.PlayBGM();
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (videoPlayer != null)
+        {
+            videoPlayer.loopPointReached -= VideoFinished;
+        }
+    }
+
+    // Untuk mengulang pengujian di Unity Editor
+    [ContextMenu("Reset Cutscene Status")]
+    private void ResetCutsceneStatus()
+    {
+        PlayerPrefs.DeleteKey(CutsceneKey);
+        PlayerPrefs.Save();
+
+        Debug.Log("Status cutscene berhasil di-reset.");
     }
 }

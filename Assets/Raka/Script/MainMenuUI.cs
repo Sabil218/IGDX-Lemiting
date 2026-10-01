@@ -7,7 +7,7 @@ public class MainMenuUI : MonoBehaviour
     public GameObject optionPanel;
     public GameObject levelSelectPanel;
     public GameObject cutsceneManager;
-    public GameObject creditPanel; // TAMBAHAN
+    public GameObject creditPanel;
 
     [Header("Pages")]
     public GameObject levelSelectPage;
@@ -27,30 +27,32 @@ public class MainMenuUI : MonoBehaviour
     public Color inactiveTabColor =
         new Color(0.65f, 0.65f, 0.65f, 1f);
 
-
-    // Menyimpan posisi awal kedua tab
     private Vector2 levelSelectOriginalPosition;
     private Vector2 almanacOriginalPosition;
 
-
     private void Start()
     {
-        // Simpan posisi asli tab dari Unity
-        levelSelectOriginalPosition = levelSelectTab.anchoredPosition;
-        almanacOriginalPosition = almanacTab.anchoredPosition;
+        // Simpan posisi awal tab
+        if (levelSelectTab != null)
+            levelSelectOriginalPosition = levelSelectTab.anchoredPosition;
 
-        // Kondisi awal panel
-        optionPanel.SetActive(false);
-        levelSelectPanel.SetActive(false);
+        if (almanacTab != null)
+            almanacOriginalPosition = almanacTab.anchoredPosition;
 
-        // TAMBAHAN
-        creditPanel.SetActive(false);
+        // Sembunyikan panel saat Mainmenu dibuka
+        if (optionPanel != null)
+            optionPanel.SetActive(false);
 
-        // Kondisi awal halaman
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(false);
+
+        if (creditPanel != null)
+            creditPanel.SetActive(false);
+
+        // Atur tab awal ke Level Select
         SetLevelSelectActive();
 
-
-        // Jika kembali dari scene lain
+        // Buka Level Select jika kembali dari gameplay
         if (PlayerPrefs.GetInt("OpenLevelSelect", 0) == 1)
         {
             levelSelectPanel.SetActive(true);
@@ -62,152 +64,151 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
-
-    // =================================
+    // =========================
     // OPTION
-    // =================================
+    // =========================
 
     public void OpenOption()
     {
-        optionPanel.SetActive(true);
+        if (optionPanel != null)
+            optionPanel.SetActive(true);
     }
 
     public void CloseOption()
     {
-        optionPanel.SetActive(false);
+        if (optionPanel != null)
+            optionPanel.SetActive(false);
     }
 
-
-    // =================================
+    // =========================
     // CREDIT
-    // =================================
+    // =========================
 
     public void OpenCredit()
     {
-        // Buka Credit Panel
-        creditPanel.SetActive(true);
+        if (creditPanel != null)
+            creditPanel.SetActive(true);
     }
 
     public void CloseCredit()
     {
-        // Tutup Credit Panel
-        creditPanel.SetActive(false);
+        if (creditPanel != null)
+            creditPanel.SetActive(false);
     }
 
-
-    // =================================
-    // BUKA LEVEL SELECT
-    // =================================
+    // =========================
+    // LEVEL SELECT
+    // =========================
 
     public void OpenLevelSelect()
     {
-        if (PlayerPrefs.GetInt("LevelSelectCutscenePlayed", 0) == 0)
+        if (levelSelectPanel == null)
+            return;
+
+        // Sembunyikan panel sementara
+        levelSelectPanel.SetActive(false);
+
+        if (cutsceneManager != null)
         {
-            levelSelectPanel.SetActive(false);
+            CutsceneManager manager =
+                cutsceneManager.GetComponent<CutsceneManager>();
 
-            cutsceneManager.GetComponent<CutsceneManager>().PlayCutscene();
-
-            PlayerPrefs.SetInt("LevelSelectCutscenePlayed", 1);
-            PlayerPrefs.Save();
+            if (manager != null)
+            {
+                // CutsceneManager menentukan apakah
+                // cutscene perlu diputar atau dilewati
+                manager.PlayCutscene();
+            }
+            else
+            {
+                Debug.LogError(
+                    "CutsceneManager component tidak ditemukan!"
+                );
+            }
         }
         else
         {
-            levelSelectPanel.SetActive(true);
+            Debug.LogError("Cutscene Manager belum diisi!");
         }
     }
 
     public void CloseLevelSelect()
     {
-        levelSelectPanel.SetActive(false);
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(false);
     }
 
-
-    // =================================
-    // PINDAH KE ALMANAC
-    // =================================
+    // =========================
+    // ALMANAC
+    // =========================
 
     public void OpenAlmanac()
     {
         SetAlmanacActive();
     }
 
-
-    // =================================
-    // PINDAH KE LEVEL SELECT
-    // =================================
-
     public void GoToLevelSelect()
     {
         SetLevelSelectActive();
     }
 
-
-    // =================================
-    // LEVEL SELECT AKTIF
-    // =================================
+    // =========================
+    // TAB LEVEL SELECT
+    // =========================
 
     public void SetLevelSelectActive()
     {
-        // Tampilkan halaman Level Select
-        levelSelectPage.SetActive(true);
+        if (levelSelectPage != null)
+            levelSelectPage.SetActive(true);
 
-        // Sembunyikan halaman Almanac
-        almanacPanel.SetActive(false);
+        if (almanacPanel != null)
+            almanacPanel.SetActive(false);
 
+        // Atur posisi dan warna tab Level Select
+        if (levelSelectTab != null)
+            levelSelectTab.anchoredPosition =
+                levelSelectOriginalPosition;
 
-        // LEVEL SELECT TAB AKTIF
-        // Kembali ke posisi asli
-        levelSelectTab.anchoredPosition =
-            levelSelectOriginalPosition;
+        if (levelSelectTabImage != null)
+            levelSelectTabImage.color = activeTabColor;
 
-        // Warna terang
-        levelSelectTabImage.color =
-            activeTabColor;
+        // Atur posisi dan warna tab Almanac
+        if (almanacTab != null)
+            almanacTab.anchoredPosition =
+                almanacOriginalPosition +
+                new Vector2(inactiveTabX, 0);
 
-
-        // ALMANAC TAB TIDAK AKTIF
-        // Geser sedikit dari posisi asli
-        almanacTab.anchoredPosition =
-            almanacOriginalPosition +
-            new Vector2(inactiveTabX, 0);
-
-        // Warna lebih gelap
-        almanacTabImage.color =
-            inactiveTabColor;
+        if (almanacTabImage != null)
+            almanacTabImage.color = inactiveTabColor;
     }
 
-
-    // =================================
-    // ALMANAC AKTIF
-    // =================================
+    // =========================
+    // TAB ALMANAC
+    // =========================
 
     public void SetAlmanacActive()
     {
-        // Sembunyikan halaman Level Select
-        levelSelectPage.SetActive(false);
+        if (levelSelectPage != null)
+            levelSelectPage.SetActive(false);
 
-        // Tampilkan halaman Almanac
-        almanacPanel.SetActive(true);
+        if (almanacPanel != null)
+            almanacPanel.SetActive(true);
 
+        // Atur posisi dan warna tab Level Select
+        if (levelSelectTab != null)
+            levelSelectTab.anchoredPosition =
+                levelSelectOriginalPosition +
+                new Vector2(inactiveTabX, 0);
 
-        // LEVEL SELECT TAB TIDAK AKTIF
-        // Geser sedikit dari posisi asli
-        levelSelectTab.anchoredPosition =
-            levelSelectOriginalPosition +
-            new Vector2(inactiveTabX, 0);
+        if (levelSelectTabImage != null)
+            levelSelectTabImage.color = inactiveTabColor;
 
-        // Warna lebih gelap
-        levelSelectTabImage.color =
-            inactiveTabColor;
+        // Atur posisi dan warna tab Almanac
+        if (almanacTab != null)
+            almanacTab.anchoredPosition =
+                almanacOriginalPosition;
 
-
-        // ALMANAC TAB AKTIF
-        // Kembali ke posisi asli
-        almanacTab.anchoredPosition =
-            almanacOriginalPosition;
-
-        // Warna terang
-        almanacTabImage.color =
-            activeTabColor;
+        if (almanacTabImage != null)
+            almanacTabImage.color = activeTabColor;
     }
 }
