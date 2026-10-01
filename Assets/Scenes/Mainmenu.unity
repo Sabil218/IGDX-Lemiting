@@ -1554,7 +1554,7 @@ MonoBehaviour:
   - {fileID: 1675986594}
   lockedAlpha: 0.4
   unlockedAlpha: 1
-  resetProgressOnStart: 1
+  resetProgressOnStart: 0
 --- !u!1 &406904606
 GameObject:
   m_ObjectHideFlags: 0
@@ -5489,7 +5489,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: MiniGame1
+          m_StringArgument: SementaraMiniGame1
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &1679589841
@@ -6622,7 +6622,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: MiniGame1
+          m_StringArgument: SementaraMiniGame1
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &2116951042

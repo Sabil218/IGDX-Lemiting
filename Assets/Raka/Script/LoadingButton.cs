@@ -22,7 +22,7 @@ public class LoadingButton : MonoBehaviour
         {
             LoadingManager.instance.LoadScene("SementaraMiniGame1");
         }
-        else if (currentScene == "MiniGame1")
+        else if (currentScene == "SementaraMiniGame1")
         {
             LoadingManager.instance.LoadScene("Level4");
         }

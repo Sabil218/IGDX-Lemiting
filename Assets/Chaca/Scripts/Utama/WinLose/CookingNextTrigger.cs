@@ -5,14 +5,30 @@ public class CookingNextTrigger : MonoBehaviour
     public GameObject descriptionPanel;
     public GameObject nextButton;
 
+    private bool wasPanelActive;
     private bool triggered;
+
+    private void Start()
+    {
+        if (descriptionPanel != null)
+        {
+            wasPanelActive = descriptionPanel.activeSelf;
+        }
+
+        if (nextButton != null)
+        {
+            nextButton.SetActive(false);
+        }
+    }
 
     private void Update()
     {
-        if (triggered)
+        if (triggered || descriptionPanel == null)
             return;
 
-        if (descriptionPanel != null && descriptionPanel.activeSelf)
+        bool panelActive = descriptionPanel.activeSelf;
+
+        if (!wasPanelActive && panelActive)
         {
             triggered = true;
 
@@ -21,5 +37,7 @@ public class CookingNextTrigger : MonoBehaviour
                 nextButton.SetActive(true);
             }
         }
+
+        wasPanelActive = panelActive;
     }
 }
