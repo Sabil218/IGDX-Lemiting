@@ -25,7 +25,7 @@ public class CutsceneManager : MonoBehaviour
         }
 
         cutsceneImage.SetActive(false);
-        levelSelectPanel.SetActive(false);
+        
 
         videoPlayer.source = VideoSource.Url;
         videoPlayer.playOnAwake = false;

@@ -73,6 +73,8 @@ public class LoadingButton : MonoBehaviour
         LoadingManager.instance.LoadScene("Mainmenu");
     }
 
+    
+
 
     // =========================
     // MAIN MENU
