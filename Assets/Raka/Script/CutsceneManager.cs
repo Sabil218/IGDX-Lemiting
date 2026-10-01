@@ -1,61 +1,147 @@
+
 using UnityEngine;
 using UnityEngine.Video;
+using System;
+using System.IO;
 
 public class CutsceneManager : MonoBehaviour
 {
+    [Header("Cutscene References")]
     public VideoPlayer videoPlayer;
     public GameObject cutsceneImage;
     public GameObject levelSelectPanel;
     public AudioManager audioManager;
 
     private const string CutsceneKey = "LevelSelectCutscenePlayed";
+    private bool isPlaying = false;
 
     private void Start()
     {
+        if (videoPlayer == null || cutsceneImage == null ||
+            levelSelectPanel == null)
+        {
+            Debug.LogError("Referensi CutsceneManager belum lengkap!");
+            return;
+        }
+
         cutsceneImage.SetActive(false);
+        levelSelectPanel.SetActive(false);
+
+        videoPlayer.source = VideoSource.Url;
+        videoPlayer.playOnAwake = false;
+        videoPlayer.isLooping = false;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        videoPlayer.url = Application.streamingAssetsPath
+            + "/IGDX26_INTRO.mp4";
+#else
+        string videoPath = Path.Combine(
+            Application.streamingAssetsPath,
+            "IGDX26_INTRO.mp4"
+        );
+
+        videoPlayer.url = new Uri(
+            Path.GetFullPath(videoPath)
+        ).AbsoluteUri;
+#endif
 
         videoPlayer.loopPointReached -= VideoFinished;
         videoPlayer.loopPointReached += VideoFinished;
+
+        videoPlayer.errorReceived -= VideoError;
+        videoPlayer.errorReceived += VideoError;
+
+        Debug.Log("Cutscene URL: " + videoPlayer.url);
     }
 
     public void PlayCutscene()
     {
-        // Periksa apakah cutscene sudah pernah diselesaikan
+        if (videoPlayer == null ||
+            cutsceneImage == null ||
+            levelSelectPanel == null)
+        {
+            Debug.LogError("Referensi cutscene belum lengkap!");
+            return;
+        }
+
+        // Jika cutscene sudah pernah selesai,
+        // langsung tampilkan Level Select.
         if (PlayerPrefs.GetInt(CutsceneKey, 0) == 1)
         {
             levelSelectPanel.SetActive(true);
             return;
         }
 
-        // Sembunyikan Level Select
+        // Mencegah cutscene diputar berulang kali.
+        if (isPlaying) return;
+
+        isPlaying = true;
+
+        // Sembunyikan Level Select.
         levelSelectPanel.SetActive(false);
 
-        // Matikan BGM
+        // Hentikan BGM Mainmenu.
         if (audioManager != null)
         {
             audioManager.StopBGM();
         }
 
-        // Tampilkan dan putar cutscene
+        // Tampilkan layar cutscene.
         cutsceneImage.SetActive(true);
 
-        videoPlayer.Stop();
-        videoPlayer.Play();
+        // Siapkan video sebelum diputar.
+        videoPlayer.prepareCompleted -= VideoPrepared;
+        videoPlayer.prepareCompleted += VideoPrepared;
+        videoPlayer.Prepare();
+    }
+
+    private void VideoPrepared(VideoPlayer vp)
+    {
+        videoPlayer.prepareCompleted -= VideoPrepared;
+
+        if (isPlaying)
+        {
+            videoPlayer.Play();
+            Debug.Log("Cutscene mulai diputar.");
+        }
     }
 
     private void VideoFinished(VideoPlayer vp)
     {
-        // Tandai cutscene sudah selesai
+        // Simpan status bahwa cutscene sudah selesai.
         PlayerPrefs.SetInt(CutsceneKey, 1);
         PlayerPrefs.Save();
 
-        // Sembunyikan cutscene
+        isPlaying = false;
+
+        // Sembunyikan cutscene.
         cutsceneImage.SetActive(false);
 
-        // Tampilkan Level Select
+        // Tampilkan Level Select.
         levelSelectPanel.SetActive(true);
 
-        // Nyalakan kembali BGM
+        // Nyalakan kembali BGM.
+        if (audioManager != null)
+        {
+            audioManager.PlayBGM();
+        }
+
+        Debug.Log("Cutscene selesai.");
+    }
+
+    private void VideoError(VideoPlayer vp, string message)
+    {
+        Debug.LogError("Cutscene Error: " + message);
+
+        isPlaying = false;
+
+        // Sembunyikan cutscene.
+        cutsceneImage.SetActive(false);
+
+        // Tampilkan Level Select.
+        levelSelectPanel.SetActive(true);
+
+        // Nyalakan kembali BGM jika terjadi error.
         if (audioManager != null)
         {
             audioManager.PlayBGM();
@@ -67,10 +153,11 @@ public class CutsceneManager : MonoBehaviour
         if (videoPlayer != null)
         {
             videoPlayer.loopPointReached -= VideoFinished;
+            videoPlayer.prepareCompleted -= VideoPrepared;
+            videoPlayer.errorReceived -= VideoError;
         }
     }
 
-    // Untuk mengulang pengujian di Unity Editor
     [ContextMenu("Reset Cutscene Status")]
     private void ResetCutsceneStatus()
     {
