@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,35 +33,58 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("MainMenuUI Start dipanggil.");
+
         // Simpan posisi awal tab
         if (levelSelectTab != null)
-            levelSelectOriginalPosition = levelSelectTab.anchoredPosition;
+            levelSelectOriginalPosition =
+                levelSelectTab.anchoredPosition;
 
         if (almanacTab != null)
-            almanacOriginalPosition = almanacTab.anchoredPosition;
+            almanacOriginalPosition =
+                almanacTab.anchoredPosition;
 
-        // Sembunyikan panel saat Mainmenu dibuka
+        // Sembunyikan panel awal
         if (optionPanel != null)
             optionPanel.SetActive(false);
-
-        if (levelSelectPanel != null)
-            levelSelectPanel.SetActive(false);
 
         if (creditPanel != null)
             creditPanel.SetActive(false);
 
-        // Atur tab awal ke Level Select
+        // Baca penanda untuk membuka Level Select
+        int openLevelSelect =
+            PlayerPrefs.GetInt("OpenLevelSelect", 0);
+
+        Debug.Log("OpenLevelSelect saat Mainmenu dibuka: "
+            + openLevelSelect);
+
+        // Atur tab awal
         SetLevelSelectActive();
 
-        // Buka Level Select jika kembali dari gameplay
-        if (PlayerPrefs.GetInt("OpenLevelSelect", 0) == 1)
+        if (openLevelSelect == 1)
         {
-            levelSelectPanel.SetActive(true);
-
+            // Hapus penanda setelah dibaca
             PlayerPrefs.SetInt("OpenLevelSelect", 0);
             PlayerPrefs.Save();
 
-            SetLevelSelectActive();
+            // Buka Level Select langsung
+            if (levelSelectPanel != null)
+            {
+                levelSelectPanel.SetActive(true);
+                Debug.Log("Level Select dibuka dari gameplay.");
+            }
+            else
+            {
+                Debug.LogError("Level Select Panel belum diisi!");
+            }
+        }
+        else
+        {
+            // Masuk Mainmenu secara normal
+            if (levelSelectPanel != null)
+                levelSelectPanel.SetActive(false);
+
+            Debug.Log("Mainmenu dibuka tanpa Level Select.");
         }
     }
 
@@ -102,11 +126,15 @@ public class MainMenuUI : MonoBehaviour
 
     public void OpenLevelSelect()
     {
-        if (levelSelectPanel == null)
-            return;
+        Debug.Log("Tombol Level Select Mainmenu ditekan.");
 
-        // Sembunyikan panel sementara
-        levelSelectPanel.SetActive(false);
+        if (levelSelectPanel == null)
+        {
+            Debug.LogError("Level Select Panel belum diisi!");
+            return;
+        }
+
+        SetLevelSelectActive();
 
         if (cutsceneManager != null)
         {
@@ -115,20 +143,25 @@ public class MainMenuUI : MonoBehaviour
 
             if (manager != null)
             {
-                // CutsceneManager menentukan apakah
-                // cutscene perlu diputar atau dilewati
                 manager.PlayCutscene();
             }
             else
             {
                 Debug.LogError(
-                    "CutsceneManager component tidak ditemukan!"
+                    "Komponen CutsceneManager tidak ditemukan!"
                 );
+
+                levelSelectPanel.SetActive(true);
             }
         }
         else
         {
-            Debug.LogError("Cutscene Manager belum diisi!");
+            Debug.LogWarning(
+                "Cutscene Manager belum diisi. " +
+                "Level Select dibuka langsung."
+            );
+
+            levelSelectPanel.SetActive(true);
         }
     }
 
@@ -144,6 +177,9 @@ public class MainMenuUI : MonoBehaviour
 
     public void OpenAlmanac()
     {
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(true);
+
         SetAlmanacActive();
     }
 
@@ -164,19 +200,23 @@ public class MainMenuUI : MonoBehaviour
         if (almanacPanel != null)
             almanacPanel.SetActive(false);
 
-        // Atur posisi dan warna tab Level Select
+        // Posisi dan warna tab Level Select
         if (levelSelectTab != null)
+        {
             levelSelectTab.anchoredPosition =
                 levelSelectOriginalPosition;
+        }
 
         if (levelSelectTabImage != null)
             levelSelectTabImage.color = activeTabColor;
 
-        // Atur posisi dan warna tab Almanac
+        // Posisi dan warna tab Almanac
         if (almanacTab != null)
+        {
             almanacTab.anchoredPosition =
                 almanacOriginalPosition +
                 new Vector2(inactiveTabX, 0);
+        }
 
         if (almanacTabImage != null)
             almanacTabImage.color = inactiveTabColor;
@@ -194,19 +234,23 @@ public class MainMenuUI : MonoBehaviour
         if (almanacPanel != null)
             almanacPanel.SetActive(true);
 
-        // Atur posisi dan warna tab Level Select
+        // Posisi dan warna tab Level Select
         if (levelSelectTab != null)
+        {
             levelSelectTab.anchoredPosition =
                 levelSelectOriginalPosition +
                 new Vector2(inactiveTabX, 0);
+        }
 
         if (levelSelectTabImage != null)
             levelSelectTabImage.color = inactiveTabColor;
 
-        // Atur posisi dan warna tab Almanac
+        // Posisi dan warna tab Almanac
         if (almanacTab != null)
+        {
             almanacTab.anchoredPosition =
                 almanacOriginalPosition;
+        }
 
         if (almanacTabImage != null)
             almanacTabImage.color = activeTabColor;

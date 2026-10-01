@@ -43,9 +43,19 @@ public class PauseManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        PlayerPrefs.SetInt("OpenLevelSelect", 0);
+        PlayerPrefs.Save();
+
+        Debug.Log("GoHome dipanggil. OpenLevelSelect = " +
+            PlayerPrefs.GetInt("OpenLevelSelect", 0));
+
         if (LoadingManager.instance != null)
         {
             LoadingManager.instance.LoadScene("Mainmenu");
+        }
+        else
+        {
+            Debug.LogError("LoadingManager tidak ditemukan!");
         }
     }
 }
