@@ -21,8 +21,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Level3.unity
     guid: 90c891dbdbbe0304c8f91c7e9339f020
   - enabled: 1
-    path: Assets/Scenes/MiniGame1.unity
-    guid: 45b45c9a6d8866a47bba2324c49999de
+    path: Assets/Scenes/SementaraMiniGame1.unity
+    guid: 2cec64e555449324e8d87682767523fa
   - enabled: 1
     path: Assets/Scenes/Level4.unity
     guid: c60522b22a580104396ba1cca1ab778c
@@ -33,6 +33,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Level6.unity
     guid: d61e2f9b92958214cbad0ff33e8b6756
   - enabled: 1
-    path: Assets/Scenes/MiniGame2.unity
-    guid: 22a60c840f66eb246bc34eabbdbb2dac
+    path: Assets/Scenes/SementaraMiniGame2.unity
+    guid: 6d343b1777178944bbb84a9910b2e13f
   m_configObjects: {}
