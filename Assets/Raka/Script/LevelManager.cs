@@ -13,8 +13,16 @@ public class LevelUnlockManager : MonoBehaviour
     [Range(0f, 1f)]
     public float unlockedAlpha = 1f;
 
+    [Header("Testing")]
+    public bool resetProgressOnStart = false;
+
     private void Start()
     {
+        if (resetProgressOnStart)
+        {
+            ResetProgress();
+        }
+
         UpdateLevelButtons();
     }
 
@@ -26,15 +34,12 @@ public class LevelUnlockManager : MonoBehaviour
 
             bool unlocked;
 
-            // Level 1 selalu terbuka
             if (levelNumber == 1)
             {
                 unlocked = true;
             }
             else
             {
-                // Level berikutnya terbuka
-                // jika level sebelumnya sudah selesai
                 unlocked = PlayerPrefs.GetInt(
                     "Level" + (levelNumber - 1) + "Completed",
                     0
@@ -50,10 +55,8 @@ public class LevelUnlockManager : MonoBehaviour
         if (button == null)
             return;
 
-        // Bisa diklik atau tidak
         button.interactable = unlocked;
 
-        // Atur transparansi
         CanvasGroup canvasGroup =
             button.GetComponent<CanvasGroup>();
 
@@ -73,7 +76,6 @@ public class LevelUnlockManager : MonoBehaviour
         }
     }
 
-    // Dipanggil ketika suatu level selesai
     public void CompleteLevel(int levelNumber)
     {
         PlayerPrefs.SetInt(
@@ -84,7 +86,17 @@ public class LevelUnlockManager : MonoBehaviour
         PlayerPrefs.Save();
 
         UpdateLevelButtons();
+    }
 
-        Debug.Log("Level " + levelNumber + " selesai!");
+    public void ResetProgress()
+    {
+        for (int i = 1; i <= levelButtons.Length; i++)
+        {
+            PlayerPrefs.DeleteKey(
+                "Level" + i + "Completed"
+            );
+        }
+
+        PlayerPrefs.Save();
     }
 }

@@ -1554,6 +1554,7 @@ MonoBehaviour:
   - {fileID: 1675986594}
   lockedAlpha: 0.4
   unlockedAlpha: 1
+  resetProgressOnStart: 1
 --- !u!1 &406904606
 GameObject:
   m_ObjectHideFlags: 0
