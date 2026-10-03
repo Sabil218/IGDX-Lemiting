@@ -22,6 +22,8 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     public IngredientDropCutscene dropCutscene;
     public Transform targetDropArea;
     public Transform panContentContainer;
+    // Titik awal di mana bahan makanan muncul (rak kayu) sebelum jatuh ke wajan.
+    public Transform ingredientSpawnPoint;
 
     [Header("Cinemachine Cameras (Auto-detected if unassigned)")]
     [SerializeField] private Cinemachine.CinemachineVirtualCamera letterVirtualCamera;
@@ -50,7 +52,6 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     [SerializeField] private Transform targetBoardContainer;
     [SerializeField] private Transform letterPoolContainer;
     [SerializeField] private int maxCols = 6;
-    [SerializeField] private float maxContainerWidth = 950f;
     private int activeCols = 6;
 
     private Queue<GameObject> letterTilePool = new Queue<GameObject>();
@@ -87,6 +88,18 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     public void StartPhase()
     {
         EnsureCameraReferences();
+        EnsureSpawnPointReference();
+        EnsureDropAreaReference();
+
+        if (letterVirtualCamera != null)
+        {
+            letterVirtualCamera.gameObject.SetActive(true);
+            letterVirtualCamera.Priority = 15;
+        }
+        if (panVirtualCamera != null)
+        {
+            panVirtualCamera.Priority = 10;
+        }
 
         if (panContentContainer == null && CookingVisualController.Instance != null)
         {
@@ -453,13 +466,8 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         if (spellingRounds == null || spellingRounds.Length == 0 || currentSpellingIndex >= spellingRounds.Length)
             return;
 
-        Canvas canvas = GetComponentInChildren<Canvas>(true);
-        if (canvas != null)
-        {
-            CanvasGroup cg = canvas.GetComponent<CanvasGroup>();
-            if (cg == null) cg = canvas.gameObject.AddComponent<CanvasGroup>();
-            StartCoroutine(FadeCanvasGroup(cg, 0f, 0.3f, () => canvas.gameObject.SetActive(false)));
-        }
+        // Hanya fade out huruf-huruf, kotak kayu (Box) tetap aktif dan static
+        FadeLetterContainers(0f, 0.25f);
 
         if (dropCutscene != null && currentIngredient != null && targetDropArea != null)
         {
@@ -474,69 +482,174 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     public void EnsureCameraReferences()
     {
-        if (letterVirtualCamera == null)
+        if (letterVirtualCamera == null || panVirtualCamera == null)
         {
-            GameObject obj = GameObject.Find("VCam_Letter");
-            if (obj != null) letterVirtualCamera = obj.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            Cinemachine.CinemachineVirtualCamera[] allCameras = Resources.FindObjectsOfTypeAll<Cinemachine.CinemachineVirtualCamera>();
+            foreach (var cam in allCameras)
+            {
+                if (cam == null || !cam.gameObject.scene.IsValid()) continue;
+                if (cam.gameObject.name == "VCam_Letter" && letterVirtualCamera == null)
+                {
+                    letterVirtualCamera = cam;
+                }
+                else if (cam.gameObject.name == "VCam_Pan" && panVirtualCamera == null)
+                {
+                    panVirtualCamera = cam;
+                }
+            }
         }
-        if (panVirtualCamera == null)
+    }
+
+    public void EnsureSpawnPointReference()
+    {
+        if (ingredientSpawnPoint == null)
         {
-            GameObject obj = GameObject.Find("VCam_Pan");
-            if (obj != null) panVirtualCamera = obj.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+            foreach (Transform t in allTransforms)
+            {
+                if (t != null && t.gameObject.scene.IsValid() && t.name == "IngredientSpawnPoint")
+                {
+                    ingredientSpawnPoint = t;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void EnsureDropAreaReference()
+    {
+        if (targetDropArea == null)
+        {
+            Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+            foreach (Transform t in allTransforms)
+            {
+                if (t != null && t.gameObject.scene.IsValid() && t.name == "DropArea")
+                {
+                    targetDropArea = t;
+                    break;
+                }
+            }
+        }
+        if (panContentContainer == null && targetDropArea != null)
+        {
+            panContentContainer = targetDropArea;
+        }
+    }
+
+    public void SyncCameraBlendWithDropDuration()
+    {
+        if (dropCutscene == null) return;
+        float targetDuration = dropCutscene.DropDuration;
+
+        if (Camera.main != null)
+        {
+            Cinemachine.CinemachineBrain brain = Camera.main.GetComponent<Cinemachine.CinemachineBrain>();
+            if (brain != null && brain.m_CustomBlends != null && brain.m_CustomBlends.m_CustomBlends != null)
+            {
+                for (int i = 0; i < brain.m_CustomBlends.m_CustomBlends.Length; i++)
+                {
+                    if (brain.m_CustomBlends.m_CustomBlends[i].m_From == "VCam_Letter" &&
+                        brain.m_CustomBlends.m_CustomBlends[i].m_To == "VCam_Pan")
+                    {
+                        var blend = brain.m_CustomBlends.m_CustomBlends[i];
+                        blend.m_Blend.m_Style = Cinemachine.CinemachineBlendDefinition.Style.EaseInOut;
+                        blend.m_Blend.m_Time = targetDuration;
+                        brain.m_CustomBlends.m_CustomBlends[i] = blend;
+                        break;
+                    }
+                }
+            }
         }
     }
 
     private System.Collections.IEnumerator PlayCutsceneSequence()
     {
         EnsureCameraReferences();
+        EnsureSpawnPointReference();
+        EnsureDropAreaReference();
 
         bool isLastRound = (currentSpellingIndex >= spellingRounds.Length - 1);
 
-        // 1. Immediately blend camera to the Pan
+        // Pastikan di awal reveal kamera tetap menghadap ke rak kayu / huruf
+        if (letterVirtualCamera != null)
+        {
+            letterVirtualCamera.gameObject.SetActive(true);
+            letterVirtualCamera.Priority = 20;
+        }
+        if (panVirtualCamera != null)
+        {
+            panVirtualCamera.Priority = 10;
+        }
+
+        // 1. Munculkan (enable) visual bahan makanan tepat di rak kayu (IngredientSpawnPoint)
+        if (dropCutscene != null)
+        {
+            yield return StartCoroutine(dropCutscene.RevealAtSpawnPoint(currentIngredient, ingredientSpawnPoint));
+            if (dropCutscene.delayBeforeDrop > 0f)
+            {
+                yield return new WaitForSeconds(dropCutscene.delayBeforeDrop);
+            }
+        }
+        else if (currentIngredient != null)
+        {
+            if (ingredientSpawnPoint != null)
+            {
+                Vector3 p = ingredientSpawnPoint.position;
+                p.z = 0f;
+                currentIngredient.position = p;
+            }
+            currentIngredient.gameObject.SetActive(true);
+            yield return new WaitForSeconds(0.35f);
+        }
+
+        // 2. Kamera mulai bergerak ke wajan & bahan makanan mulai jatuh dari rak kayu ke wajan
+        onDropCutsceneStart?.Invoke();
+
+        EnsureCameraReferences();
+        SyncCameraBlendWithDropDuration();
         if (panVirtualCamera != null)
         {
             panVirtualCamera.gameObject.SetActive(true);
-            panVirtualCamera.Priority = 25; // Higher than letter camera (15) -> Cinemachine blends to pan
-        }
-        else if (letterVirtualCamera != null)
-        {
-            letterVirtualCamera.gameObject.SetActive(false);
+            panVirtualCamera.Priority = 25; // Cinemachine blend ke wajan
         }
 
-        onDropCutsceneStart?.Invoke();
-
-        // 2. Drop the ingredient dynamically with juicy arc & squash-and-stretch into the pan
         bool dropFinished = false;
-        dropCutscene.Play(currentIngredient, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
+        if (dropCutscene != null)
+        {
+            dropCutscene.DropToPan(currentIngredient, ingredientSpawnPoint, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
+            {
+                dropFinished = true;
+            });
+        }
+        else
         {
             dropFinished = true;
-        });
+        }
 
-        // 3. Wait for camera blend and drop animation
-        yield return StartCoroutine(WaitForCameraBlend());
-
+        // Tunggu hingga drop selesai
         while (!dropFinished)
         {
             yield return null;
         }
 
-        // 4. Check if this is the final round or if more words remain
+        // Tunggu hingga camera blend selesai jika masih dalam proses blend
+        yield return StartCoroutine(WaitForCameraBlend());
+
+        // 3. Cek apakah ini kata terakhir atau masih ada ronde berikutnya
         if (isLastRound)
         {
-            // ALL WORDS COMPLETED!
-            // Do NOT return camera to letter board. Keep camera focused on the pan (VCam_Pan stays active with Priority 25)!
+            // Selesai seluruh round: kamera tetap di wajan untuk fase Stir (Mengaduk)!
             yield return new WaitForSeconds(postDropWaitDelay);
 
-            // Clean up the Spelling Canvas permanently
-            Canvas canvas = GetComponentInChildren<Canvas>(true);
-            if (canvas != null) canvas.gameObject.SetActive(false);
+            // Sembunyikan huruf-huruf secara permanen, biarkan kotak kayu (Box) tetap static di rak
+            SetLetterContainersVisible(false);
 
             Debug.Log("[WordMatchingManager] Seluruh kata selesai dieja! Beralih langsung ke fase Stir (Mengaduk)...");
             onSpellingComplete?.Invoke();
         }
         else
         {
-            // More words remain: advance round and return camera to letter board
+            // Masih ada kata berikutnya: kembali ke rak huruf
             AdvanceSpellingRound();
         }
     }
@@ -551,7 +664,7 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                 // Wait 2 frames so Cinemachine LateUpdate has started the blend
                 yield return null; 
                 yield return null; 
-
+                
                 float safetyTimeout = 4f;
                 while (brain.IsBlending && safetyTimeout > 0f)
                 {
@@ -606,13 +719,12 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                 yield return new WaitForSeconds(cameraReturnDelay); 
             }
 
-            Canvas canvas = GetComponentInChildren<Canvas>(true);
-            if (canvas != null)
-            {
-                canvas.gameObject.SetActive(true);
-                CanvasGroup cg = canvas.GetComponent<CanvasGroup>();
-                if (cg != null) cg.alpha = 1f;
-            }
+            // Tampilkan kembali huruf-huruf baru di dalam kotak kayu yang tetap static
+            SetLetterContainersVisible(true);
+            CanvasGroup cgTarget = GetOrAddCanvasGroup(targetBoardContainer);
+            CanvasGroup cgPool = GetOrAddCanvasGroup(letterPoolContainer);
+            if (cgTarget != null) cgTarget.alpha = 1f;
+            if (cgPool != null) cgPool.alpha = 1f;
 
             LoadCurrentSpellingRound();
         }
@@ -620,6 +732,56 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         {
             onSpellingComplete?.Invoke();
         }
+    }
+
+    public void SetLetterContainersVisible(bool visible)
+    {
+        if (targetBoardContainer != null) targetBoardContainer.gameObject.SetActive(visible);
+        if (letterPoolContainer != null) letterPoolContainer.gameObject.SetActive(visible);
+    }
+
+    private void FadeLetterContainers(float targetAlpha, float duration, System.Action onComplete = null)
+    {
+        StartCoroutine(FadeContainersRoutine(targetAlpha, duration, onComplete));
+    }
+
+    private System.Collections.IEnumerator FadeContainersRoutine(float targetAlpha, float duration, System.Action onComplete)
+    {
+        CanvasGroup cgTarget = GetOrAddCanvasGroup(targetBoardContainer);
+        CanvasGroup cgPool = GetOrAddCanvasGroup(letterPoolContainer);
+
+        float startTargetAlpha = cgTarget != null ? cgTarget.alpha : 1f;
+        float startPoolAlpha = cgPool != null ? cgPool.alpha : 1f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            if (cgTarget != null) cgTarget.alpha = Mathf.Lerp(startTargetAlpha, targetAlpha, t);
+            if (cgPool != null) cgPool.alpha = Mathf.Lerp(startPoolAlpha, targetAlpha, t);
+
+            yield return null;
+        }
+
+        if (cgTarget != null) cgTarget.alpha = targetAlpha;
+        if (cgPool != null) cgPool.alpha = targetAlpha;
+
+        if (targetAlpha <= 0f)
+        {
+            SetLetterContainersVisible(false);
+        }
+
+        onComplete?.Invoke();
+    }
+
+    private CanvasGroup GetOrAddCanvasGroup(Transform t)
+    {
+        if (t == null) return null;
+        CanvasGroup cg = t.GetComponent<CanvasGroup>();
+        if (cg == null) cg = t.gameObject.AddComponent<CanvasGroup>();
+        return cg;
     }
 
     private void ClearContainer(Transform container)

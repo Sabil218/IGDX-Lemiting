@@ -52,6 +52,11 @@ public class FoodSlicer : MonoBehaviour
     {
         foreach (var phase in slicePhases)
         {
+            if (phase.sliceLine != null)
+            {
+                phase.sliceLine.raycastTarget = false;
+            }
+
             if (phase.sourceObject != null)
             {
                 SpriteRenderer sr = phase.sourceObject.GetComponent<SpriteRenderer>();
@@ -90,6 +95,7 @@ public class FoodSlicer : MonoBehaviour
             {
                 slicePhases[i].sliceLine.gameObject.SetActive(false);
                 slicePhases[i].sliceLine.fillAmount = 1f;
+                slicePhases[i].sliceLine.raycastTarget = false;
             }
 
             foreach (GameObject obj in slicePhases[i].resultObjects)
@@ -205,6 +211,7 @@ public class FoodSlicer : MonoBehaviour
 
     private void HandleSwipeMoving(Vector2 currentPos)
     {
+        if (Time.timeScale <= 0.0001f) return;
         if (currentPhaseIndex >= slicePhases.Length) return;
 
         SlicePhase currentPhase = slicePhases[currentPhaseIndex];
@@ -219,9 +226,10 @@ public class FoodSlicer : MonoBehaviour
             Vector2 lineRight = currentPhase.sliceLine.transform.right;
 
             float currentPerpDistance = Mathf.Abs(Vector2.Dot(currentPos - linePos, lineRight));
-            float startPerpDistance = Mathf.Abs(Vector2.Dot(startPos - linePos, lineRight));
 
-            if (startPerpDistance > perpDistanceTolerance * 1.5f || currentPerpDistance > perpDistanceTolerance * 1.5f)
+            // Periksa jarak tegak lurus dengan toleransi yang cukup fleksibel agar pemain tidak terblokir
+            float maxAllowedPerp = perpDistanceTolerance * 2.0f;
+            if (currentPerpDistance > maxAllowedPerp)
             {
                 return;
             }
@@ -262,11 +270,14 @@ public class FoodSlicer : MonoBehaviour
 
     private void HandleSwipeCompleted(List<Vector2> swipePath)
     {
+        if (Time.timeScale <= 0.0001f) return;
         if (currentPhaseIndex >= slicePhases.Length) return;
 
         SlicePhase currentPhase = slicePhases[currentPhaseIndex];
 
-        if (currentSliceProgress <= sliceCompletionThreshold)
+        // Saat jari dilepas, jika sudah terpotong lebih dari 65%, tuntaskan potongan agar tidak menggantung
+        float finishThreshold = Mathf.Max(sliceCompletionThreshold, 0.35f);
+        if (currentSliceProgress <= finishThreshold)
         {
             ExecuteSlice(currentPhase);
         }
@@ -274,6 +285,7 @@ public class FoodSlicer : MonoBehaviour
 
     private void ExecuteSlice(SlicePhase phase)
     {
+        if (Time.timeScale <= 0.0001f) return;
         if (SlicingManager.instance != null)
         {
             SlicingManager.instance.PlaySliceSfx(customSliceSfx);
@@ -403,38 +415,6 @@ public class FoodSlicer : MonoBehaviour
         if (SlicingManager.instance != null)
         {
             SlicingManager.instance.BahanSelesaiDipotong();
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (slicePhases == null) return;
-
-        foreach (var phase in slicePhases)
-        {
-            if (phase != null && phase.sliceLine != null)
-            {
-                RectTransform rectT = phase.sliceLine.rectTransform;
-                Vector3 linePos = rectT.position;
-                
-                float worldHeight = rectT.rect.height * rectT.lossyScale.y;
-                float actualWidth = perpDistanceTolerance * 1.5f * 2f; 
-
-                Matrix4x4 rotationMatrix = Matrix4x4.TRS(linePos, rectT.rotation, Vector3.one);
-                
-                Matrix4x4 oldMatrix = Gizmos.matrix;
-                Gizmos.matrix = rotationMatrix;
-                
-                // Draw a semi-transparent solid box to clearly show the swipe hitbox
-                Gizmos.color = new Color(0f, 1f, 1f, 0.3f); // Semi-transparent Cyan
-                Gizmos.DrawCube(Vector3.zero, new Vector3(actualWidth, worldHeight, 0.1f));
-
-                // Draw a solid wireframe border
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawWireCube(Vector3.zero, new Vector3(actualWidth, worldHeight, 0.1f));
-                
-                Gizmos.matrix = oldMatrix;
-            }
         }
     }
 }

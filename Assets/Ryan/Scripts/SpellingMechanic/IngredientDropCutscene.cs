@@ -5,59 +5,79 @@ using UnityEngine;
 
 public class IngredientDropCutscene : MonoBehaviour
 {
-    [Header("Drop Animation")]
-    [Tooltip("Fall duration in seconds for a gentle, caring drop.")]
+    [Header("Spawn Reference")]
+    // Titik awal di mana bahan makanan muncul (kotak rak kayu).
+    [SerializeField] private Transform customSpawnPoint;
+
+    [Header("Drop Movement")]
+    // Kecepatan Drop
     [SerializeField] private float dropDuration = 0.65f;
-    [SerializeField] private float spawnOffsetY = 3.8f;
-    [Tooltip("Small delay so the camera starts blending down before the ingredient falls into view.")]
-    [SerializeField] private float delayBeforeDrop = 0.25f;
-    [SerializeField] private float maxStaggerDelay = 0.05f;
+    public float DropDuration => Mathf.Max(0.05f, dropDuration);
+    // Ingredient Delay (0 = Immedieate Spawn)
+    public float delayBeforeDrop = 0.35f;
+    // Ketinggian busur lempar/tumpah (parabola) sebelum jatuh ke wajan
+    [SerializeField] private float tossArcHeight = 0.55f;
 
     [Header("Scale & Wajan Basin Bounds")]
-    [SerializeField] private float targetScale = 0.6f;
-    [Tooltip("Maximum horizontal spread inside the wajan.")]
+    // Faktor skala bahan makanan saat berada di wajan.
+    [SerializeField] private float targetScale = 0.65f;
+    // Batas radius horizontal di dalam wajan.
     [SerializeField] private float spreadRadiusX = 2.0f;
-    [Tooltip("Maximum upper spread inside the wajan.")]
+    // Batas radius vertikal atas di dalam wajan.
     [SerializeField] private float spreadRadiusYUp = 0.65f;
-    [Tooltip("Maximum lower spread inside the wajan.")]
+    // Batas radius vertikal bawah di dalam wajan.
     [SerializeField] private float spreadRadiusYDown = 0.40f;
-    [Tooltip("Gentle tilt on landing.")]
-    [SerializeField] private float maxRandomRotationZ = 20f;
+    //Z Rotation
+    [SerializeField] private float maxRandomRotationZ = 12f;
 
     [Header("Visual Effects & Juice")]
     [SerializeField] private ParticleSystem splashEffect;
     [SerializeField] private AudioClip popSfx;
-    [Tooltip("Gentle settling cushion on landing.")]
-    [SerializeField] private bool enableSquashAndStretch = true;
-    [SerializeField] private float squashAmount = 0.08f;
-    [SerializeField] private float squashDuration = 0.16f;
+    [SerializeField] private AudioClip landingSfx;
+    // Hentakan mendarat (micro-squash pada skala tanpa mengubah koordinat posisi)
+    [SerializeField] private float impactSquashIntensity = 0.18f;
+    [SerializeField] private float impactSquashDuration = 0.09f;
 
-    [Header("Post-Impact")]
-    [SerializeField] private float postImpactDelay = 0.65f;
+    [Header("Camera")]
+    [SerializeField] private float postImpactDelay = 0.45f;
 
     [Header("Debug")]
     [SerializeField] private Transform debugDropArea;
 
-    // Sector / Pocket tracking
+    // Pocket tracking untuk bahan-bahan sekunder di sekitar ayam
     private int currentPocketIndex = 0;
-    private List<Transform> cachedPieces = new List<Transform>();
+    private Dictionary<Transform, Vector3> originalScales = new Dictionary<Transform, Vector3>();
 
-    // Natural broth pockets around the chicken inside the wajan oval
-    private static readonly Vector2[] BrothPockets = new Vector2[]
+    // Pocket posisi default (-1 s/d 1 relatif terhadap radius wajan) dengan alur sebaran alami
+    private static readonly Vector2[] DefaultBrothPockets = new Vector2[]
     {
-        new Vector2(-1.15f,  0.38f),  // Upper-left broth pocket
-        new Vector2( 1.15f,  0.38f),  // Upper-right broth pocket
-        new Vector2( 1.55f, -0.05f),  // Right edge broth
-        new Vector2(-1.55f, -0.05f),  // Left edge broth
-        new Vector2( 0.00f,  0.50f),  // Top center broth
-        new Vector2( 0.50f, -0.22f),  // Lower-front right
-        new Vector2(-0.50f, -0.22f)   // Lower-front left
+        new Vector2(-0.70f,  0.20f),  // 1. Kiri tengah
+        new Vector2(-0.50f,  0.60f),  // 2. Kiri atas
+        new Vector2( 0.05f,  0.75f),  // 3. Atas tengah
+        new Vector2( 0.55f,  0.55f),  // 4. Kanan atas
+        new Vector2( 0.70f, -0.05f),  // 5. Kanan tengah
+        new Vector2( 0.45f, -0.60f),  // 6. Kanan bawah
+        new Vector2(-0.15f, -0.75f),  // 7. Bawah tengah
+        new Vector2(-0.55f, -0.45f)   // 8. Kiri bawah
     };
+
+    [Header("Drop Pockets (Relative -1 to 1)")]
+    // Titik sebaran relatif (-1 sampai 1). Jika kosong, otomatis menggunakan DefaultBrothPockets
+    [SerializeField] private Vector2[] customPockets;
+
+    private Vector2[] GetPockets()
+    {
+        if (customPockets != null && customPockets.Length > 0)
+        {
+            return customPockets;
+        }
+        return DefaultBrothPockets;
+    }
 
     public void ResetDropHistory()
     {
         currentPocketIndex = 0;
-        cachedPieces.Clear();
+        originalScales.Clear();
     }
 
     public void ResetClusterMemory()
@@ -65,13 +85,81 @@ public class IngredientDropCutscene : MonoBehaviour
         ResetDropHistory();
     }
 
-    // Main entry point for gentle, caring drop into the pan
-    public void Play(Transform ingredient, Transform targetArea, Transform panContentContainer, Action onComplete)
+    private void Awake()
     {
-        Play(ingredient, targetArea, panContentContainer, false, false, onComplete);
+        EnsureSpawnPoint();
     }
 
-    public void Play(Transform ingredient, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
+    public void EnsureSpawnPoint()
+    {
+        if (customSpawnPoint == null)
+        {
+            Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+            foreach (Transform t in allTransforms)
+            {
+                if (t != null && t.gameObject.scene.IsValid() && t.name == "IngredientSpawnPoint")
+                {
+                    customSpawnPoint = t;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Menampilkan dan mengaktifkan bahan makanan tepat di rak kayu (IngredientSpawnPoint).
+    public IEnumerator RevealAtSpawnPoint(Transform ingredient, Transform spawnPoint = null)
+    {
+        if (ingredient == null) yield break;
+
+        EnsureSpawnPoint();
+        Transform targetSpawn = spawnPoint != null ? spawnPoint : customSpawnPoint;
+
+        Vector3 spawnPos = targetSpawn != null ? targetSpawn.position : transform.position;
+        spawnPos.z = 0f;
+
+        // Catat skala dasar awal agar tidak mengecil berulang kali
+        if (!originalScales.ContainsKey(ingredient))
+        {
+            originalScales[ingredient] = ingredient.localScale;
+        }
+        Vector3 baseScale = originalScales[ingredient];
+
+        // Tempatkan di spawn point dan aktifkan visualnya
+        ingredient.position = spawnPos;
+        ingredient.rotation = Quaternion.identity;
+        ingredient.gameObject.SetActive(true);
+
+        // Pastikan seluruh SpriteRenderer child aktif
+        SpriteRenderer[] renderers = ingredient.GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var sr in renderers)
+        {
+            sr.gameObject.SetActive(true);
+            sr.enabled = true;
+        }
+
+        if (popSfx != null)
+        {
+            AudioSource.PlayClipAtPoint(popSfx, spawnPos);
+        }
+
+        // Animasi pop-in halus dari 0.1x ke skala dasar
+        float popDuration = 0.22f;
+        float elapsed = 0f;
+        while (elapsed < popDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / popDuration);
+            // Smooth ease-out dengan sedikit elastisitas manis
+            float ease = Mathf.Sin(t * Mathf.PI * 0.5f);
+            ingredient.localScale = Vector3.LerpUnclamped(baseScale * 0.1f, baseScale, ease);
+            yield return null;
+        }
+
+        ingredient.localScale = baseScale;
+    }
+
+    // Menjatuhkan bahan makanan dari rak kayu langsung ke wajan secara mulus.
+    public void DropToPan(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
     {
         if (ingredient == null || targetArea == null)
         {
@@ -79,167 +167,73 @@ public class IngredientDropCutscene : MonoBehaviour
             return;
         }
 
-        StartCoroutine(DropSequence(ingredient, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete));
+        StartCoroutine(DropToPanRoutine(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete));
     }
 
-    private IEnumerator DropSequence(Transform ingredient, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
+    private IEnumerator DropToPanRoutine(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
     {
-        if (delayBeforeDrop > 0f)
-        {
-            yield return new WaitForSeconds(delayBeforeDrop);
-        }
+        EnsureSpawnPoint();
+        Transform targetSpawn = spawnPoint != null ? spawnPoint : customSpawnPoint;
+
+        Vector3 startPos = (targetSpawn != null) ? targetSpawn.position : ingredient.position;
+        startPos.z = 0f;
+        ingredient.position = startPos;
 
         Vector3 panCenter = targetArea.position;
+        panCenter.z = 0f;
 
-        // Reparent cleanly so it follows the pan container
-        if (panContentContainer != null)
-        {
-            ingredient.SetParent(panContentContainer, true);
-        }
-        else
-        {
-            ingredient.SetParent(this.transform, true);
-        }
-
-        // Apply visual scale
-        ingredient.localScale = ingredient.localScale * targetScale;
-
-        // Position directly above the pan (NOT across the room at the letter board)
-        // This ensures the drop is vertical, gentle, and centered in the pan camera view
-        Vector3 parentStartPos = panCenter + Vector3.up * Mathf.Clamp(spawnOffsetY, 3.2f, 4.2f);
-        ingredient.position = parentStartPos;
-        ingredient.gameObject.SetActive(true);
-
-        if (popSfx != null)
-        {
-            AudioSource.PlayClipAtPoint(popSfx, parentStartPos);
-        }
-
-        // Collect all individual pieces
-        SpriteRenderer[] renderers = ingredient.GetComponentsInChildren<SpriteRenderer>(true);
-        List<Transform> pieces = new List<Transform>();
-
-        foreach (var sr in renderers)
-        {
-            if (sr.transform != ingredient)
-            {
-                pieces.Add(sr.transform);
-                sr.gameObject.SetActive(true);
-            }
-        }
-
-        if (pieces.Count == 0)
-        {
-            SpriteRenderer rootSr = ingredient.GetComponent<SpriteRenderer>();
-            if (rootSr != null)
-            {
-                pieces.Add(ingredient);
-            }
-        }
-
-        int totalPieces = pieces.Count;
-        int completedPieces = 0;
-
-        // Determine landing position inside the wajan
-        Vector3 baseTargetPos;
-
+        // 1. Tentukan target akhir di wajan SEJAK AWAL
+        Vector3 targetLandingPos;
         if (dropInCenter)
         {
-            // Centerpiece (Ayam or Ikan) lands gently right in the center of the wajan
-            baseTargetPos = panCenter;
+            // Bahan utama seperti ayam mendarat pas di tengah wajan
+            targetLandingPos = panCenter;
         }
         else
         {
-            // Subsequent ingredients cycle through the open broth pockets around the chicken
-            Vector2 pocket = BrothPockets[currentPocketIndex % BrothPockets.Length];
+            // Bahan pendukung mendarat di pocket wajan dengan variasi alami
+            Vector2[] pockets = GetPockets();
+            Vector2 pocket = pockets[currentPocketIndex % pockets.Length];
             currentPocketIndex++;
 
-            float candX = pocket.x + UnityEngine.Random.Range(-0.15f, 0.15f);
-            float candY = pocket.y + UnityEngine.Random.Range(-0.08f, 0.08f);
+            // Skala offset berdasarkan radius wajan agar menyebar proporsional mengisi ruang kosong
+            float limitY = pocket.y >= 0f ? spreadRadiusYUp : spreadRadiusYDown;
+            float jitterX = UnityEngine.Random.Range(-0.08f, 0.08f) * spreadRadiusX;
+            float jitterY = UnityEngine.Random.Range(-0.06f, 0.06f) * limitY;
 
-            // ABSOLUTE CLAMP: Guarantee point is 100% inside the wajan's inner oval
-            float limitY = candY >= 0f ? spreadRadiusYUp : spreadRadiusYDown;
-            float normX = candX / spreadRadiusX;
-            float normY = candY / limitY;
+            float offsetX = (pocket.x * spreadRadiusX) + jitterX;
+            float offsetY = (pocket.y * limitY) + jitterY;
+
+            // Clamp batas oval wajan agar tidak keluar dari bibir wajan
+            float normX = offsetX / spreadRadiusX;
+            float normY = offsetY / limitY;
             float distSq = normX * normX + normY * normY;
             if (distSq > 1f)
             {
-                float scale = 0.92f / Mathf.Sqrt(distSq);
-                candX *= scale;
-                candY *= scale;
+                float scale = 0.95f / Mathf.Sqrt(distSq);
+                offsetX *= scale;
+                offsetY *= scale;
             }
 
-            baseTargetPos = panCenter + new Vector3(candX, candY, 0f);
+            targetLandingPos = panCenter + new Vector3(offsetX, offsetY, 0f);
         }
 
-        // Animate each piece falling gently into its spot
-        float actualDropDuration = Mathf.Max(0.4f, dropDuration);
+        // Tentukan rotasi akhir yang lembut (tanpa putaran berlebihan)
+        Quaternion startRot = ingredient.rotation;
+        float targetRotZ = disableRotation ? 0f : UnityEngine.Random.Range(-maxRandomRotationZ, maxRandomRotationZ);
+        Quaternion targetRot = Quaternion.Euler(0f, 0f, targetRotZ);
 
-        for (int i = 0; i < totalPieces; i++)
+        // Tentukan skala target di wajan
+        if (!originalScales.ContainsKey(ingredient))
         {
-            Vector3 targetGlobalPos;
-
-            if (totalPieces == 1)
-            {
-                targetGlobalPos = baseTargetPos;
-            }
-            else
-            {
-                // Multi-piece (chopped onion/garlic/cabai) fans out gently around the pocket
-                float pieceAngle = (i * (360f / totalPieces) + UnityEngine.Random.Range(-15f, 15f)) * Mathf.Deg2Rad;
-                float pieceDist = UnityEngine.Random.Range(0.12f, 0.28f);
-                float pOffsetX = Mathf.Cos(pieceAngle) * pieceDist;
-                float pOffsetY = Mathf.Sin(pieceAngle) * pieceDist * 0.55f; // isometric squash
-                targetGlobalPos = baseTargetPos + new Vector3(pOffsetX, pOffsetY, 0f);
-            }
-
-            // Piece starts slightly above its target X for a vertical drop
-            Vector3 pieceStartPos = new Vector3(targetGlobalPos.x, parentStartPos.y, targetGlobalPos.z);
-            pieces[i].position = pieceStartPos;
-
-            float randomZ = disableRotation ? 0f : UnityEngine.Random.Range(-maxRandomRotationZ, maxRandomRotationZ);
-            Quaternion targetRot = pieces[i].localRotation * Quaternion.Euler(0f, 0f, randomZ);
-
-            StartCoroutine(AnimateSinglePiece(pieces[i], pieceStartPos, targetGlobalPos, targetRot, actualDropDuration, splashEffect, () => completedPieces++));
-
-            if (totalPieces > 1 && maxStaggerDelay > 0f)
-            {
-                yield return new WaitForSeconds(UnityEngine.Random.Range(0.02f, maxStaggerDelay));
-            }
+            originalScales[ingredient] = ingredient.localScale;
         }
+        Vector3 baseScale = originalScales[ingredient];
+        Vector3 finalScale = (targetScale > 0f) ? (baseScale * targetScale) : baseScale;
+        Vector3 currentScale = ingredient.localScale;
 
-        while (completedPieces < totalPieces)
-        {
-            yield return null;
-        }
-
-        // Anchor pieces to panContentContainer so they follow during stirring/cooking
-        if (panContentContainer != null)
-        {
-            for (int i = 0; i < pieces.Count; i++)
-            {
-                if (pieces[i] != null && pieces[i] != ingredient)
-                {
-                    pieces[i].SetParent(panContentContainer, true);
-                }
-            }
-            if (ingredient != null)
-            {
-                ingredient.position = panCenter;
-            }
-        }
-
-        float actualWait = Mathf.Max(0.2f, postImpactDelay);
-        yield return new WaitForSeconds(actualWait);
-        onComplete?.Invoke();
-    }
-
-    // Animates a single piece falling gently and settling with care into the wajan
-    private IEnumerator AnimateSinglePiece(Transform piece, Vector3 startPos, Vector3 endPos, Quaternion endRot, float duration, ParticleSystem splash, Action onComplete)
-    {
-        piece.gameObject.SetActive(true);
-
-        Quaternion startRot = piece.rotation;
+        // 2. Animasi meluncur/jatuh ke wajan dengan fisika gravitasi & arc lemparan
+        float duration = Mathf.Max(0.05f, dropDuration);
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -247,87 +241,96 @@ public class IngredientDropCutscene : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
 
-            // SmoothStep provides a gentle, natural, caring descent that cushions as it touches down
-            float tFall = t * t * (3f - 2f * t);
-            float currentY = Mathf.Lerp(startPos.y, endPos.y, tFall);
+            // Gerakan horizontal menyeberang secara smooth
+            float tX = Mathf.SmoothStep(0f, 1f, t);
 
-            // Smooth gentle horizontal drift into final resting spot
-            float currentX = Mathf.Lerp(startPos.x, endPos.x, t);
-            float currentZ = Mathf.Lerp(startPos.z, endPos.z, t);
+            // Gerakan vertikal: Arc parabola (tumpah) + percepatan gravitasi (Ease-In Quad)
+            // Menghasilkan kecepatan jatuh yang berakselerasi dan menumbuk wajan tanpa mengerem
+            float arc = 4f * t * (1f - t) * tossArcHeight;
+            float gravityFall = t * t;
 
-            piece.position = new Vector3(currentX, currentY, currentZ);
-            piece.rotation = Quaternion.Lerp(startRot, endRot, tFall);
+            float curX = Mathf.Lerp(startPos.x, targetLandingPos.x, tX);
+            float curY = Mathf.Lerp(startPos.y, targetLandingPos.y, gravityFall) + arc;
+            float curZ = Mathf.Lerp(startPos.z, targetLandingPos.z, t);
+
+            ingredient.position = new Vector3(curX, curY, curZ);
+            ingredient.rotation = Quaternion.Lerp(startRot, targetRot, t);
+            ingredient.localScale = Vector3.Lerp(currentScale, finalScale, t);
 
             yield return null;
         }
 
-        piece.position = endPos;
-        piece.rotation = endRot;
+        // 3. Touchdown TEPAT di targetLandingPos: 100% terkunci dan tidak pernah bergeser
+        ingredient.position = targetLandingPos;
+        ingredient.rotation = targetRot;
 
-        // Subtle splash on touchdown
-        if (splash != null)
+        // Efek cipratan/splash di titik pendaratan
+        if (splashEffect != null)
         {
-            splash.transform.position = endPos;
-            splash.Play();
+            splashEffect.transform.position = targetLandingPos;
+            splashEffect.Play();
         }
 
-        // Gentle settling cushion (soft micro-squash)
-        if (enableSquashAndStretch && piece != null)
+        if (landingSfx != null)
         {
-            yield return StartCoroutine(SquashAndStretchRoutine(piece, squashDuration));
+            AudioSource.PlayClipAtPoint(landingSfx, targetLandingPos);
+        }
+
+        // 4. Micro Squash & Stretch pada skala (Bukan posisi!) untuk sensasi benturan fisik wajan
+        if (impactSquashIntensity > 0f && impactSquashDuration > 0f)
+        {
+            float impactElapsed = 0f;
+            while (impactElapsed < impactSquashDuration)
+            {
+                impactElapsed += Time.deltaTime;
+                float it = Mathf.Clamp01(impactElapsed / impactSquashDuration);
+                // Sumbu Y memipih (squash), sumbu X melebar (stretch), lalu membal kembali ke normal (decay)
+                float decay = 1f - it;
+                float squashX = 1f + (impactSquashIntensity * 0.75f * decay);
+                float squashY = 1f - (impactSquashIntensity * decay);
+
+                ingredient.localScale = new Vector3(finalScale.x * squashX, finalScale.y * squashY, finalScale.z);
+                yield return null;
+            }
+        }
+        ingredient.localScale = finalScale;
+
+        // 5. Kaitkan ke container wajan (panContentContainer) dengan worldPositionStays = true
+        // Posisi world ingredient dijamin tetap persis di targetLandingPos tanpa bergeser
+        if (panContentContainer != null)
+        {
+            ingredient.SetParent(panContentContainer, true);
+        }
+
+        // Jeda tenang setelah mendarat
+        if (postImpactDelay > 0f)
+        {
+            yield return new WaitForSeconds(postImpactDelay);
         }
 
         onComplete?.Invoke();
     }
 
-    private IEnumerator SquashAndStretchRoutine(Transform target, float duration)
+    // Overload untuk kompatibilitas
+    public void Play(Transform ingredient, Transform targetArea, Transform panContentContainer, Action onComplete)
     {
-        if (target == null) yield break;
-
-        Vector3 baseScale = target.localScale;
-        Vector3 squashedScale = new Vector3(
-            baseScale.x * (1f + squashAmount),
-            baseScale.y * (1f - squashAmount),
-            baseScale.z
-        );
-
-        float halfDuration = duration * 0.5f;
-        float elapsed = 0f;
-
-        // Gentle settle
-        while (elapsed < halfDuration && target != null)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-            target.localScale = Vector3.Lerp(baseScale, squashedScale, t);
-            yield return null;
-        }
-
-        elapsed = 0f;
-        // Rebound softly to normal
-        while (elapsed < halfDuration && target != null)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-            target.localScale = Vector3.Lerp(squashedScale, baseScale, t);
-            yield return null;
-        }
-
-        if (target != null)
-        {
-            target.localScale = baseScale;
-        }
+        Play(ingredient, targetArea, panContentContainer, false, false, onComplete);
     }
 
-    // Backwards-compatible methods for other scripts
+    public void Play(Transform ingredient, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
+    {
+        EnsureSpawnPoint();
+        DropToPan(ingredient, customSpawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete);
+    }
+
+    public void Play(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
+    {
+        DropToPan(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete);
+    }
+
     public IEnumerator PopAtSpawnPoint(Transform ingredient, Transform targetArea, Transform panContentContainer)
     {
-        // No-op or quick reveal (kept for compatibility)
-        if (ingredient != null)
-        {
-            ingredient.gameObject.SetActive(true);
-        }
-        yield break;
+        yield return StartCoroutine(RevealAtSpawnPoint(ingredient, customSpawnPoint));
     }
 
     public void StartDroppingPieces(Transform ingredient, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
@@ -341,6 +344,11 @@ public class IngredientDropCutscene : MonoBehaviour
         if (area == null)
         {
             WordMatchingManager wmm = GetComponent<WordMatchingManager>();
+            if (wmm != null && wmm.targetDropArea != null) area = wmm.targetDropArea;
+        }
+        if (area == null)
+        {
+            WordMatchingManager wmm = FindObjectOfType<WordMatchingManager>();
             if (wmm != null && wmm.targetDropArea != null) area = wmm.targetDropArea;
         }
         if (area == null) return;
@@ -362,13 +370,20 @@ public class IngredientDropCutscene : MonoBehaviour
             lastPoint = nextPoint;
         }
 
-        // Draw natural broth pockets
+        // Gambar titik-titik pendaratan bahan (broth pockets) di dalam wajan
         Gizmos.color = Color.yellow;
-        if (BrothPockets != null)
+        Vector2[] pockets = GetPockets();
+        if (pockets != null)
         {
-            for (int i = 0; i < BrothPockets.Length; i++)
+            for (int i = 0; i < pockets.Length; i++)
             {
-                Gizmos.DrawWireSphere(c + new Vector3(BrothPockets[i].x, BrothPockets[i].y, 0f), 0.12f);
+                float limitY = pockets[i].y >= 0f ? spreadRadiusYUp : spreadRadiusYDown;
+                Vector3 pocketPos = c + new Vector3(pockets[i].x * spreadRadiusX, pockets[i].y * limitY, 0f);
+                Gizmos.DrawWireSphere(pocketPos, 0.12f);
+#if UNITY_EDITOR
+                UnityEditor.Handles.color = Color.yellow;
+                UnityEditor.Handles.Label(pocketPos + Vector3.up * 0.12f, $"Spot {i + 1}");
+#endif
             }
         }
     }

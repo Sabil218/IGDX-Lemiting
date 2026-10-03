@@ -16,6 +16,7 @@ public class StirInput : MonoBehaviour
     [SerializeField] private Collider2D stirZoneCollider;
 
     public GameObject StirZoneObject => stirZoneCollider != null ? stirZoneCollider.gameObject : null;
+    public Vector2 LastPushDirection { get; private set; } = Vector2.right;
 
     private bool isDragging;
     private Vector2 previousDirection;
@@ -42,15 +43,18 @@ public class StirInput : MonoBehaviour
     // Handles touch/mouse input, calculates circular motion around the pan, and fires progress events.
     private void Update()
     {
-        if (isCompleted) return;
+        if (isCompleted || Time.timeScale <= 0.0001f)
+        {
+            if (isDragging) isDragging = false;
+            return;
+        }
 
         Vector2 screenPos = GetPointerScreenPos();
         Vector2 worldPos = mainCamera.ScreenToWorldPoint(screenPos);
 
         if (IsPointerDown())
         {
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (IsPointerOverUI())
                 return;
 
             if (stirZoneCollider != null && stirZoneCollider.OverlapPoint(worldPos))
@@ -61,6 +65,12 @@ public class StirInput : MonoBehaviour
         }
         else if (isDragging && IsPointerHeld())
         {
+            if (IsPointerOverUI())
+            {
+                isDragging = false;
+                return;
+            }
+
             Vector2 center = GetCenterWorldPos();
 
             float moveDelta = Vector2.Distance(worldPos, center);
@@ -69,6 +79,13 @@ public class StirInput : MonoBehaviour
             Vector2 currentDirection = (worldPos - center).normalized;
 
             float angleDelta = Vector2.SignedAngle(previousDirection, currentDirection);
+
+            Vector2 dirDelta = currentDirection - previousDirection;
+            if (dirDelta.sqrMagnitude > 0.0001f)
+            {
+                Vector2 targetDir = dirDelta.normalized;
+                LastPushDirection = Vector2.Lerp(LastPushDirection, targetDir, 0.4f).normalized;
+            }
 
             float progressDelta = requireClockwise ? -angleDelta : Mathf.Abs(angleDelta);
 
@@ -113,6 +130,14 @@ public class StirInput : MonoBehaviour
     private bool IsPointerHeld() => Input.touchCount > 0 ? (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Stationary) : Input.GetMouseButton(0);
     private bool IsPointerUp() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Ended : Input.GetMouseButtonUp(0);
     private Vector2 GetPointerScreenPos() => Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+
+    private bool IsPointerOverUI()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+        if (Input.touchCount > 0)
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+    }
 
     private void OnDrawGizmos()
     {

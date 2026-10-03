@@ -43,6 +43,8 @@ public class LoadingManager : MonoBehaviour
         if (isLoading)
             return;
 
+        Time.timeScale = 1f;
+
         if (string.IsNullOrEmpty(sceneName))
         {
             Debug.LogError("Nama scene belum diisi!");

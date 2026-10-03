@@ -354,6 +354,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stirInput: {fileID: 114016121}
   spoonTransform: {fileID: 43304441}
+  fireObject: {fileID: 1134777971}
+  stirSfx: {fileID: 8300000, guid: 49d49bdbe092ff54aa1bcc6cc0805bd6, type: 3}
+  sfxAudioSource: {fileID: 0}
+  stirAudioInterval: 0.22
   panBoundaryMultiplier: 0.75
   stirBoundsCollider: {fileID: 0}
   ingredientSpeedMultiplier: 0.5
@@ -1699,6 +1703,9 @@ MonoBehaviour:
   finalAlasTargetPos: {fileID: 1055150276}
   wajanMeetPoint: {fileID: 1174440985}
   piringMeetPoint: {fileID: 2146750219}
+  finalScreenSfx: {fileID: 8300000, guid: 3ec71bcc15b220d4e897058387cc5f78, type: 3}
+  dropToPlateSfx: {fileID: 0}
+  sfxAudioSource: {fileID: 0}
 --- !u!114 &684682242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3643,7 +3650,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1134777972
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6392,6 +6399,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stirInput: {fileID: 1756615804}
   spoonTransform: {fileID: 43304441}
+  fireObject: {fileID: 1134777971}
+  stirSfx: {fileID: 8300000, guid: 49d49bdbe092ff54aa1bcc6cc0805bd6, type: 3}
+  sfxAudioSource: {fileID: 0}
+  stirAudioInterval: 0.22
   panBoundaryMultiplier: 0.75
   stirBoundsCollider: {fileID: 0}
   ingredientSpeedMultiplier: 0.5

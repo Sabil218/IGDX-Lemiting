@@ -51,7 +51,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
     // Handles picking up the tile and detaching it from the layout grid.
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (isConsumed) return;
+        if (isConsumed || Time.timeScale <= 0.0001f) return;
 
         originParent = transform.parent;
         originLocalPosition = transform.localPosition;
@@ -70,7 +70,7 @@ public class DraggableLetterTile : MonoBehaviour, IBeginDragHandler, IDragHandle
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (isConsumed) return;
+        if (isConsumed || Time.timeScale <= 0.0001f) return;
 
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
             rootCanvas.transform as RectTransform,

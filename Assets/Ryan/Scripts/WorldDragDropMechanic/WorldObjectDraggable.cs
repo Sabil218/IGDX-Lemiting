@@ -67,6 +67,20 @@ public class WorldObjectDraggable : MonoBehaviour
     {
         if (isConsumed) return;
 
+        if (Time.timeScale <= 0.0001f)
+        {
+            if (isDragging)
+            {
+                isDragging = false;
+                BoostSortingOrder(false);
+                if (returnAfterDrop)
+                {
+                    rootToDrag.position = originalPosition;
+                }
+            }
+            return;
+        }
+
         Vector2 pointerWorldPos = mainCamera.ScreenToWorldPoint(GetPointerScreenPos());
 
         if (IsPointerDown())
@@ -95,6 +109,16 @@ public class WorldObjectDraggable : MonoBehaviour
 
                 BoostSortingOrder(true);
             }
+        }
+        else if (isDragging && IsPointerOverUI())
+        {
+            isDragging = false;
+            BoostSortingOrder(false);
+            if (returnAfterDrop)
+            {
+                rootToDrag.position = originalPosition;
+            }
+            return;
         }
 
         if (IsPointerUp() && isDragging)

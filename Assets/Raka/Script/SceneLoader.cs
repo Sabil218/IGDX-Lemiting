@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
@@ -62,6 +62,8 @@ public class SceneLoader : MonoBehaviour
     {
         if (isLoading)
             return;
+
+        Time.timeScale = 1f;
 
         if (string.IsNullOrEmpty(sceneName))
         {

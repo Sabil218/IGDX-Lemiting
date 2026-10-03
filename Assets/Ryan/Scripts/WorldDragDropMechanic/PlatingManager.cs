@@ -15,20 +15,29 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
     [Header("Events")]
     public UnityEvent OnPhaseComplete;
 
-    // Starts the plating sequence and triggers the entry animation.
+    // Memulai fase plating dan animasi masuk wajan & piring
     public void StartPhase()
     {
+        // 1. Pindah kamera ke meja saji jika ada
         if (platingVirtualCamera != null)
         {
             platingVirtualCamera.SetActive(true);
+            var vcam = platingVirtualCamera.GetComponent<Cinemachine.CinemachineVirtualCamera>();
+            if (vcam != null) vcam.Priority = 30;
         }
 
+        // Pastikan sendok pengaduk dan api kompor mati saat masuk fase plating
+        CookingManager.SetStoveFireActive(false);
+        CookingManager.SetSpoonActive(false);
+
+        // Matikan CookedDummy jika ada di scene
         GameObject autoDummy = GameObject.Find("CookedDummy");
         if (autoDummy != null)
         {
             autoDummy.SetActive(false);
         }
 
+        // 2. Setup cutscene player dan kunci drag wajan sementara
         if (cutscenePlayer != null)
         {
             cutscenePlayer.gameObject.SetActive(true);
@@ -36,6 +45,7 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
         
         if (wajanDraggable != null) wajanDraggable.enabled = false;
 
+        // 3. Mainkan animasi wajan & piring masuk bersamaan seperti versi lama
         if (cutscenePlayer != null)
         {
             cutscenePlayer.PlayEntryAnimation(() => 
@@ -48,6 +58,7 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
             if (wajanDraggable != null) wajanDraggable.enabled = true;
         }
 
+        // 4. Daftarkan event saat wajan dituang ke piring
         if (piringDropZone != null)
         {
             piringDropZone.ResetZone();
@@ -63,7 +74,7 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
         }
     }
 
-    // Triggered when the player successfully drags the pan to the plate.
+    // Dipanggil saat wajan berhasil di-drop ke atas piring
     private void HandleDropReceived()
     {
         if (wajanDraggable != null) wajanDraggable.enabled = false;
