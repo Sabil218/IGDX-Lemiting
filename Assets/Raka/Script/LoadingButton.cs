@@ -8,6 +8,8 @@ public class LoadingButton : MonoBehaviour
     // =========================
     public void NextLevel()
     {
+        Time.timeScale = 1f;
+
         string currentScene = SceneManager.GetActiveScene().name;
 
         if (currentScene == "Level1")

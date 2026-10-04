@@ -8,10 +8,7 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
     public static SlicingManager instance { get; private set; }
 
     [Header("Slicing References")]
-    [Tooltip("Daftar bahan yang akan dipotong secara berurutan")]
     [SerializeField] private GameObject[] bahanSlicing;
-    
-    [Tooltip("Titik kemunculan bahan yang akan dipotong. Jika kosong, akan menggunakan posisi objek ini.")]
     [SerializeField] private Transform spawnPoint;
     
     private int currentSlicingIndex = 0;
@@ -21,8 +18,12 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
 
     private IngredientTransitionManager transitionManager;
 
+    [Header("Audio / SFX")]
+    [SerializeField] private AudioSource sfxAudioSource;
+    [SerializeField] private AudioClip[] sliceSfxClips;
+    [SerializeField] private AudioClip ingredientCompleteSfx;
+
     [Header("Events")]
-    [Tooltip("Event ini akan dipanggil saat seluruh bahan selesai dipotong.")]
     [SerializeField] private UnityEvent onSlicingComplete;
 
     //Initialize Singleton
@@ -77,7 +78,54 @@ public class SlicingManager : MonoBehaviour, ICookingPhase
     //Ingredient Slice Complete Handler
     public void BahanSelesaiDipotong()
     {
+        PlayIngredientCompleteSfx();
         StartCoroutine(JedaGantiBahanSlicing());
+    }
+
+    public void PlaySliceSfx(AudioClip customClip = null)
+    {
+        AudioClip clipToPlay = customClip;
+        if (clipToPlay == null && sliceSfxClips != null && sliceSfxClips.Length > 0)
+        {
+            clipToPlay = sliceSfxClips[Random.Range(0, sliceSfxClips.Length)];
+        }
+
+        if (clipToPlay != null)
+        {
+            PlaySfx(clipToPlay);
+        }
+    }
+
+    public void PlayIngredientCompleteSfx()
+    {
+        if (ingredientCompleteSfx != null)
+        {
+            PlaySfx(ingredientCompleteSfx);
+        }
+    }
+
+    private void PlaySfx(AudioClip clip)
+    {
+        if (clip == null) return;
+        if (sfxAudioSource == null)
+        {
+            sfxAudioSource = GetComponent<AudioSource>();
+            if (sfxAudioSource == null) sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            SetupAudioMixerGroup(sfxAudioSource);
+        }
+        sfxAudioSource.PlayOneShot(clip);
+    }
+
+    private void SetupAudioMixerGroup(AudioSource source)
+    {
+        if (AudioManager.instance != null && AudioManager.instance.audioMixer != null)
+        {
+            UnityEngine.Audio.AudioMixerGroup[] groups = AudioManager.instance.audioMixer.FindMatchingGroups("SFX");
+            if (groups != null && groups.Length > 0)
+            {
+                source.outputAudioMixerGroup = groups[0];
+            }
+        }
     }
 
     //Delay before next ingredient

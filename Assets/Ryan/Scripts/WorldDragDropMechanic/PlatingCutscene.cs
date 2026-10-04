@@ -8,27 +8,20 @@ public class PlatingCutscene : MonoBehaviour
     public Transform wajan;
     public Transform piring;
 
-    [Header("Sprite Swaps")]
-    [Tooltip("Target wajan yang sprite-nya akan diganti")]
-    public SpriteRenderer wajanRenderer;
-    [Tooltip("Gambar wajan kosong/kotor setelah makanan dituang")]
-    public Sprite wajanKosongSprite;
-    
-    [Tooltip("Object-object makanan (seperti Matang/SetengahMatang) di dalam wajan yang harus disembunyikan saat dituang")]
+    [Header("Food Drop Visibility")]
     public GameObject[] objectsToHideOnDrop;
-
-    [Tooltip("Target piring yang sprite-nya akan diganti")]
-    public SpriteRenderer piringRenderer;
-    [Tooltip("Gambar piring yang sudah ada makanannya")]
-    public Sprite piringIsiSprite;
-
-    [Tooltip("Object-object yang harus dimunculkan saat dituang (misalnya ServedFood)")]
     public GameObject[] objectsToShowOnDrop;
 
     [Header("Entry Animation")]
-    public Vector3 wajanStartOffset = new Vector3(-10f, 0f, 0f); // Dari kiri
-    public Vector3 piringStartOffset = new Vector3(0f, 8f, 0f); // Dari atas
+    public Transform piringStartPoint;
+    public Transform piringMeetPoint;
+    public Transform wajanStartPoint;
+    public Transform wajanMeetPoint;
+    public Vector3 piringStartOffset = new Vector3(0f, 12f, 0f);
+    public Vector3 wajanStartOffset = new Vector3(-12f, 0f, 0f);
     public float entryDuration = 0.8f;
+    // Jika true, piring diam di meja (stasioner) sejak awal dan hanya wajan yang meluncur masuk
+    public bool keepPlateStationary = true;
 
     [Header("Post-Drop Effects")]
     public ParticleSystem dropEffect;
@@ -38,65 +31,138 @@ public class PlatingCutscene : MonoBehaviour
 
     [Header("Exit Animation")]
     public Vector3 wajanExitOffset = new Vector3(10f, 0f, 0f);
-    public float exitDuration = 1.5f; // Diperlambat dari 0.5 ke 1.5
-    public Vector3 plateTargetScale = new Vector3(2f, 2f, 1f); // Diperbesar
-    
-    [Tooltip("Opsional: Titik tengah layar tempat piring akan bergerak saat dizoom. Kosongkan jika piring tidak perlu pindah.")]
+    public float exitDuration = 1.5f;
+    public Vector3 plateTargetScale = new Vector3(1.5f, 1.5f, 1f);
     public Transform plateCenterPoint;
-    
-    public float zoomDuration = 1.0f; // Diperlambat sedikit agar lebih dramatis
+    public float zoomDuration = 1.0f;
 
     [Header("Final Presentation")]
-    [Tooltip("Object yang akan dimunculkan setelah piring selesai di-zoom (teks, background final, dll)")]
     public GameObject[] finalUIObjects;
-    
-    [Tooltip("Opsional: Jika ingin 'final_alas' meluncur masuk otomatis, masukkan object-nya ke sini")]
+    public GameObject nextButton;
     public Transform finalAlasObject;
-    [Tooltip("Titik tujuan berhentinya final_alas (AlasFinalPos)")]
     public Transform finalAlasTargetPos;
+    public Vector3 finalAlasStartOffset = new Vector3(0f, 10f, 0f);
+    public float uiBounceDuration = 0.45f;
+    public float uiStaggerDelay = 0.12f;
 
-    public Transform wajanMeetPoint;
-    public Transform piringMeetPoint;
+    [Header("Audio")]
+    public AudioClip finalScreenSfx;
+    public AudioClip dropToPlateSfx;
+    [SerializeField] private AudioSource sfxAudioSource;
 
     private Camera mainCamera;
+    private System.Collections.Generic.Dictionary<Transform, Vector3> initialScales = new System.Collections.Generic.Dictionary<Transform, Vector3>();
 
     private void Awake()
     {
         mainCamera = Camera.main;
+        CacheInitialScales();
+        HideFinalUI();
+        SnapPlateIfStationary();
+    }
+
+    private void Start()
+    {
+        CacheInitialScales();
+        HideFinalUI();
+        SnapPlateIfStationary();
+    }
+
+    // Simpan skala asli elemen UI dan judul agar saat bounce kembali ke ukuran yang tepat
+    private void CacheInitialScales()
+    {
+        if (finalUIObjects != null)
+        {
+            foreach (var obj in finalUIObjects)
+            {
+                if (obj != null && !initialScales.ContainsKey(obj.transform))
+                {
+                    initialScales[obj.transform] = obj.transform.localScale;
+                }
+            }
+        }
+        if (nextButton != null && !initialScales.ContainsKey(nextButton.transform))
+        {
+            initialScales[nextButton.transform] = nextButton.transform.localScale;
+        }
+    }
+
+    // Pastikan posisi piring langsung berada di titik temu meja jika diset stasioner
+    private void SnapPlateIfStationary()
+    {
+        if (keepPlateStationary && piring != null && piringMeetPoint != null)
+        {
+            Vector3 pTarget = piringMeetPoint.position;
+            pTarget.z = 0f;
+            piring.position = pTarget;
+        }
+    }
+
+    // Sembunyikan elemen UI akhir saat fase memasak/menuang berlangsung
+    public void HideFinalUI()
+    {
+        if (finalUIObjects != null)
+        {
+            foreach (var obj in finalUIObjects)
+            {
+                if (obj != null) obj.SetActive(false);
+            }
+        }
+        if (nextButton != null)
+        {
+            nextButton.SetActive(false);
+        }
+        if (finalAlasObject != null)
+        {
+            finalAlasObject.gameObject.SetActive(false);
+        }
     }
 
     public void PlayEntryAnimation(Action onComplete)
     {
+        HideFinalUI();
         StartCoroutine(EntrySequence(onComplete));
     }
 
+    // Meluncurkan wajan masuk ke meja sementara piring tetap stasioner di posisinya
     private IEnumerator EntrySequence(Action onComplete)
     {
-        if (wajan == null || piring == null || wajanMeetPoint == null || piringMeetPoint == null)
+        if (wajan == null || piring == null)
         {
-            Debug.LogWarning("Referensi Wajan, Piring, atau Meet Point ada yang kosong di PlatingCutscene!");
+            Debug.LogWarning("Referensi Wajan atau Piring ada yang kosong di PlatingCutscene!");
             yield break;
         }
 
-        // 1. Set posisi awal (di luar layar / offset berdasarkan titik kumpul)
-        Vector3 wTarget = wajanMeetPoint.position;
-        Vector3 pTarget = piringMeetPoint.position;
+        Vector3 wTarget = (wajanMeetPoint != null) ? wajanMeetPoint.position : wajan.position;
+        Vector3 pTarget = (piringMeetPoint != null) ? piringMeetPoint.position : piring.position;
+        wTarget.z = 0f;
+        pTarget.z = 0f;
 
-        Vector3 wStart = wTarget + wajanStartOffset;
-        Vector3 pStart = pTarget + piringStartOffset;
-
+        Vector3 wStart = (wajanStartPoint != null) ? wajanStartPoint.position : (wTarget + wajanStartOffset);
+        wStart.z = 0f;
         wajan.position = wStart;
+
+        // Piring tetap stasioner di meja jika keepPlateStationary bernilai true
+        Vector3 pStart = keepPlateStationary ? pTarget : ((piringStartPoint != null) ? piringStartPoint.position : (pTarget + piringStartOffset));
+        pStart.z = 0f;
         piring.position = pStart;
 
-        // 2. Animasi meluncur dari luar layar ke titik kumpul
         float elapsed = 0f;
         while (elapsed < entryDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.SmoothStep(0f, 1f, elapsed / entryDuration);
 
-            wajan.position = Vector3.Lerp(wStart, wTarget, t);
-            piring.position = Vector3.Lerp(pStart, pTarget, t);
+            Vector3 curW = Vector3.Lerp(wStart, wTarget, t);
+            curW.z = 0f;
+            wajan.position = curW;
+
+            if (!keepPlateStationary)
+            {
+                Vector3 curP = Vector3.Lerp(pStart, pTarget, t);
+                curP.z = 0f;
+                piring.position = curP;
+            }
 
             yield return null;
         }
@@ -107,26 +173,44 @@ public class PlatingCutscene : MonoBehaviour
         onComplete?.Invoke();
     }
 
+    private void PlaySFX(AudioClip clip)
+    {
+        if (clip == null) return;
+        if (sfxAudioSource == null)
+        {
+            sfxAudioSource = GetComponent<AudioSource>();
+            if (sfxAudioSource == null) sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            SetupAudioMixerGroup(sfxAudioSource);
+        }
+        sfxAudioSource.PlayOneShot(clip);
+    }
+
+    private void SetupAudioMixerGroup(AudioSource source)
+    {
+        if (AudioManager.instance != null && AudioManager.instance.audioMixer != null)
+        {
+            UnityEngine.Audio.AudioMixerGroup[] groups = AudioManager.instance.audioMixer.FindMatchingGroups("SFX");
+            if (groups != null && groups.Length > 0)
+            {
+                source.outputAudioMixerGroup = groups[0];
+            }
+        }
+    }
+
     public void PlayPostDropAndExitAnimation(Action onComplete)
     {
         StartCoroutine(PostDropSequence(onComplete));
     }
 
+    // Efek jatuh makanan, swap sprite piring & wajan, lalu animasi zoom keluar
     private IEnumerator PostDropSequence(Action onComplete)
     {
-        // 1. Play Effects
         if (dropEffect != null) dropEffect.Play();
+        if (dropToPlateSfx != null) PlaySFX(dropToPlateSfx);
 
-        // 2. Sprite Swaps
-        if (wajanRenderer != null && wajanKosongSprite != null)
-            wajanRenderer.sprite = wajanKosongSprite;
-
-        if (piringRenderer != null && piringIsiSprite != null)
-            piringRenderer.sprite = piringIsiSprite;
-            
         if (objectsToHideOnDrop != null)
         {
-            foreach(var obj in objectsToHideOnDrop)
+            foreach (var obj in objectsToHideOnDrop)
             {
                 if (obj != null) obj.SetActive(false);
             }
@@ -134,7 +218,7 @@ public class PlatingCutscene : MonoBehaviour
 
         if (objectsToShowOnDrop != null)
         {
-            foreach(var obj in objectsToShowOnDrop)
+            foreach (var obj in objectsToShowOnDrop)
             {
                 if (obj != null) obj.SetActive(true);
             }
@@ -142,40 +226,54 @@ public class PlatingCutscene : MonoBehaviour
 
         yield return new WaitForSeconds(postDropDelay);
 
-        // 3. Play Exit Animation
         yield return StartCoroutine(ExitSequence());
 
-        // 4. Show Final UI / Objects
-        if (finalUIObjects != null)
+        // Memunculkan UI akhir dengan efek bounce ala NewIngredientPopup
+        if (finalUIObjects != null && finalUIObjects.Length > 0)
         {
-            foreach(var obj in finalUIObjects)
+            if (finalScreenSfx != null) PlaySFX(finalScreenSfx);
+
+            foreach (var obj in finalUIObjects)
             {
-                if (obj != null) obj.SetActive(true);
+                if (obj != null)
+                {
+                    StartCoroutine(BounceInObject(obj.transform));
+                    if (uiStaggerDelay > 0f) yield return new WaitForSeconds(uiStaggerDelay);
+                }
             }
+        }
+
+        if (nextButton != null)
+        {
+            StartCoroutine(BounceInObject(nextButton.transform));
         }
 
         onComplete?.Invoke();
     }
 
+    // Wajan meluncur keluar layar dan piring dizoom ke tengah untuk penyajian
     private IEnumerator ExitSequence()
     {
         float elapsed = 0f;
         Vector3 wajanExitStart = wajan != null ? wajan.position : Vector3.zero;
         Vector3 wajanExitTarget = wajanExitStart + wajanExitOffset;
+        wajanExitTarget.z = 0f;
 
         Vector3 piringStartScale = piring != null ? piring.localScale : Vector3.one;
         Vector3 piringStartPos = piring != null ? piring.position : Vector3.zero;
         
-        // Tentukan target posisi piring (jika plateCenterPoint ada, bergerak ke situ, jika tidak, tetap di tempat)
         Vector3 piringTargetPos = plateCenterPoint != null ? plateCenterPoint.position : piringStartPos;
+        piringTargetPos.z = 0f;
 
-        // Setup animasi final_alas jika ada
-        Vector3 alasStartPos = finalAlasObject != null ? finalAlasObject.position : Vector3.zero;
-        Vector3 alasTargetPos = finalAlasTargetPos != null ? finalAlasTargetPos.position : alasStartPos;
+        Vector3 alasTargetPos = finalAlasTargetPos != null ? finalAlasTargetPos.position : (finalAlasObject != null ? finalAlasObject.position : Vector3.zero);
+        alasTargetPos.z = 0f;
+        Vector3 alasStartPos = alasTargetPos + finalAlasStartOffset;
+        alasStartPos.z = 0f;
         
         if (finalAlasObject != null)
         {
-            finalAlasObject.gameObject.SetActive(true); // Nyalakan alas saat animasi mulai
+            finalAlasObject.position = alasStartPos;
+            finalAlasObject.gameObject.SetActive(true);
         }
 
         while (elapsed < exitDuration || elapsed < zoomDuration)
@@ -185,7 +283,9 @@ public class PlatingCutscene : MonoBehaviour
             if (elapsed < exitDuration && wajan != null)
             {
                 float tWajan = Mathf.SmoothStep(0, 1, elapsed / exitDuration);
-                wajan.position = Vector3.Lerp(wajanExitStart, wajanExitTarget, tWajan);
+                Vector3 wPos = Vector3.Lerp(wajanExitStart, wajanExitTarget, tWajan);
+                wPos.z = 0f;
+                wajan.position = wPos;
             }
 
             if (elapsed < zoomDuration)
@@ -195,12 +295,16 @@ public class PlatingCutscene : MonoBehaviour
                 if (piring != null)
                 {
                     piring.localScale = Vector3.Lerp(piringStartScale, plateTargetScale, tZoom);
-                    piring.position = Vector3.Lerp(piringStartPos, piringTargetPos, tZoom);
+                    Vector3 pPos = Vector3.Lerp(piringStartPos, piringTargetPos, tZoom);
+                    pPos.z = 0f;
+                    piring.position = pPos;
                 }
 
                 if (finalAlasObject != null)
                 {
-                    finalAlasObject.position = Vector3.Lerp(alasStartPos, alasTargetPos, tZoom);
+                    Vector3 aPos = Vector3.Lerp(alasStartPos, alasTargetPos, tZoom);
+                    aPos.z = 0f;
+                    finalAlasObject.position = aPos;
                 }
             }
 
@@ -217,5 +321,49 @@ public class PlatingCutscene : MonoBehaviour
         {
             finalAlasObject.position = alasTargetPos;
         }
+    }
+
+    // Animasi membal masuk ala NewIngredientPopup
+    private IEnumerator BounceInObject(Transform target)
+    {
+        target.gameObject.SetActive(true);
+        Vector3 targetScale = Vector3.one;
+        if (initialScales.TryGetValue(target, out Vector3 cached))
+        {
+            targetScale = cached;
+        }
+        else if (target.localScale != Vector3.zero)
+        {
+            targetScale = target.localScale;
+        }
+
+        target.localScale = Vector3.zero;
+
+        float timer = 0f;
+        float duration = uiBounceDuration > 0f ? uiBounceDuration : 0.45f;
+        float[] scales = { 0f, 1.2f, 0.85f, 1.08f, 0.96f, 1f };
+        float[] points = { 0f, 0.35f, 0.55f, 0.72f, 0.86f, 1f };
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float progress = Mathf.Clamp01(timer / duration);
+            float scaleMultiplier = 1f;
+
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                if (progress >= points[i] && progress <= points[i + 1])
+                {
+                    float segProgress = Mathf.InverseLerp(points[i], points[i + 1], progress);
+                    scaleMultiplier = Mathf.Lerp(scales[i], scales[i + 1], segProgress);
+                    break;
+                }
+            }
+
+            target.localScale = targetScale * scaleMultiplier;
+            yield return null;
+        }
+
+        target.localScale = targetScale;
     }
 }

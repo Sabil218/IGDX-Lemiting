@@ -8,55 +8,52 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     [System.Serializable]
     public class SpellingRoundData
     {
-        [Tooltip("Kata yang dieja")]
         public string targetWord;
-        [Tooltip("Objek bahan makanan")]
         public Transform ingredientObject;
-        [Tooltip("Matikan rotasi saat jatuh (Cocok untuk Ayam/Daging agar tidak terbalik)")]
         public bool disableRotation;
-        [Tooltip("Jatuhkan persis di tengah wajan tanpa sebaran acak (Cocok untuk bahan utama).")]
         public bool dropInCenter;
     }
 
     [Header("Spelling Rounds")]
-    [Tooltip("Daftar kata yang harus dieja")]
     public SpellingRoundData[] spellingRounds;
     private int currentSpellingIndex = 0;
 
     [Header("Spelling Cutscene")]
-    [Tooltip("Referensi skrip cutscene")]
     public IngredientDropCutscene dropCutscene;
-    [Tooltip("Target area wajan (Pusat jatuhnya bahan)")]
     public Transform targetDropArea;
-    [Tooltip("Container tempat potongan akan dijatuhkan (Di dalam Wajan Global)")]
     public Transform panContentContainer;
+    // Titik awal di mana bahan makanan muncul (rak kayu) sebelum jatuh ke wajan.
+    public Transform ingredientSpawnPoint;
+
+    [Header("Cinemachine Cameras (Auto-detected if unassigned)")]
+    [SerializeField] private Cinemachine.CinemachineVirtualCamera letterVirtualCamera;
+    [SerializeField] private Cinemachine.CinemachineVirtualCamera panVirtualCamera;
 
     [Header("Events")]
-    [Tooltip("Event ini dipanggil saat seluruh ronde ejaan tamat.")]
     public UnityEngine.Events.UnityEvent onSpellingComplete;
-
-    [Tooltip("Event ini dipanggil saat bawang akan mulai jatuh (Gunakan untuk ganti BG/Kamera).")]
     public UnityEngine.Events.UnityEvent onDropCutsceneStart;
-
-    [Tooltip("Event ini dipanggil setelah cutscene jatuh selesai (Gunakan untuk mematikan kamera wajan/balik ke papan).")]
     public UnityEngine.Events.UnityEvent onDropCutsceneEnd;
 
     [Header("Transition Timings")]
-    [Tooltip("Waktu tunggu menikmati bahan di wajan sesudah jatuh, sebelum kamera kembali.")]
     public float postDropWaitDelay = 0.8f;
-    [Tooltip("Waktu tunggu bergeraknya kamera dari wajan kembali ke papan sebelum soal berikutnya muncul.")]
     public float cameraReturnDelay = 1.0f;
+
+    [Header("Audio / SFX")]
+    [SerializeField] private AudioSource sfxAudioSource;
+    [SerializeField] private AudioClip correctLetterSfx;
+    [SerializeField] private AudioClip wrongLetterSfx;
+    [SerializeField] private AudioClip wordCompleteSfx;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject AnswerArea;
     [SerializeField] private GameObject WordTile;
 
     [Header("Scene Container")]
-    [SerializeField] private Transform targetBoardContainer; // Area Jawaban
-    [SerializeField] private Transform letterPoolContainer; // Area Shuffled Letter
-    [SerializeField] private int maxCols = 5;
+    [SerializeField] private Transform targetBoardContainer;
+    [SerializeField] private Transform letterPoolContainer;
+    [SerializeField] private int maxCols = 6;
+    private int activeCols = 6;
 
-    // Object Pool Letter Tile
     private Queue<GameObject> letterTilePool = new Queue<GameObject>();
 
     private string currentWord;
@@ -64,10 +61,8 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     private bool currentDisableRotation;
     private bool currentDropInCenter;
 
-    // Store Spelled Word
     private BoardDropZone mainWordDisplay;
 
-    // Store Spawned Ingredient
     private GameObject currentSpawnedIngredient;
 
     private void Awake()
@@ -81,17 +76,46 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         instance = this;
     }
 
+    private void Start()
+    {
+        EnsureCameraReferences();
+        if (CookingManager.instance == null)
+        {
+            StartPhase();
+        }
+    }
+
     public void StartPhase()
     {
+        EnsureCameraReferences();
+        EnsureSpawnPointReference();
+        EnsureDropAreaReference();
+
+        if (letterVirtualCamera != null)
+        {
+            letterVirtualCamera.gameObject.SetActive(true);
+            letterVirtualCamera.Priority = 15;
+        }
+        if (panVirtualCamera != null)
+        {
+            panVirtualCamera.Priority = 10;
+        }
+
         if (panContentContainer == null && CookingVisualController.Instance != null)
         {
             panContentContainer = CookingVisualController.Instance.rawIngredientsContainer;
+        }
+
+        if (dropCutscene != null)
+        {
+            dropCutscene.ResetDropHistory();
         }
 
         currentSpellingIndex = 0;
         LoadCurrentSpellingRound();
     }
 
+    // Initializes the next spelling round and spawns the raw ingredient.
     private void LoadCurrentSpellingRound()
     {
         if (spellingRounds == null || spellingRounds.Length == 0)
@@ -129,9 +153,9 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     }
 
     [Header("Profanity Filter")]
-    [Tooltip("Daftar kata terlarang agar tidak muncul secara tidak sengaja saat diacak")]
     public string[] forbiddenWords = new string[] { "NIGA", "NIGGA", "FUCK", "SHIT", "CUNT", "ANJING", "ASU", "KONTOL", "MEMEK", "NGENTOT", "PELACUR", "BABI", "PORN", "SEX" };
 
+    // Checks if the scrambled letters accidentally form an inappropriate word.
     private bool ContainsForbiddenWord(string text)
     {
         if (forbiddenWords == null || forbiddenWords.Length == 0) return false;
@@ -162,6 +186,7 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         return false;
     }
 
+    // Sets up the board and spawns the random letter tiles for the player to drag.
     public void LoadRound(string word, Transform ingredient, bool disableRotation, bool dropInCenter = false)
     {
         currentWord = word.ToUpper();
@@ -186,6 +211,30 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
             if (c != ' ') charactersToSpawn.Add(c);
         }
 
+        // --- AUTO-SCALE TARGET WORD TO FIT BOARD ---
+        CandyBitmapTextUGUI targetBmpText = wordObj.GetComponentInChildren<CandyBitmapTextUGUI>();
+        float actualWordWidth = 0f;
+        if (targetBmpText != null)
+        {
+            RectTransform textRt = targetBmpText.GetComponent<RectTransform>();
+            if (textRt != null)
+            {
+                actualWordWidth = textRt.sizeDelta.x;
+            }
+        }
+
+        RectTransform targetRect = targetBoardContainer.GetComponent<RectTransform>();
+        float targetMaxWidth = targetRect != null && targetRect.rect.width > 0 ? targetRect.rect.width : 1100f;
+        if (actualWordWidth > targetMaxWidth && targetMaxWidth > 0)
+        {
+            float tScale = targetMaxWidth / actualWordWidth;
+            targetBoardContainer.localScale = new Vector3(tScale, tScale, 1f);
+        }
+        else
+        {
+            targetBoardContainer.localScale = Vector3.one;
+        }
+
         string cleanTargetWord = new string(charactersToSpawn.ToArray());
         int attempts = 0;
         string shuffledString;
@@ -198,22 +247,89 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         while ((shuffledString == cleanTargetWord || WillFormForbiddenWord(shuffledString, cleanTargetWord)) && attempts < 50);
 
         Transform currentRow = null;
+        
+        // --- DYNAMIC OPTIMAL LAYOUT FOR MAXIMUM TILE SIZE & TOUCHABILITY ---
+        float tileWidth = 180f;
+        if (WordTile != null)
+        {
+            UnityEngine.UI.LayoutElement le = WordTile.GetComponent<UnityEngine.UI.LayoutElement>();
+            if (le != null && le.preferredWidth > 0) tileWidth = le.preferredWidth;
+        }
+
+        float verticalSpacing = 20f;
+        UnityEngine.UI.VerticalLayoutGroup vg = letterPoolContainer.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+        if (vg != null) 
+        {
+            verticalSpacing = vg.spacing;
+            vg.childAlignment = TextAnchor.MiddleCenter;
+            vg.childControlWidth = true;
+            vg.childControlHeight = true;
+            vg.childForceExpandWidth = false;
+            vg.childForceExpandHeight = false;
+        }
+        
+        RectTransform poolRect = letterPoolContainer.GetComponent<RectTransform>();
+        float actualMaxWidth = poolRect != null && poolRect.rect.width > 0 ? poolRect.rect.width : 1165f;
+        float actualMaxHeight = poolRect != null && poolRect.rect.height > 0 ? poolRect.rect.height : 419f;
+
+        int N = charactersToSpawn.Count;
+        int optimalCols = N;
+        float optimalScale = 0f;
+        int bestRows = 1;
+
+        // Iterate through all possible column counts to find the arrangement that yields the LARGEST tile scale
+        for (int c = 1; c <= N; c++)
+        {
+            int r = Mathf.CeilToInt((float)N / c);
+            float totalW = (c * tileWidth) + ((c - 1) * verticalSpacing);
+            float totalH = (r * tileWidth) + ((r - 1) * verticalSpacing);
+
+            float sW = actualMaxWidth / totalW;
+            float sH = actualMaxHeight / totalH;
+            float fitScale = Mathf.Min(sW, sH);
+            float effectiveScale = Mathf.Min(1.0f, fitScale);
+
+            if (effectiveScale > optimalScale + 0.001f)
+            {
+                optimalScale = effectiveScale;
+                optimalCols = c;
+                bestRows = r;
+            }
+            else if (Mathf.Abs(effectiveScale - optimalScale) <= 0.001f)
+            {
+                // Tie-breaker: if both achieve the same maximum scale, prefer fewer rows
+                if (r < bestRows)
+                {
+                    optimalScale = effectiveScale;
+                    optimalCols = c;
+                    bestRows = r;
+                }
+            }
+        }
+
+        activeCols = optimalCols;
+        letterPoolContainer.localScale = new Vector3(optimalScale, optimalScale, 1f);
 
         for (int i = 0; i < charactersToSpawn.Count; i++)
         {
-            if (i % maxCols == 0)
+            if (i % activeCols == 0)
             {
-                GameObject rowObj = new GameObject("Row_" + (i / maxCols), typeof(RectTransform));
+                GameObject rowObj = new GameObject("Row_" + (i / activeCols), typeof(RectTransform));
                 rowObj.layer = letterPoolContainer.gameObject.layer;
                 rowObj.transform.SetParent(letterPoolContainer, false);
                 rowObj.transform.localScale = Vector3.one;
                 rowObj.transform.localPosition = Vector3.zero;
 
+                UnityEngine.UI.LayoutElement rowLe = rowObj.AddComponent<UnityEngine.UI.LayoutElement>();
+                rowLe.preferredHeight = tileWidth;
+                rowLe.minHeight = tileWidth;
+                rowLe.flexibleHeight = 0;
+
                 UnityEngine.UI.HorizontalLayoutGroup hg = rowObj.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
                 hg.childAlignment = TextAnchor.MiddleCenter;
-                hg.spacing = 20;
-                hg.childControlWidth = false;
-                hg.childControlHeight = false;
+                hg.spacing = verticalSpacing;
+                hg.childControlWidth = true;
+                hg.childControlHeight = true;
                 hg.childForceExpandWidth = false;
                 hg.childForceExpandHeight = false;
 
@@ -241,14 +357,56 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     public void OnLetterCorrectlySpelled()
     {
+        PlayCorrectLetterSfx();
         RepackTiles();
     }
 
     public void OnWordComplete()
     {
+        PlayWordCompleteSfx();
         StartCoroutine(HandleWordComplete());
     }
 
+    public void PlayCorrectLetterSfx()
+    {
+        PlaySfx(correctLetterSfx);
+    }
+
+    public void PlayWrongLetterSfx()
+    {
+        PlaySfx(wrongLetterSfx);
+    }
+
+    public void PlayWordCompleteSfx()
+    {
+        PlaySfx(wordCompleteSfx);
+    }
+
+    private void PlaySfx(AudioClip clip)
+    {
+        if (clip == null) return;
+        if (sfxAudioSource == null)
+        {
+            sfxAudioSource = GetComponent<AudioSource>();
+            if (sfxAudioSource == null) sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            SetupAudioMixerGroup(sfxAudioSource);
+        }
+        sfxAudioSource.PlayOneShot(clip);
+    }
+
+    private void SetupAudioMixerGroup(AudioSource source)
+    {
+        if (AudioManager.instance != null && AudioManager.instance.audioMixer != null)
+        {
+            UnityEngine.Audio.AudioMixerGroup[] groups = AudioManager.instance.audioMixer.FindMatchingGroups("SFX");
+            if (groups != null && groups.Length > 0)
+            {
+                source.outputAudioMixerGroup = groups[0];
+            }
+        }
+    }
+
+    // Re-organizes the remaining letter tiles neatly after one is consumed.
     private void RepackTiles()
     {
         List<Transform> activeTiles = new List<Transform>();
@@ -269,49 +427,229 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                 }
             }
         }
+
+        int currentCols = activeCols > 0 ? activeCols : maxCols;
         for (int i = 0; i < activeTiles.Count; i++)
         {
-            int rowIndex = i / maxCols;
+            int rowIndex = i / currentCols;
             if (rowIndex < activeRows.Count)
             {
                 activeTiles[i].SetParent(activeRows[rowIndex], false);
             }
         }
+
+        // Hide rows that are empty so remaining rows automatically re-center
+        for (int r = 0; r < activeRows.Count; r++)
+        {
+            int nonConsumedCount = 0;
+            foreach (Transform tile in activeRows[r])
+            {
+                DraggableLetterTile dlt = tile.GetComponent<DraggableLetterTile>();
+                if (dlt != null && !dlt.isConsumed && tile.gameObject.activeSelf)
+                {
+                    nonConsumedCount++;
+                }
+            }
+            activeRows[r].gameObject.SetActive(nonConsumedCount > 0);
+        }
     }
 
     private System.Collections.IEnumerator HandleWordComplete()
     {
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(0.45f); // Comfortable pause to admire the completed word & hear SFX
         ProcessRoundCompletion();
     }
 
+    // Triggered when a word is fully spelled. Starts the drop cutscene.
     private void ProcessRoundCompletion()
     {
         if (spellingRounds == null || spellingRounds.Length == 0 || currentSpellingIndex >= spellingRounds.Length)
             return;
 
-        Canvas canvas = GetComponentInChildren<Canvas>(true);
-        if (canvas != null)
-        {
-            CanvasGroup cg = canvas.GetComponent<CanvasGroup>();
-            if (cg == null) cg = canvas.gameObject.AddComponent<CanvasGroup>();
-            StartCoroutine(FadeCanvasGroup(cg, 0f, 0.5f, () => canvas.gameObject.SetActive(false)));
-        }
+        // Hanya fade out huruf-huruf, kotak kayu (Box) tetap aktif dan static
+        FadeLetterContainers(0f, 0.25f);
 
         if (dropCutscene != null && currentIngredient != null && targetDropArea != null)
         {
-            // Trigger event untuk pindah kamera & background
-            onDropCutsceneStart?.Invoke();
-
-            dropCutscene.Play(currentIngredient, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
-            {
-                // Bagian ini sekarang hanya memanggil next round tanpa menghapus objek bahan!
-                AdvanceSpellingRound();
-            });
+            StartCoroutine(PlayCutsceneSequence());
         }
         else
         {
             Debug.LogWarning("[WordMatchingManager] DropCutscene, targetDropArea, or ingredient not assigned — skipping cutscene.");
+            AdvanceSpellingRound();
+        }
+    }
+
+    public void EnsureCameraReferences()
+    {
+        if (letterVirtualCamera == null || panVirtualCamera == null)
+        {
+            Cinemachine.CinemachineVirtualCamera[] allCameras = Resources.FindObjectsOfTypeAll<Cinemachine.CinemachineVirtualCamera>();
+            foreach (var cam in allCameras)
+            {
+                if (cam == null || !cam.gameObject.scene.IsValid()) continue;
+                if (cam.gameObject.name == "VCam_Letter" && letterVirtualCamera == null)
+                {
+                    letterVirtualCamera = cam;
+                }
+                else if (cam.gameObject.name == "VCam_Pan" && panVirtualCamera == null)
+                {
+                    panVirtualCamera = cam;
+                }
+            }
+        }
+    }
+
+    public void EnsureSpawnPointReference()
+    {
+        if (ingredientSpawnPoint == null)
+        {
+            Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+            foreach (Transform t in allTransforms)
+            {
+                if (t != null && t.gameObject.scene.IsValid() && t.name == "IngredientSpawnPoint")
+                {
+                    ingredientSpawnPoint = t;
+                    break;
+                }
+            }
+        }
+    }
+
+    public void EnsureDropAreaReference()
+    {
+        if (targetDropArea == null)
+        {
+            Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+            foreach (Transform t in allTransforms)
+            {
+                if (t != null && t.gameObject.scene.IsValid() && t.name == "DropArea")
+                {
+                    targetDropArea = t;
+                    break;
+                }
+            }
+        }
+        if (panContentContainer == null && targetDropArea != null)
+        {
+            panContentContainer = targetDropArea;
+        }
+    }
+
+    public void SyncCameraBlendWithDropDuration()
+    {
+        if (dropCutscene == null) return;
+        float targetDuration = dropCutscene.DropDuration;
+
+        if (Camera.main != null)
+        {
+            Cinemachine.CinemachineBrain brain = Camera.main.GetComponent<Cinemachine.CinemachineBrain>();
+            if (brain != null && brain.m_CustomBlends != null && brain.m_CustomBlends.m_CustomBlends != null)
+            {
+                for (int i = 0; i < brain.m_CustomBlends.m_CustomBlends.Length; i++)
+                {
+                    if (brain.m_CustomBlends.m_CustomBlends[i].m_From == "VCam_Letter" &&
+                        brain.m_CustomBlends.m_CustomBlends[i].m_To == "VCam_Pan")
+                    {
+                        var blend = brain.m_CustomBlends.m_CustomBlends[i];
+                        blend.m_Blend.m_Style = Cinemachine.CinemachineBlendDefinition.Style.EaseInOut;
+                        blend.m_Blend.m_Time = targetDuration;
+                        brain.m_CustomBlends.m_CustomBlends[i] = blend;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator PlayCutsceneSequence()
+    {
+        EnsureCameraReferences();
+        EnsureSpawnPointReference();
+        EnsureDropAreaReference();
+
+        bool isLastRound = (currentSpellingIndex >= spellingRounds.Length - 1);
+
+        // Pastikan di awal reveal kamera tetap menghadap ke rak kayu / huruf
+        if (letterVirtualCamera != null)
+        {
+            letterVirtualCamera.gameObject.SetActive(true);
+            letterVirtualCamera.Priority = 20;
+        }
+        if (panVirtualCamera != null)
+        {
+            panVirtualCamera.Priority = 10;
+        }
+
+        // 1. Munculkan (enable) visual bahan makanan tepat di rak kayu (IngredientSpawnPoint)
+        if (dropCutscene != null)
+        {
+            yield return StartCoroutine(dropCutscene.RevealAtSpawnPoint(currentIngredient, ingredientSpawnPoint));
+            if (dropCutscene.delayBeforeDrop > 0f)
+            {
+                yield return new WaitForSeconds(dropCutscene.delayBeforeDrop);
+            }
+        }
+        else if (currentIngredient != null)
+        {
+            if (ingredientSpawnPoint != null)
+            {
+                Vector3 p = ingredientSpawnPoint.position;
+                p.z = 0f;
+                currentIngredient.position = p;
+            }
+            currentIngredient.gameObject.SetActive(true);
+            yield return new WaitForSeconds(0.35f);
+        }
+
+        // 2. Kamera mulai bergerak ke wajan & bahan makanan mulai jatuh dari rak kayu ke wajan
+        onDropCutsceneStart?.Invoke();
+
+        EnsureCameraReferences();
+        SyncCameraBlendWithDropDuration();
+        if (panVirtualCamera != null)
+        {
+            panVirtualCamera.gameObject.SetActive(true);
+            panVirtualCamera.Priority = 25; // Cinemachine blend ke wajan
+        }
+
+        bool dropFinished = false;
+        if (dropCutscene != null)
+        {
+            dropCutscene.DropToPan(currentIngredient, ingredientSpawnPoint, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
+            {
+                dropFinished = true;
+            });
+        }
+        else
+        {
+            dropFinished = true;
+        }
+
+        // Tunggu hingga drop selesai
+        while (!dropFinished)
+        {
+            yield return null;
+        }
+
+        // Tunggu hingga camera blend selesai jika masih dalam proses blend
+        yield return StartCoroutine(WaitForCameraBlend());
+
+        // 3. Cek apakah ini kata terakhir atau masih ada ronde berikutnya
+        if (isLastRound)
+        {
+            // Selesai seluruh round: kamera tetap di wajan untuk fase Stir (Mengaduk)!
+            yield return new WaitForSeconds(postDropWaitDelay);
+
+            // Sembunyikan huruf-huruf secara permanen, biarkan kotak kayu (Box) tetap static di rak
+            SetLetterContainersVisible(false);
+
+            Debug.Log("[WordMatchingManager] Seluruh kata selesai dieja! Beralih langsung ke fase Stir (Mengaduk)...");
+            onSpellingComplete?.Invoke();
+        }
+        else
+        {
+            // Masih ada kata berikutnya: kembali ke rak huruf
             AdvanceSpellingRound();
         }
     }
@@ -323,12 +661,25 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
             Cinemachine.CinemachineBrain brain = Camera.main.GetComponent<Cinemachine.CinemachineBrain>();
             if (brain != null)
             {
+                // Wait 2 frames so Cinemachine LateUpdate has started the blend
                 yield return null; 
-                while (brain.IsBlending)
+                yield return null; 
+                
+                float safetyTimeout = 4f;
+                while (brain.IsBlending && safetyTimeout > 0f)
                 {
+                    safetyTimeout -= Time.deltaTime;
                     yield return null;
                 }
             }
+            else
+            {
+                yield return new WaitForSeconds(1.5f);
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(1.5f);
         }
     }
 
@@ -338,39 +689,99 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         StartCoroutine(ResetCameraAndNextRound());
     }
 
+    // Waits for the camera to return to the board, then starts the next round.
     private System.Collections.IEnumerator ResetCameraAndNextRound()
     {
-        // Tunggu bentar setelah jatuhnya selesai (menikmati bahan di wajan)
         yield return new WaitForSeconds(postDropWaitDelay);
 
         if (currentSpellingIndex < spellingRounds.Length)
         {
-            onDropCutsceneEnd?.Invoke(); // Matikan kamera wajan di sini agar loop kembali ke atas
+            EnsureCameraReferences();
 
-            // Tunggu otomatis sampai kamera Cinemachine selesai blending kembali ke papan
+            // Lower Pan camera priority and deactivate to smoothly blend back to letter camera
+            if (panVirtualCamera != null)
+            {
+                panVirtualCamera.Priority = 10;
+                panVirtualCamera.gameObject.SetActive(false);
+            }
+            if (letterVirtualCamera != null)
+            {
+                letterVirtualCamera.gameObject.SetActive(true);
+                letterVirtualCamera.Priority = 15;
+            }
+
+            onDropCutsceneEnd?.Invoke();
+
             yield return StartCoroutine(WaitForCameraBlend());
 
-            // Tunggu tambahan delay manual jika diperlukan
             if (cameraReturnDelay > 0f)
             {
                 yield return new WaitForSeconds(cameraReturnDelay); 
             }
 
-            Canvas canvas = GetComponentInChildren<Canvas>(true);
-            if (canvas != null)
-            {
-                canvas.gameObject.SetActive(true);
-                CanvasGroup cg = canvas.GetComponent<CanvasGroup>();
-                if (cg != null) cg.alpha = 1f;
-            }
+            // Tampilkan kembali huruf-huruf baru di dalam kotak kayu yang tetap static
+            SetLetterContainersVisible(true);
+            CanvasGroup cgTarget = GetOrAddCanvasGroup(targetBoardContainer);
+            CanvasGroup cgPool = GetOrAddCanvasGroup(letterPoolContainer);
+            if (cgTarget != null) cgTarget.alpha = 1f;
+            if (cgPool != null) cgPool.alpha = 1f;
 
             LoadCurrentSpellingRound();
         }
         else
         {
-            // Do NOT invoke onDropCutsceneEnd so the camera stays locked on the pan
             onSpellingComplete?.Invoke();
         }
+    }
+
+    public void SetLetterContainersVisible(bool visible)
+    {
+        if (targetBoardContainer != null) targetBoardContainer.gameObject.SetActive(visible);
+        if (letterPoolContainer != null) letterPoolContainer.gameObject.SetActive(visible);
+    }
+
+    private void FadeLetterContainers(float targetAlpha, float duration, System.Action onComplete = null)
+    {
+        StartCoroutine(FadeContainersRoutine(targetAlpha, duration, onComplete));
+    }
+
+    private System.Collections.IEnumerator FadeContainersRoutine(float targetAlpha, float duration, System.Action onComplete)
+    {
+        CanvasGroup cgTarget = GetOrAddCanvasGroup(targetBoardContainer);
+        CanvasGroup cgPool = GetOrAddCanvasGroup(letterPoolContainer);
+
+        float startTargetAlpha = cgTarget != null ? cgTarget.alpha : 1f;
+        float startPoolAlpha = cgPool != null ? cgPool.alpha : 1f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            if (cgTarget != null) cgTarget.alpha = Mathf.Lerp(startTargetAlpha, targetAlpha, t);
+            if (cgPool != null) cgPool.alpha = Mathf.Lerp(startPoolAlpha, targetAlpha, t);
+
+            yield return null;
+        }
+
+        if (cgTarget != null) cgTarget.alpha = targetAlpha;
+        if (cgPool != null) cgPool.alpha = targetAlpha;
+
+        if (targetAlpha <= 0f)
+        {
+            SetLetterContainersVisible(false);
+        }
+
+        onComplete?.Invoke();
+    }
+
+    private CanvasGroup GetOrAddCanvasGroup(Transform t)
+    {
+        if (t == null) return null;
+        CanvasGroup cg = t.GetComponent<CanvasGroup>();
+        if (cg == null) cg = t.gameObject.AddComponent<CanvasGroup>();
+        return cg;
     }
 
     private void ClearContainer(Transform container)

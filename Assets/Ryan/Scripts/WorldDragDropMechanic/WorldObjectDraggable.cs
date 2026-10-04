@@ -4,21 +4,14 @@ using UnityEngine;
 public class WorldObjectDraggable : MonoBehaviour
 {
     [Header("Hierarchy Options")]
-    [Tooltip("Jika diisi, objek ini yang akan pindah posisinya (berguna jika script ada di child). Jika kosong, ia menggerakkan dirinya sendiri.")]
     public Transform rootToDrag;
 
     [Header("Drop Options")]
-    [Tooltip("Jika false, barang tidak akan di-hide (hilang) saat berhasil masuk wajan/piring. Berguna untuk wajan yang akan dipakai cutscene.")]
     public bool hideOnConsume = true;
-
-    [Tooltip("Jika true, objek kembali ke posisi awal setelah drop berhasil (tidak di-consume).")]
     public bool returnAfterDrop = false;
-
-    [Tooltip("Centang ini jika ini adalah bahan mentah yang masuk ke wajan (supaya parent-nya pindah ke wajan)")]
     public bool isCookingIngredient = false;
 
     [Header("Drag Visuals")]
-    [Tooltip("Berapa banyak Sorting Order akan dinaikkan saat didrag agar tampil di depan")]
     [SerializeField] private int sortingOrderBoost = 10;
 
     private SpriteRenderer[] allRenderers;
@@ -35,18 +28,17 @@ public class WorldObjectDraggable : MonoBehaviour
     private Coroutine activeMoveCoroutine;
     private bool isReturning = false;
 
-    //Initialize components
     private void Awake()
     {
         mainCamera = Camera.main;
         myCollider = GetComponent<Collider2D>();
         
-        if (rootToDrag == null) rootToDrag = transform; // Auto assign if empty
+        if (rootToDrag == null) rootToDrag = transform;
         
-        // Ambil SEMUA SpriteRenderer di objek ini dan anak-anaknya
         allRenderers = rootToDrag.GetComponentsInChildren<SpriteRenderer>(true);
     }
 
+    // Brings the dragged item to the front so it visually overlaps everything else.
     private void BoostSortingOrder(bool boost)
     {
         int offset = boost ? sortingOrderBoost : -sortingOrderBoost;
@@ -57,21 +49,46 @@ public class WorldObjectDraggable : MonoBehaviour
         }
     }
 
-    //Handle drag state
+    private bool IsPointerDown() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Began : Input.GetMouseButtonDown(0);
+    private bool IsPointerHeld() => Input.touchCount > 0 ? (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Stationary) : Input.GetMouseButton(0);
+    private bool IsPointerUp() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Ended : Input.GetMouseButtonUp(0);
+    private Vector2 GetPointerScreenPos() => Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+
+    private bool IsPointerOverUI()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+        if (Input.touchCount > 0)
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+    }
+
+    // Core logic for picking up, moving, and dropping the object using mouse/touch.
     private void Update()
     {
         if (isConsumed) return;
 
-        Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-
-        if (Input.GetMouseButtonDown(0))
+        if (Time.timeScale <= 0.0001f)
         {
-            // Cegah klik drag jika kursor berada di atas elemen UI (Canvas)
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (isDragging)
+            {
+                isDragging = false;
+                BoostSortingOrder(false);
+                if (returnAfterDrop)
+                {
+                    rootToDrag.position = originalPosition;
+                }
+            }
+            return;
+        }
+
+        Vector2 pointerWorldPos = mainCamera.ScreenToWorldPoint(GetPointerScreenPos());
+
+        if (IsPointerDown())
+        {
+            if (IsPointerOverUI())
                 return;
 
-            if (myCollider.OverlapPoint(mouseWorldPos))
+            if (myCollider.OverlapPoint(pointerWorldPos))
             {
                 isDragging = true;
                 
@@ -88,13 +105,23 @@ public class WorldObjectDraggable : MonoBehaviour
                 isReturning = false;
 
                 zOffset = rootToDrag.position.z;
-                dragOffset = rootToDrag.position - (Vector3)mouseWorldPos;
+                dragOffset = rootToDrag.position - (Vector3)pointerWorldPos;
 
                 BoostSortingOrder(true);
             }
         }
+        else if (isDragging && IsPointerOverUI())
+        {
+            isDragging = false;
+            BoostSortingOrder(false);
+            if (returnAfterDrop)
+            {
+                rootToDrag.position = originalPosition;
+            }
+            return;
+        }
 
-        if (Input.GetMouseButtonUp(0) && isDragging)
+        if (IsPointerUp() && isDragging)
         {
             isDragging = false;
             BoostSortingOrder(false);
@@ -116,7 +143,7 @@ public class WorldObjectDraggable : MonoBehaviour
                     }
                     else
                     {
-                        dropZone.HandleDrop(this); // Lapor ke wajan
+                        dropZone.HandleDrop(this);
                         droppedInZone = true;
                     }
                     break;
@@ -132,13 +159,13 @@ public class WorldObjectDraggable : MonoBehaviour
 
         if (isDragging)
         {
-            Vector3 newPos = (Vector3)mouseWorldPos + dragOffset;
-            newPos.z = zOffset; // Kunci sumbu Z agar tidak hilang
+            Vector3 newPos = (Vector3)pointerWorldPos + dragOffset;
+            newPos.z = zOffset;
             rootToDrag.position = newPos;
         }
     }
 
-    //Hide item on valid drop
+    // Triggered when the object lands in a valid drop zone.
     public void Consume(Transform dropZoneCenter)
     {
         isConsumed = true;
@@ -150,12 +177,10 @@ public class WorldObjectDraggable : MonoBehaviour
             activeMoveCoroutine = null;
         }
 
-        // Jika wajan global aktif, jadikan item ini anak dari wadah bahan mentah
         if (isCookingIngredient && CookingVisualController.Instance != null && CookingVisualController.Instance.rawIngredientsContainer != null)
         {
             rootToDrag.SetParent(CookingVisualController.Instance.rawIngredientsContainer, true);
             
-            // Tambahkan sedikit random offset agar tumpukan tidak persis di satu titik
             Vector2 randomOffset = Random.insideUnitCircle * 0.5f;
             Vector3 targetPos = new Vector3(dropZoneCenter.position.x + randomOffset.x, dropZoneCenter.position.y + randomOffset.y, zOffset);
             
@@ -168,6 +193,7 @@ public class WorldObjectDraggable : MonoBehaviour
         }
     }
 
+    // Animates the object snapping back to its original spot if dropped incorrectly.
     private System.Collections.IEnumerator SmoothMoveBack(Transform target, Vector3 targetPosition, float duration)
     {
         isReturning = true;
@@ -180,7 +206,7 @@ public class WorldObjectDraggable : MonoBehaviour
             float t = elapsed / duration;
             float c1 = 1.70158f;
             float c3 = c1 + 1f;
-            float easedT = 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f); // EaseOutBack
+            float easedT = 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
 
             target.position = Vector3.LerpUnclamped(startPosition, targetPosition, easedT);
             yield return null;
@@ -190,6 +216,7 @@ public class WorldObjectDraggable : MonoBehaviour
         activeMoveCoroutine = null;
     }
 
+    // Visually shrinks and absorbs the item into the target drop zone.
     private System.Collections.IEnumerator SmoothConsume(Transform target, Vector3 targetPosition, float duration)
     {
         Vector3 startPosition = target.position;

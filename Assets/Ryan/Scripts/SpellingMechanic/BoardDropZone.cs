@@ -15,6 +15,7 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
     private string fullWord;
     private int completedLength = 0;
 
+    // Sets up the target word and clears the board visuals.
     public void InitializeWord(string word)
     {
         fullWord = word.ToUpper();
@@ -39,6 +40,7 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         UpdateDisplay();
     }
 
+    // Automatically skips over space characters so players don't have to fill them.
     private void SkipSpacesIfAny()
     {
         if (string.IsNullOrEmpty(fullWord)) return;
@@ -49,39 +51,36 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         }
     }
 
+    // Refreshes the visual text and colors on the board based on current progress.
     private void UpdateDisplay()
     {
         if (displayText == null) return;
 
         string finalWord = "";
 
-        // 1. Tampilkan huruf aslinya secara utuh sejak awal, JANGAN diganti jadi setrip ("-")
         for (int i = 0; i < fullWord.Length; i++)
         {
             finalWord += fullWord[i];
         }
 
-        // Masukkan teks utuh ke script Candy
         displayText.Text = finalWord;
 
-        // 2. Warnai setiap gambar huruf secara dinamis
         Image[] glyphImages = displayText.GetComponentsInChildren<Image>(true);
         int glyphIndex = 0;
 
         for (int i = 0; i < fullWord.Length; i++)
         {
-            // Abaikan spasi karena script Candy tidak memproduksi GameObject gambar untuk spasi
             if (fullWord[i] == ' ') continue;
 
             if (glyphIndex < glyphImages.Length)
             {
                 if (i < completedLength)
                 {
-                    glyphImages[glyphIndex].color = completedColor; // Huruf yang sudah ditebak (Hijau)
+                    glyphImages[glyphIndex].color = completedColor;
                 }
                 else
                 {
-                    glyphImages[glyphIndex].color = lockedColor; // Huruf yang belum ditebak (Biru Buram)
+                    glyphImages[glyphIndex].color = lockedColor;
                 }
                 glyphIndex++;
             }
@@ -98,6 +97,7 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         }
     }
 
+    // Checks if the dropped letter matches the expected next letter in the word.
     private void TrySpellLetter(DraggableLetterTile tile)
     {
         if (completedLength >= fullWord.Length) return;
@@ -129,6 +129,10 @@ public class BoardDropZone : MonoBehaviour, IDropHandler
         else
         {
             Debug.Log($"Salah!!!, Seharusnya {expectedChar}, bukan {tile.Letter}");
+            if (WordMatchingManager.instance != null)
+            {
+                WordMatchingManager.instance.PlayWrongLetterSfx();
+            }
         }
     }
 }

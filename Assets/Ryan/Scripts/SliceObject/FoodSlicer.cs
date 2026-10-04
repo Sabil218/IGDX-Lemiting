@@ -16,14 +16,11 @@ public class FoodSlicer : MonoBehaviour
 
         [Header("Juiceness Effect (Rotating and Movement of Sliced Objects)")]
         public float tiltAngle = 15f;
-
-        [Tooltip("Optional to move non-ejected fragments")]
         public bool moveNonEjected = false;
         public Vector2 secondaryKnockbackDirection = new Vector2(-0.2f, -0.1f);
         public float secondaryTiltAngle = -3f;
 
         [Header("Sprite Swapping")]
-        [Tooltip("Change cut sprite")]
         public Sprite cutSprite;
     }
 
@@ -32,16 +29,18 @@ public class FoodSlicer : MonoBehaviour
 
     [Header("Slicing Mechanics")]
     [SerializeField] private SlicePhase[] slicePhases;
-    [Tooltip("Delay before the first guideline appears (seconds)")]
     [SerializeField] private float initialGuidelineDelay = 0.5f;
 
     [Header("Slice Validation Tolerances")]
-    [Tooltip("Toleransi jarak menyamping kursor dengan garis potong.")]
     [SerializeField] private float perpDistanceTolerance = 0.3f;
+    [SerializeField, Range(0.01f, 0.4f)] private float sliceCompletionThreshold = 0.15f; // Makes it more forgiving to finish a slice
 
     [Header("Game Feel (Juiciness)")]
     [SerializeField] private float knockbackDistance;
     [SerializeField] private float knockbackDuration;
+
+    [Header("Audio (Optional Override)")]
+    [SerializeField] private AudioClip customSliceSfx;
 
     private int currentPhaseIndex = 0;
     private float currentSliceProgress = 1f;
@@ -49,12 +48,15 @@ public class FoodSlicer : MonoBehaviour
     private List<GameObject> spawnedFragments = new List<GameObject>();
     private Dictionary<SpriteRenderer, Sprite> originalSprites = new Dictionary<SpriteRenderer, Sprite>();
 
-    //Initialize original sprites
     private void Awake()
     {
-        // Simpan sprite asli dari setiap sourceObject agar bisa di-reset nanti
         foreach (var phase in slicePhases)
         {
+            if (phase.sliceLine != null)
+            {
+                phase.sliceLine.raycastTarget = false;
+            }
+
             if (phase.sourceObject != null)
             {
                 SpriteRenderer sr = phase.sourceObject.GetComponent<SpriteRenderer>();
@@ -66,7 +68,6 @@ public class FoodSlicer : MonoBehaviour
         }
     }
 
-    //Subscribe to swipe input
     private void OnEnable()
     {
         if (inputController != null)
@@ -77,13 +78,11 @@ public class FoodSlicer : MonoBehaviour
         ResetSlicerState();
     }
 
-    //Reset slice progress and fragments
     private void ResetSlicerState()
     {
         currentPhaseIndex = 0;
         currentSliceProgress = 1f;
 
-        // Clean sliced fragment from prev ingredient
         foreach (var frag in spawnedFragments)
         {
             if (frag != null) Destroy(frag);
@@ -94,14 +93,13 @@ public class FoodSlicer : MonoBehaviour
         {
             if (slicePhases[i].sliceLine != null)
             {
-                // Always disable initially, we will delay the first one
                 slicePhases[i].sliceLine.gameObject.SetActive(false);
                 slicePhases[i].sliceLine.fillAmount = 1f;
+                slicePhases[i].sliceLine.raycastTarget = false;
             }
 
             foreach (GameObject obj in slicePhases[i].resultObjects)
             {
-                // Validating object type
                 if (obj != null && obj.scene.IsValid()) obj.SetActive(false);
             }
         }
@@ -110,7 +108,6 @@ public class FoodSlicer : MonoBehaviour
         {
             GameObject src = slicePhases[0].sourceObject;
             
-            // Reset sprite for next ingredient
             SpriteRenderer sr = src.GetComponent<SpriteRenderer>();
             if (sr != null && originalSprites.TryGetValue(sr, out Sprite origSprite))
             {
@@ -142,14 +139,12 @@ public class FoodSlicer : MonoBehaviour
     private IEnumerator DelayShowFirstGuideline()
     {
         yield return new WaitForSeconds(initialGuidelineDelay);
-        // Ensure we are still on the first phase before activating
         if (currentPhaseIndex == 0 && slicePhases.Length > 0 && slicePhases[0].sliceLine != null)
         {
             slicePhases[0].sliceLine.gameObject.SetActive(true);
         }
     }
 
-    //Unsubscribe from swipe input
     private void OnDisable()
     {
         if (inputController != null)
@@ -160,7 +155,6 @@ public class FoodSlicer : MonoBehaviour
     }
 
 
-    //Force skip slicing process
     public void ForceSlicedState()
     {
         this.enabled = false;
@@ -176,7 +170,7 @@ public class FoodSlicer : MonoBehaviour
             {
                 if (obj != null)
                 {
-                    if (!obj.scene.IsValid()) // Jika obj adalah Prefab
+                    if (!obj.scene.IsValid())
                     {
                         GameObject spawned = Instantiate(obj, sourceT.position, sourceT.rotation, transform);
                         spawned.SetActive(true);
@@ -215,15 +209,15 @@ public class FoodSlicer : MonoBehaviour
         }
     }
 
-    //Update slice line fill visually
     private void HandleSwipeMoving(Vector2 currentPos)
     {
+        if (Time.timeScale <= 0.0001f) return;
         if (currentPhaseIndex >= slicePhases.Length) return;
 
         SlicePhase currentPhase = slicePhases[currentPhaseIndex];
         if (currentPhase.sliceLine == null) return;
 
-        if (inputController.PathPoints.Count > 1) // Cek arah tarikan
+        if (inputController.PathPoints.Count > 1)
         {
             Vector2 startPos = inputController.PathPoints[0];
 
@@ -231,24 +225,21 @@ public class FoodSlicer : MonoBehaviour
             Vector2 lineUp = currentPhase.sliceLine.transform.up;
             Vector2 lineRight = currentPhase.sliceLine.transform.right;
 
-            // 1. Cek akurasi menyamping
             float currentPerpDistance = Mathf.Abs(Vector2.Dot(currentPos - linePos, lineRight));
-            float startPerpDistance = Mathf.Abs(Vector2.Dot(startPos - linePos, lineRight));
 
-            if (startPerpDistance > perpDistanceTolerance * 1.5f || currentPerpDistance > perpDistanceTolerance * 1.5f)
+            // Periksa jarak tegak lurus dengan toleransi yang cukup fleksibel agar pemain tidak terblokir
+            float maxAllowedPerp = perpDistanceTolerance * 2.0f;
+            if (currentPerpDistance > maxAllowedPerp)
             {
                 return;
             }
 
-            // Hitung tinggi garis (World Space)
             RectTransform rectT = currentPhase.sliceLine.rectTransform;
             float worldHeight = rectT.rect.height * rectT.lossyScale.y;
 
-            // Proyeksi jari ke vertikal garis
             Vector2 midOffset = currentPos - linePos;
-            float alongDistance = Vector2.Dot(midOffset, lineUp); // Posisi jari relatif thd tengah
+            float alongDistance = Vector2.Dot(midOffset, lineUp);
 
-            // Deteksi arah usapan untuk ubah Fill Origin otomatis
             Vector2 swipeDir = (currentPos - startPos).normalized;
             bool swipingUp = Vector2.Dot(swipeDir, lineUp) > 0;
             
@@ -260,41 +251,46 @@ public class FoodSlicer : MonoBehaviour
                 float sisaGaris = (worldHeight / 2f) - alongDistance;
                 newFillAmount = Mathf.Clamp01(sisaGaris / worldHeight);
             }
-            else // swiping down
+            else
             {
                 currentPhase.sliceLine.fillOrigin = (int)UnityEngine.UI.Image.OriginVertical.Bottom;
                 float sisaGaris = alongDistance + (worldHeight / 2f);
                 newFillAmount = Mathf.Clamp01(sisaGaris / worldHeight);
             }
 
-            // Simpan progress terkecil (agar garis tidak pernah mundur)
             currentSliceProgress = Mathf.Min(currentSliceProgress, newFillAmount);
             currentPhase.sliceLine.fillAmount = currentSliceProgress;
 
-            // Pemicu eksekusi saat progres selesai dicicil
-            if (currentSliceProgress <= 0.05f)
+            if (currentSliceProgress <= sliceCompletionThreshold)
             {
                 ExecuteSlice(currentPhase);
             }
         }
     }
 
-    //Check if slice is completed
     private void HandleSwipeCompleted(List<Vector2> swipePath)
     {
+        if (Time.timeScale <= 0.0001f) return;
         if (currentPhaseIndex >= slicePhases.Length) return;
 
         SlicePhase currentPhase = slicePhases[currentPhaseIndex];
 
-        if (currentSliceProgress <= 0.05f)
+        // Saat jari dilepas, jika sudah terpotong lebih dari 65%, tuntaskan potongan agar tidak menggantung
+        float finishThreshold = Mathf.Max(sliceCompletionThreshold, 0.35f);
+        if (currentSliceProgress <= finishThreshold)
         {
             ExecuteSlice(currentPhase);
         }
     }
 
-    //Spawn slice fragments and apply knockback
     private void ExecuteSlice(SlicePhase phase)
     {
+        if (Time.timeScale <= 0.0001f) return;
+        if (SlicingManager.instance != null)
+        {
+            SlicingManager.instance.PlaySliceSfx(customSliceSfx);
+        }
+
         if (phase.sliceLine != null)
         {
             phase.sliceLine.gameObject.SetActive(false);
@@ -304,7 +300,6 @@ public class FoodSlicer : MonoBehaviour
         {
             if (phase.cutSprite != null)
             {
-                // Change Sprite
                 SpriteRenderer sr = phase.sourceObject.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
@@ -341,19 +336,18 @@ public class FoodSlicer : MonoBehaviour
             {
                 GameObject activeObj = null;
 
-                if (!obj.scene.IsValid()) // Jika obj adalah Prefab
+                if (!obj.scene.IsValid())
                 {
                     activeObj = Instantiate(obj, spawnPos, spawnRot, transform);
                     activeObj.SetActive(true);
                     spawnedFragments.Add(activeObj);
                 }
-                else // Jika obj sudah ada di Scene
+                else
                 {
                     activeObj = obj;
                     activeObj.SetActive(true);
                 }
 
-                // Cek apakah objek ini adalah pecahan yang harus terlempar (knockback utama)
                 if (phase.ejectedFragment != null && obj.transform == phase.ejectedFragment)
                 {
                     Vector3 knockbackDir = new Vector3(phase.knockbackDirection.x, phase.knockbackDirection.y, 0).normalized;
@@ -361,7 +355,6 @@ public class FoodSlicer : MonoBehaviour
                 }
                 else if (phase.moveNonEjected)
                 {
-                    // Secondary jiggle movement untuk objek sisa
                     Vector3 secKnockbackDir = new Vector3(phase.secondaryKnockbackDirection.x, phase.secondaryKnockbackDirection.y, 0);
                     StartCoroutine(ProcessKnockback(activeObj.transform, secKnockbackDir, knockbackDuration * 0.8f, phase.secondaryTiltAngle));
                 }
@@ -369,7 +362,7 @@ public class FoodSlicer : MonoBehaviour
         }
 
         currentPhaseIndex++;
-        currentSliceProgress = 1f; // Reset progress
+        currentSliceProgress = 1f;
 
         if (currentPhaseIndex < slicePhases.Length)
         {
@@ -386,7 +379,6 @@ public class FoodSlicer : MonoBehaviour
         }
     }
 
-    //Animate knockback fragment
     private IEnumerator ProcessKnockback(Transform target, Vector3 knockbackVector, float duration, float tiltAngle)
     {
         Vector3 startPos = target.localPosition;
@@ -416,7 +408,6 @@ public class FoodSlicer : MonoBehaviour
         target.localScale = startScale;
     }
 
-    //Delay before notifying manager
     private IEnumerator DelayNextGameState()
     {
         yield return new WaitForSeconds(0.25f);
@@ -424,38 +415,6 @@ public class FoodSlicer : MonoBehaviour
         if (SlicingManager.instance != null)
         {
             SlicingManager.instance.BahanSelesaiDipotong();
-        }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (slicePhases == null) return;
-
-        Gizmos.color = Color.cyan;
-        foreach (var phase in slicePhases)
-        {
-            if (phase != null && phase.sliceLine != null)
-            {
-                RectTransform rectT = phase.sliceLine.rectTransform;
-                Vector3 linePos = rectT.position;
-                
-                float worldHeight = rectT.rect.height * rectT.lossyScale.y;
-                // The current script checks perpDistanceTolerance * 1.5f as the half-width
-                float actualWidth = perpDistanceTolerance * 1.5f * 2f; 
-
-                // Draw a box rotated to match the line
-                Matrix4x4 rotationMatrix = Matrix4x4.TRS(linePos, rectT.rotation, Vector3.one);
-                
-                // Save the old matrix
-                Matrix4x4 oldMatrix = Gizmos.matrix;
-                Gizmos.matrix = rotationMatrix;
-                
-                // Draw the bounding box
-                Gizmos.DrawWireCube(Vector3.zero, new Vector3(actualWidth, worldHeight, 0.1f));
-                
-                // Restore the old matrix
-                Gizmos.matrix = oldMatrix;
-            }
         }
     }
 }

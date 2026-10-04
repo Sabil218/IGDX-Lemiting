@@ -16,15 +16,12 @@ public class CookingManager : MonoBehaviour
     {
         public string phaseName;
         public GameObject phaseContainer;
-        
-        [Tooltip("Start Event for this phase")]
         public UnityEngine.Events.UnityEvent onPhaseStart;
     }
 
     // ─── Inspector References ───────────────────────────────────────
 
     [Header("Cooking Sequence")]
-    [Tooltip("Urutan memasak")]
     public System.Collections.Generic.List<CookingPhase> cookingSequence = new System.Collections.Generic.List<CookingPhase>();
     private int currentPhaseIndex = 0;
 
@@ -32,13 +29,45 @@ public class CookingManager : MonoBehaviour
     void Awake()
     {
         instance = this;
+        Time.timeScale = 1f;
+    }
+
+    //Helper to control stove fire outside stirring phase
+    public static void SetStoveFireActive(bool active)
+    {
+        GameObject stove = GameObject.Find("StoveObject");
+        if (stove != null)
+        {
+            Transform fire = stove.transform.Find("Fire");
+            if (fire != null && fire.gameObject.activeSelf != active)
+            {
+                fire.gameObject.SetActive(active);
+            }
+        }
+    }
+
+    //Helper to control spoon/spatula outside stirring phase
+    public static void SetSpoonActive(bool active)
+    {
+        GameObject stove = GameObject.Find("StoveObject");
+        if (stove != null)
+        {
+            Transform spoon = stove.transform.Find("Spoon");
+            if (spoon != null && spoon.gameObject.activeSelf != active)
+            {
+                spoon.gameObject.SetActive(active);
+            }
+        }
     }
 
     //Start first cooking phase
     void Start()
     {
+        Time.timeScale = 1f;
         Debug.Log("Cooking Started");
         currentPhaseIndex = 0;
+        SetStoveFireActive(false);
+        SetSpoonActive(false);
         if (cookingSequence.Count > 0)
         {
             PlayCurrentPhase();
@@ -60,6 +89,9 @@ public class CookingManager : MonoBehaviour
                 phase.phaseContainer.SetActive(false);
             }
         }
+
+        SetStoveFireActive(false);
+        SetSpoonActive(false);
 
         if (currentPhaseIndex < cookingSequence.Count)
         {

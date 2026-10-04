@@ -7,17 +7,13 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
     public CookingDropZone dropZone;
 
     [Header("Free Phase Setup (Bebas)")]
-    [Tooltip("Objek yang akan diaktifkan secara bebas sekaligus saat phase dimulai (Non-Sequential)")]
     public GameObject[] objectsToActivateOnStart;
 
     [Header("Sequential Spawning (Berurutan)")]
-    [Tooltip("Jika dicentang, akan menggunakan mode memanggil bahan satu per satu.")]
     public bool spawnSequentially = false;
-    public Transform spawnPoint; // Titik orange
-    [Tooltip("Daftar bahan makanan (Prefab atau objek di dalam Scene yang nonaktif)")]
+    public Transform spawnPoint;
     public GameObject[] sequentialIngredients;
     public IngredientDropCutscene dropCutscene;
-    [Tooltip("Target area wajan")]
     public Transform targetDropArea;
 
     [Header("Global Events")]
@@ -26,10 +22,9 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
     private int currentIndex = 0;
     private GameObject currentSpawnedItem;
 
-    //Initialize Drag and Drop Phase
+    // Initializes the phase and prepares the ingredients to be dragged.
     public void StartPhase()
     {
-        // Reset Drop Zone jika tahapan diulang
         if (dropZone != null)
         {
             dropZone.ResetZone();
@@ -42,7 +37,6 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         }
         else
         {
-            // Mode Lama: Aktifkan semua bebas
             if (objectsToActivateOnStart != null)
             {
                 foreach (var obj in objectsToActivateOnStart)
@@ -53,6 +47,7 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    // Handles spawning ingredients, either all at once or one by one sequentially.
     private void SpawnNextIngredient()
     {
         if (currentIndex < sequentialIngredients.Length)
@@ -60,7 +55,6 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
             GameObject ing = sequentialIngredients[currentIndex];
             if (ing != null)
             {
-                // Cek apakah ini objek dari Scene atau sebuah Prefab
                 if (ing.scene.IsValid()) 
                 {
                     currentSpawnedItem = ing;
@@ -76,14 +70,12 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
             }
             else
             {
-                // Skip jika ada slot kosong
                 currentIndex++;
                 SpawnNextIngredient();
             }
         }
         else
         {
-            // Semua bahan berurutan selesai diproses
             CompleteStep();
         }
     }
@@ -106,13 +98,13 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         }
     }
 
+    // Triggered when an ingredient is successfully dragged into the pan.
     private void HandleItemDropped(WorldObjectDraggable item)
     {
         if (spawnSequentially)
         {
             if (dropCutscene != null && targetDropArea != null)
             {
-                // Putar cutscene, dan setelah cutscene selesai, panggil bahan berikutnya
                 dropCutscene.Play(item.transform, targetDropArea, null, OnCutsceneFinished);
             }
             else
@@ -128,7 +120,6 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         SpawnNextIngredient();
     }
 
-    //Process logic when all items are collected (Mode Non-Sequential)
     private void HandleAllItemsReceived()
     {
         if (!spawnSequentially)
@@ -137,7 +128,7 @@ public class CookingDragManager : MonoBehaviour, ICookingPhase
         }
     }
 
-    //Trigger stage completion event
+    // Completes this cooking phase and signals the global manager to advance.
     private void CompleteStep()
     {
         OnStepCompleted?.Invoke();

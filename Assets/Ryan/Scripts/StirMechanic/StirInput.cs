@@ -9,7 +9,6 @@ public class StirInput : MonoBehaviour
 
     [Header("Stir Settings")]
     [SerializeField] private float requiredRotations = 3f;
-    [Tooltip("If false, player can stir in any circular direction (clockwise or counter-clockwise)")]
     [SerializeField] private bool requireClockwise = false;
     [SerializeField] private float minimumMoveDelta = 0.2f;
 
@@ -17,6 +16,7 @@ public class StirInput : MonoBehaviour
     [SerializeField] private Collider2D stirZoneCollider;
 
     public GameObject StirZoneObject => stirZoneCollider != null ? stirZoneCollider.gameObject : null;
+    public Vector2 LastPushDirection { get; private set; } = Vector2.right;
 
     private bool isDragging;
     private Vector2 previousDirection;
@@ -28,10 +28,9 @@ public class StirInput : MonoBehaviour
 
     public float Progress => Mathf.Clamp01(maxCumulativeAngle / targetAngle);
 
-    //Initialize camera
     private void Awake() => mainCamera = Camera.main;
 
-    //Reset input state
+    // Resets stirring progress every time the phase starts.
     private void OnEnable()
     {
         rawCumulativeAngle = 0f;
@@ -41,22 +40,23 @@ public class StirInput : MonoBehaviour
         isDragging = false;
     }
 
-    //Process input dragging logic
+    // Handles touch/mouse input, calculates circular motion around the pan, and fires progress events.
     private void Update()
     {
-        if (isCompleted) return;
+        if (isCompleted || Time.timeScale <= 0.0001f)
+        {
+            if (isDragging) isDragging = false;
+            return;
+        }
 
         Vector2 screenPos = GetPointerScreenPos();
         Vector2 worldPos = mainCamera.ScreenToWorldPoint(screenPos);
 
         if (IsPointerDown())
         {
-            //Validator Input
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (IsPointerOverUI())
                 return;
 
-            //Input checking: Start dragging if touching the stir zone (pan)
             if (stirZoneCollider != null && stirZoneCollider.OverlapPoint(worldPos))
             {
                 isDragging = true;
@@ -65,6 +65,12 @@ public class StirInput : MonoBehaviour
         }
         else if (isDragging && IsPointerHeld())
         {
+            if (IsPointerOverUI())
+            {
+                isDragging = false;
+                return;
+            }
+
             Vector2 center = GetCenterWorldPos();
 
             float moveDelta = Vector2.Distance(worldPos, center);
@@ -74,7 +80,13 @@ public class StirInput : MonoBehaviour
 
             float angleDelta = Vector2.SignedAngle(previousDirection, currentDirection);
 
-            // Allow any direction if requireClockwise is false, otherwise strictly check direction
+            Vector2 dirDelta = currentDirection - previousDirection;
+            if (dirDelta.sqrMagnitude > 0.0001f)
+            {
+                Vector2 targetDir = dirDelta.normalized;
+                LastPushDirection = Vector2.Lerp(LastPushDirection, targetDir, 0.4f).normalized;
+            }
+
             float progressDelta = requireClockwise ? -angleDelta : Mathf.Abs(angleDelta);
 
             if (Mathf.Abs(angleDelta) > 0.5f && Mathf.Abs(angleDelta) < 90f)
@@ -107,24 +119,31 @@ public class StirInput : MonoBehaviour
         }
     }
 
-    //Get stir zone center
+    // Finds the center of the stirring zone to calculate the circular rotation angle.
     private Vector2 GetCenterWorldPos()
     {
         if (stirZoneCollider == null) return Vector2.zero;
         return stirZoneCollider.transform.position;
     }
 
-    //Input Wrappers
     private bool IsPointerDown() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Began : Input.GetMouseButtonDown(0);
     private bool IsPointerHeld() => Input.touchCount > 0 ? (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Stationary) : Input.GetMouseButton(0);
     private bool IsPointerUp() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Ended : Input.GetMouseButtonUp(0);
     private Vector2 GetPointerScreenPos() => Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
 
+    private bool IsPointerOverUI()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+        if (Input.touchCount > 0)
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+    }
+
     private void OnDrawGizmos()
     {
         if (stirZoneCollider != null)
         {
-            Gizmos.color = new Color(0f, 1f, 0f, 0.4f); // Semi-transparent green
+            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
             Bounds bounds = stirZoneCollider.bounds;
             Gizmos.DrawWireCube(bounds.center, bounds.size);
         }
@@ -134,11 +153,10 @@ public class StirInput : MonoBehaviour
     {
         if (stirZoneCollider != null)
         {
-            Gizmos.color = Color.green; // Solid green when selected
+            Gizmos.color = Color.green;
             Bounds bounds = stirZoneCollider.bounds;
             Gizmos.DrawWireCube(bounds.center, bounds.size);
             
-            // Draw a crosshair in the center
             float crosshairSize = 0.5f;
             Gizmos.DrawLine(bounds.center - Vector3.left * crosshairSize, bounds.center + Vector3.left * crosshairSize);
             Gizmos.DrawLine(bounds.center - Vector3.up * crosshairSize, bounds.center + Vector3.up * crosshairSize);

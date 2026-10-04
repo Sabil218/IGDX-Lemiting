@@ -38,7 +38,7 @@ public class CandyBitmapTextUGUI : MonoBehaviour
     [SerializeField] private string text = "SCORE 123";
     [SerializeField] private Texture2D atlasTexture;
     [SerializeField] private TextAsset fontMapJson;
-    [SerializeField] private float fontSize = 128f;
+    [SerializeField] private float fontSize = 192f;
     [SerializeField] private float extraLetterSpacing = 0f;
     [SerializeField] private float extraLineSpacing = 0f;
     [SerializeField] private bool forceUppercase = true;

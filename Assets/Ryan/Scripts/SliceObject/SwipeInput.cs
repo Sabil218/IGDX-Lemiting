@@ -23,11 +23,21 @@ public class SwipeInput : MonoBehaviour
     //Handle Input State
     private void Update()
     {
+        // Don't accept any input if the game is paused (Time.timeScale == 0)
+        if (Time.timeScale <= 0.0001f)
+        {
+            if (isDragging)
+            {
+                isDragging = false;
+                PathPoints.Clear();
+            }
+            return;
+        }
+
         if (IsPointerDown())
         {
-            // Handle swipe start
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            // Handle swipe start (don't start swipe over actual UI menus like pause button)
+            if (IsPointerOverUI())
                 return;
 
             isDragging = true;
@@ -38,7 +48,7 @@ public class SwipeInput : MonoBehaviour
 
             OnSwipeMoving?.Invoke(startPos);
         }
-        //Checking while dragging
+        // Checking while dragging (allow swipe to continue smoothly)
         else if (isDragging && IsPointerHeld())
         {
             Vector2 currentPos = GetPointerWorldPos();
@@ -58,6 +68,36 @@ public class SwipeInput : MonoBehaviour
         }
     }
 
+    private bool IsPointerOverUI()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+
+        // Use RaycastAll so we only block actual UI menus (PauseButton, settings), NOT gameplay elements like slice guidelines
+        var pointerEventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+        pointerEventData.position = Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+
+        List<UnityEngine.EventSystems.RaycastResult> results = new List<UnityEngine.EventSystems.RaycastResult>();
+        UnityEngine.EventSystems.EventSystem.current.RaycastAll(pointerEventData, results);
+
+        foreach (var result in results)
+        {
+            if (result.gameObject == null) continue;
+
+            // Ignore slice guidelines / slice lines
+            string name = result.gameObject.name;
+            if (name.Contains("garis") || name.Contains("GuideLine") || name.Contains("SliceLine"))
+                continue;
+
+            if (result.gameObject.GetComponent<FoodSlicer>() != null)
+                continue;
+
+            // It's a real UI element (Pause button, pause popup menu, etc.)
+            return true;
+        }
+
+        return false;
+    }
+
     //Trigger completion event
     private void CompleteSwipe()
     {
@@ -66,7 +106,7 @@ public class SwipeInput : MonoBehaviour
 
     // Input Wrapper
     private bool IsPointerDown() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Began : Input.GetMouseButtonDown(0);
-    private bool IsPointerHeld() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Moved : Input.GetMouseButton(0);
+    private bool IsPointerHeld() => Input.touchCount > 0 ? (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(0).phase == TouchPhase.Stationary) : Input.GetMouseButton(0);
     private bool IsPointerUp() => Input.touchCount > 0 ? Input.GetTouch(0).phase == TouchPhase.Ended : Input.GetMouseButtonUp(0);
 
     //Convert Screen to World Position
