@@ -3,34 +3,25 @@ using UnityEngine;
 
 public class BattleManager : MonoBehaviour
 {
-    [Header("Player")]
     public Player player;
 
-    [Header("Enemy")]
     public GameObject[] enemyPrefabs;
     public Transform[] enemySpawnPoints;
 
-    [Header("Player Stop Points")]
     public Transform[] playerStopPoints;
 
-    [Header("Quiz")]
     public QuizManager quizManager;
     public float quizDelay = 1f;
 
-    [Header("Movement")]
     public float moveSpeed = 2f;
 
-    [Header("UI")]
     public GameObject winningPanel;
     public GameObject loosePanel;
 
-    [Header("Level Complete")]
     public LevelComplete levelComplete;
 
-    [Header("Camera")]
     public CameraFollow cameraFollow;
 
-    [Header("Win Trigger")]
     public GameObject winTrigger;
 
     private int currentEnemyIndex;
@@ -72,8 +63,7 @@ public class BattleManager : MonoBehaviour
 
         if (cameraFollow == null)
         {
-            cameraFollow =
-                FindObjectOfType<CameraFollow>();
+            cameraFollow = FindObjectOfType<CameraFollow>();
         }
 
         if (cameraFollow != null)
@@ -83,9 +73,18 @@ public class BattleManager : MonoBehaviour
 
         SpawnEnemy(0);
 
-        StartCoroutine(
-            MovePlayerToFirstPoint()
-        );
+        StartCoroutine(MovePlayerToFirstPoint());
+    }
+
+    private void Update()
+    {
+        if (gameEnded)
+            return;
+
+        if (player != null && player.IsDead)
+        {
+            GameOver();
+        }
     }
 
     public void SpawnEnemy(int index)
@@ -96,8 +95,7 @@ public class BattleManager : MonoBehaviour
         if (enemyPrefabs == null)
             return;
 
-        if (index < 0 ||
-            index >= enemyPrefabs.Length)
+        if (index < 0 || index >= enemyPrefabs.Length)
             return;
 
         if (enemyPrefabs[index] == null)
@@ -114,17 +112,15 @@ public class BattleManager : MonoBehaviour
 
         currentEnemyIndex = index;
 
-        GameObject enemyObject =
-            Instantiate(
-                enemyPrefabs[index],
-                enemySpawnPoints[index].position,
-                Quaternion.identity
-            );
+        GameObject enemyObject = Instantiate(
+            enemyPrefabs[index],
+            enemySpawnPoints[index].position,
+            Quaternion.identity
+        );
 
         currentEnemy = enemyObject;
 
-        currentEnemyBase =
-            enemyObject.GetComponent<EnemyBase>();
+        currentEnemyBase = enemyObject.GetComponent<EnemyBase>();
 
         if (currentEnemyBase != null)
         {
@@ -132,8 +128,7 @@ public class BattleManager : MonoBehaviour
 
             if (player != null)
             {
-                currentEnemyBase.player =
-                    player.transform;
+                currentEnemyBase.player = player.transform;
             }
         }
     }
@@ -154,8 +149,7 @@ public class BattleManager : MonoBehaviour
         if (gameEnded)
             yield break;
 
-        if (player != null &&
-            player.animator != null)
+        if (player != null && player.animator != null)
         {
             player.animator.SetBool(
                 "isRun",
@@ -210,11 +204,9 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        GameObject attackEnemy =
-            currentEnemy;
+        GameObject attackEnemy = currentEnemy;
 
-        int attackBattleID =
-            battleID;
+        int attackBattleID = battleID;
 
         battleBusy = true;
 
@@ -290,11 +282,9 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        GameObject attackEnemy =
-            currentEnemy;
+        GameObject attackEnemy = currentEnemy;
 
-        int attackBattleID =
-            battleID;
+        int attackBattleID = battleID;
 
         battleBusy = true;
 
@@ -605,6 +595,8 @@ public class BattleManager : MonoBehaviour
             return;
 
         gameEnded = true;
+        Time.timeScale = 0f;
+
         battleBusy = true;
         finalWalkStarted = false;
 
@@ -642,6 +634,14 @@ public class BattleManager : MonoBehaviour
         if (winningPanel != null)
         {
             winningPanel.SetActive(true);
+
+            ResultRewardPanel resultPanel =
+                winningPanel.GetComponent<ResultRewardPanel>();
+
+            if (resultPanel != null)
+            {
+                resultPanel.StartWinSequence();
+            }
         }
     }
 
@@ -651,6 +651,8 @@ public class BattleManager : MonoBehaviour
             return;
 
         gameEnded = true;
+        Time.timeScale = 0f;
+
         battleBusy = true;
         finalWalkStarted = false;
 
@@ -678,6 +680,14 @@ public class BattleManager : MonoBehaviour
         if (loosePanel != null)
         {
             loosePanel.SetActive(true);
+
+            ResultRewardPanel resultPanel =
+                loosePanel.GetComponent<ResultRewardPanel>();
+
+            if (resultPanel != null)
+            {
+                resultPanel.StartLoseSequence();
+            }
         }
     }
 

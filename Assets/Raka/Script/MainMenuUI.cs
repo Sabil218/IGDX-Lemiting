@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,7 @@ public class MainMenuUI : MonoBehaviour
     public GameObject optionPanel;
     public GameObject levelSelectPanel;
     public GameObject cutsceneManager;
-    public GameObject creditPanel; // TAMBAHAN
+    public GameObject creditPanel;
 
     [Header("Pages")]
     public GameObject levelSelectPage;
@@ -27,187 +28,231 @@ public class MainMenuUI : MonoBehaviour
     public Color inactiveTabColor =
         new Color(0.65f, 0.65f, 0.65f, 1f);
 
-
-    // Menyimpan posisi awal kedua tab
     private Vector2 levelSelectOriginalPosition;
     private Vector2 almanacOriginalPosition;
 
-
     private void Start()
     {
-        // Simpan posisi asli tab dari Unity
-        levelSelectOriginalPosition = levelSelectTab.anchoredPosition;
-        almanacOriginalPosition = almanacTab.anchoredPosition;
+        Debug.Log("MainMenuUI Start dipanggil.");
 
-        // Kondisi awal panel
-        optionPanel.SetActive(false);
-        levelSelectPanel.SetActive(false);
+        // Simpan posisi awal tab
+        if (levelSelectTab != null)
+            levelSelectOriginalPosition =
+                levelSelectTab.anchoredPosition;
 
-        // TAMBAHAN
-        creditPanel.SetActive(false);
+        if (almanacTab != null)
+            almanacOriginalPosition =
+                almanacTab.anchoredPosition;
 
-        // Kondisi awal halaman
+        // Sembunyikan panel awal
+        if (optionPanel != null)
+            optionPanel.SetActive(false);
+
+        if (creditPanel != null)
+            creditPanel.SetActive(false);
+
+        // Baca penanda untuk membuka Level Select
+        int openLevelSelect =
+            PlayerPrefs.GetInt("OpenLevelSelect", 0);
+
+        Debug.Log("OpenLevelSelect saat Mainmenu dibuka: "
+            + openLevelSelect);
+
+        // Atur tab awal
         SetLevelSelectActive();
 
-
-        // Jika kembali dari scene lain
-        if (PlayerPrefs.GetInt("OpenLevelSelect", 0) == 1)
+        if (openLevelSelect == 1)
         {
-            levelSelectPanel.SetActive(true);
-
+            // Hapus penanda setelah dibaca
             PlayerPrefs.SetInt("OpenLevelSelect", 0);
             PlayerPrefs.Save();
 
-            SetLevelSelectActive();
+            // Buka Level Select langsung
+            if (levelSelectPanel != null)
+            {
+                levelSelectPanel.SetActive(true);
+                Debug.Log("Level Select dibuka dari gameplay.");
+            }
+            else
+            {
+                Debug.LogError("Level Select Panel belum diisi!");
+            }
+        }
+        else
+        {
+            // Masuk Mainmenu secara normal
+            if (levelSelectPanel != null)
+                levelSelectPanel.SetActive(false);
+
+            Debug.Log("Mainmenu dibuka tanpa Level Select.");
         }
     }
 
-
-    // =================================
+    // =========================
     // OPTION
-    // =================================
+    // =========================
 
     public void OpenOption()
     {
-        optionPanel.SetActive(true);
+        if (optionPanel != null)
+            optionPanel.SetActive(true);
     }
 
     public void CloseOption()
     {
-        optionPanel.SetActive(false);
+        if (optionPanel != null)
+            optionPanel.SetActive(false);
     }
 
-
-    // =================================
+    // =========================
     // CREDIT
-    // =================================
+    // =========================
 
     public void OpenCredit()
     {
-        // Buka Credit Panel
-        creditPanel.SetActive(true);
+        if (creditPanel != null)
+            creditPanel.SetActive(true);
     }
 
     public void CloseCredit()
     {
-        // Tutup Credit Panel
-        creditPanel.SetActive(false);
+        if (creditPanel != null)
+            creditPanel.SetActive(false);
     }
 
-
-    // =================================
-    // BUKA LEVEL SELECT
-    // =================================
+    // =========================
+    // LEVEL SELECT
+    // =========================
 
     public void OpenLevelSelect()
     {
-        if (PlayerPrefs.GetInt("LevelSelectCutscenePlayed", 0) == 0)
+        Debug.Log("Tombol Level Select Mainmenu ditekan.");
+
+        if (levelSelectPanel == null)
         {
-            levelSelectPanel.SetActive(false);
+            Debug.LogError("Level Select Panel belum diisi!");
+            return;
+        }
 
-            cutsceneManager.GetComponent<CutsceneManager>().PlayCutscene();
+        SetLevelSelectActive();
 
-            PlayerPrefs.SetInt("LevelSelectCutscenePlayed", 1);
-            PlayerPrefs.Save();
+        if (cutsceneManager != null)
+        {
+            CutsceneManager manager =
+                cutsceneManager.GetComponent<CutsceneManager>();
+
+            if (manager != null)
+            {
+                manager.PlayCutscene();
+            }
+            else
+            {
+                Debug.LogError(
+                    "Komponen CutsceneManager tidak ditemukan!"
+                );
+
+                levelSelectPanel.SetActive(true);
+            }
         }
         else
         {
+            Debug.LogWarning(
+                "Cutscene Manager belum diisi. " +
+                "Level Select dibuka langsung."
+            );
+
             levelSelectPanel.SetActive(true);
         }
     }
 
     public void CloseLevelSelect()
     {
-        levelSelectPanel.SetActive(false);
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(false);
     }
 
-
-    // =================================
-    // PINDAH KE ALMANAC
-    // =================================
+    // =========================
+    // ALMANAC
+    // =========================
 
     public void OpenAlmanac()
     {
+        if (levelSelectPanel != null)
+            levelSelectPanel.SetActive(true);
+
         SetAlmanacActive();
     }
-
-
-    // =================================
-    // PINDAH KE LEVEL SELECT
-    // =================================
 
     public void GoToLevelSelect()
     {
         SetLevelSelectActive();
     }
 
-
-    // =================================
-    // LEVEL SELECT AKTIF
-    // =================================
+    // =========================
+    // TAB LEVEL SELECT
+    // =========================
 
     public void SetLevelSelectActive()
     {
-        // Tampilkan halaman Level Select
-        levelSelectPage.SetActive(true);
+        if (levelSelectPage != null)
+            levelSelectPage.SetActive(true);
 
-        // Sembunyikan halaman Almanac
-        almanacPanel.SetActive(false);
+        if (almanacPanel != null)
+            almanacPanel.SetActive(false);
 
+        // Posisi dan warna tab Level Select
+        if (levelSelectTab != null)
+        {
+            levelSelectTab.anchoredPosition =
+                levelSelectOriginalPosition;
+        }
 
-        // LEVEL SELECT TAB AKTIF
-        // Kembali ke posisi asli
-        levelSelectTab.anchoredPosition =
-            levelSelectOriginalPosition;
+        if (levelSelectTabImage != null)
+            levelSelectTabImage.color = activeTabColor;
 
-        // Warna terang
-        levelSelectTabImage.color =
-            activeTabColor;
+        // Posisi dan warna tab Almanac
+        if (almanacTab != null)
+        {
+            almanacTab.anchoredPosition =
+                almanacOriginalPosition +
+                new Vector2(inactiveTabX, 0);
+        }
 
-
-        // ALMANAC TAB TIDAK AKTIF
-        // Geser sedikit dari posisi asli
-        almanacTab.anchoredPosition =
-            almanacOriginalPosition +
-            new Vector2(inactiveTabX, 0);
-
-        // Warna lebih gelap
-        almanacTabImage.color =
-            inactiveTabColor;
+        if (almanacTabImage != null)
+            almanacTabImage.color = inactiveTabColor;
     }
 
-
-    // =================================
-    // ALMANAC AKTIF
-    // =================================
+    // =========================
+    // TAB ALMANAC
+    // =========================
 
     public void SetAlmanacActive()
     {
-        // Sembunyikan halaman Level Select
-        levelSelectPage.SetActive(false);
+        if (levelSelectPage != null)
+            levelSelectPage.SetActive(false);
 
-        // Tampilkan halaman Almanac
-        almanacPanel.SetActive(true);
+        if (almanacPanel != null)
+            almanacPanel.SetActive(true);
 
+        // Posisi dan warna tab Level Select
+        if (levelSelectTab != null)
+        {
+            levelSelectTab.anchoredPosition =
+                levelSelectOriginalPosition +
+                new Vector2(inactiveTabX, 0);
+        }
 
-        // LEVEL SELECT TAB TIDAK AKTIF
-        // Geser sedikit dari posisi asli
-        levelSelectTab.anchoredPosition =
-            levelSelectOriginalPosition +
-            new Vector2(inactiveTabX, 0);
+        if (levelSelectTabImage != null)
+            levelSelectTabImage.color = inactiveTabColor;
 
-        // Warna lebih gelap
-        levelSelectTabImage.color =
-            inactiveTabColor;
+        // Posisi dan warna tab Almanac
+        if (almanacTab != null)
+        {
+            almanacTab.anchoredPosition =
+                almanacOriginalPosition;
+        }
 
-
-        // ALMANAC TAB AKTIF
-        // Kembali ke posisi asli
-        almanacTab.anchoredPosition =
-            almanacOriginalPosition;
-
-        // Warna terang
-        almanacTabImage.color =
-            activeTabColor;
+        if (almanacTabImage != null)
+            almanacTabImage.color = activeTabColor;
     }
 }
