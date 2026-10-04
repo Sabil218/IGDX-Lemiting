@@ -96,6 +96,12 @@ public class PlatingManager : MonoBehaviour, ICookingPhase
     {
         OnPhaseComplete?.Invoke();
 
+        if (CookingVisualController.Instance != null)
+        {
+            CookingVisualController.Instance.ResetAllCookedVisuals();
+            CookingVisualController.Instance.ClearRawIngredients();
+        }
+
         if (CookingManager.instance != null)
         {
             CookingManager.instance.NextStep();

@@ -28,16 +28,44 @@ public class StirInput : MonoBehaviour
 
     public float Progress => Mathf.Clamp01(maxCumulativeAngle / targetAngle);
 
-    private void Awake() => mainCamera = Camera.main;
+    private void Awake()
+    {
+        mainCamera = Camera.main;
+        EnsureCollider();
+    }
 
     // Resets stirring progress every time the phase starts.
     private void OnEnable()
     {
+        EnsureCollider();
         rawCumulativeAngle = 0f;
         maxCumulativeAngle = 0f;
         targetAngle = requiredRotations * 360f;
         isCompleted = false;
         isDragging = false;
+    }
+
+    private void EnsureCollider()
+    {
+        if (stirZoneCollider == null)
+        {
+            // 1. Cari objek ber-tag Wajan
+            GameObject wajan = GameObject.FindWithTag("Wajan");
+            if (wajan != null)
+            {
+                stirZoneCollider = wajan.GetComponent<Collider2D>();
+            }
+
+            // 2. Jika tag tidak ditemukan, cari objek bernama Cook_pan
+            if (stirZoneCollider == null)
+            {
+                GameObject pan = GameObject.Find("Cook_pan");
+                if (pan != null)
+                {
+                    stirZoneCollider = pan.GetComponent<Collider2D>();
+                }
+            }
+        }
     }
 
     // Handles touch/mouse input, calculates circular motion around the pan, and fires progress events.
@@ -122,6 +150,7 @@ public class StirInput : MonoBehaviour
     // Finds the center of the stirring zone to calculate the circular rotation angle.
     private Vector2 GetCenterWorldPos()
     {
+        EnsureCollider();
         if (stirZoneCollider == null) return Vector2.zero;
         return stirZoneCollider.transform.position;
     }

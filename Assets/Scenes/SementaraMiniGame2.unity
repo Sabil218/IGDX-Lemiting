@@ -3443,10 +3443,12 @@ MonoBehaviour:
     ingredientObject: {fileID: 5412339652491691265, guid: 97841caf1eaf07e4a9e6c509b46d46a8, type: 3}
     disableRotation: 0
     dropInCenter: 0
+    dropSequentially: 1
   - targetWord: Bawang Putih
     ingredientObject: {fileID: 935366613560151938, guid: 5968e34aca888ca4fb6e140acf91c806, type: 3}
     disableRotation: 0
     dropInCenter: 0
+    dropSequentially: 1
   - targetWord: Kemangi
     ingredientObject: {fileID: 613352598}
     disableRotation: 0

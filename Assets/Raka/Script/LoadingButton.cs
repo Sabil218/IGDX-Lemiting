@@ -22,9 +22,9 @@ public class LoadingButton : MonoBehaviour
         }
         else if (currentScene == "Level3")
         {
-            LoadingManager.instance.LoadScene("SementaraMiniGame1");
+            LoadingManager.instance.LoadScene("MiniGame1");
         }
-        else if (currentScene == "SementaraMiniGame1")
+        else if (currentScene == "MiniGame1")
         {
             LoadingManager.instance.LoadScene("Level4");
         }
@@ -38,7 +38,7 @@ public class LoadingButton : MonoBehaviour
         }
         else if (currentScene == "Level6")
         {
-            LoadingManager.instance.LoadScene("SementaraMiniGame2");
+            LoadingManager.instance.LoadScene("MiniGame2");
         }
         else
         {
