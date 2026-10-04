@@ -467,7 +467,7 @@ MonoBehaviour:
   sliceCompletionThreshold: 0.25
   knockbackDistance: 0.9
   knockbackDuration: 0.2
-  customSliceSfx: {fileID: 0}
+  customSliceSfx: {fileID: 8300000, guid: d0472a5e5f1b5304296e8509b6fd3588, type: 3}
 --- !u!114 &6257348788947633756
 MonoBehaviour:
   m_ObjectHideFlags: 0
