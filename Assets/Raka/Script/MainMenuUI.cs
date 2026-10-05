@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +12,10 @@ public class MainMenuUI : MonoBehaviour
     [Header("Pages")]
     public GameObject levelSelectPage;
     public GameObject almanacPanel;
+
+    [Header("Level Select Only Buttons")]
+    public GameObject nextPageButton;
+    public GameObject otherLevelSelectButton;
 
     [Header("Bookmark Tabs")]
     public RectTransform levelSelectTab;
@@ -200,6 +203,9 @@ public class MainMenuUI : MonoBehaviour
         if (almanacPanel != null)
             almanacPanel.SetActive(false);
 
+        // Tampilkan tombol khusus Level Select
+        SetLevelSelectButtons(true);
+
         // Posisi dan warna tab Level Select
         if (levelSelectTab != null)
         {
@@ -234,6 +240,9 @@ public class MainMenuUI : MonoBehaviour
         if (almanacPanel != null)
             almanacPanel.SetActive(true);
 
+        // Sembunyikan tombol khusus Level Select
+        SetLevelSelectButtons(false);
+
         // Posisi dan warna tab Level Select
         if (levelSelectTab != null)
         {
@@ -254,5 +263,18 @@ public class MainMenuUI : MonoBehaviour
 
         if (almanacTabImage != null)
             almanacTabImage.color = activeTabColor;
+    }
+
+    // =========================
+    // LEVEL SELECT BUTTON VISIBILITY
+    // =========================
+
+    private void SetLevelSelectButtons(bool visible)
+    {
+        if (nextPageButton != null)
+            nextPageButton.SetActive(visible);
+
+        if (otherLevelSelectButton != null)
+            otherLevelSelectButton.SetActive(visible);
     }
 }

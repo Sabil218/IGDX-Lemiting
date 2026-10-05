@@ -13,6 +13,14 @@ public class ResultRewardPanel : MonoBehaviour
     [Header("Lose UI")]
     public GameObject encouragementText;
 
+    [Header("Sound")]
+    public AudioClip winSound;
+    public AudioClip loseSound;
+
+    [Header("Sound Settings")]
+    [Range(0f, 1f)]
+    public float soundVolume = 1f;
+
     [Header("Content Animation")]
     public float contentAnimationDuration = 0.5f;
 
@@ -54,6 +62,9 @@ public class ResultRewardPanel : MonoBehaviour
 
         HideContent();
 
+        // SOUND WIN
+        PlaySound(winSound);
+
         StartCoroutine(WinSequence());
     }
 
@@ -67,7 +78,24 @@ public class ResultRewardPanel : MonoBehaviour
 
         HideContent();
 
+        // SOUND LOSE
+        PlaySound(loseSound);
+
         StartCoroutine(LoseSequence());
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip == null)
+            return;
+
+        AudioSource.PlayClipAtPoint(
+            clip,
+            Camera.main != null
+                ? Camera.main.transform.position
+                : Vector3.zero,
+            soundVolume
+        );
     }
 
     private IEnumerator WinSequence()

@@ -25,6 +25,11 @@ public class NewIngredientPopup : MonoBehaviour
     [Header("Item Disappear")]
     public float popupDelay = 0.05f;
 
+    [Header("Sound")]
+    public AudioClip newIngredientSound;
+    [Range(0f, 1f)]
+    public float soundVolume = 1f;
+
     private RectTransform basket1Rect;
     private RectTransform basket2Rect;
     private RectTransform basket3Rect;
@@ -112,6 +117,16 @@ public class NewIngredientPopup : MonoBehaviour
         ingredientImage.sprite = ingredientSprite;
 
         popupPanel.SetActive(true);
+
+        // PLAY SOUND SAAT POPUP MUNCUL
+        if (newIngredientSound != null)
+        {
+            AudioSource.PlayClipAtPoint(
+                newIngredientSound,
+                Camera.main.transform.position,
+                soundVolume
+            );
+        }
 
         basket1.SetActive(false);
         basket2.SetActive(false);

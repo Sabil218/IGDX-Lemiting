@@ -172,6 +172,8 @@ MonoBehaviour:
   animator: {fileID: 7015243638996161797}
   battleManager: {fileID: 0}
   player: {fileID: 0}
+  hurtSound: {fileID: 8300000, guid: 5bdbf3b453eb52642899eac93693d90e, type: 3}
+  hurtVolume: 1
   fadeDuration: 0.25
   dropItemPrefabs:
   - {fileID: 1316689203086545232, guid: b7c203741835cce45932ec45af2581ee, type: 3}

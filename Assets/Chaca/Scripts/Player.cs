@@ -21,6 +21,10 @@ public class Player : MonoBehaviour
     public GameObject boomerangPrefab;
     public Transform boomerangSpawnPoint;
 
+    [Header("Audio")]
+    public AudioClip hurtSound;
+    public AudioClip attackSound;
+
     private Transform currentAttackTarget;
 
     public bool IsDead { get; private set; }
@@ -66,12 +70,17 @@ public class Player : MonoBehaviour
         yield return null;
     }
 
+    // Dipanggil oleh Animation Event
+    // pada frame saat player benar-benar melempar boomerang
     public void ThrowBoomerangEvent()
     {
         if (currentAttackTarget == null)
         {
             return;
         }
+
+        // Attack sound keluar tepat saat boomerang dilempar
+        PlaySound(attackSound);
 
         ThrowBoomerang(currentAttackTarget);
     }
@@ -131,6 +140,9 @@ public class Player : MonoBehaviour
         {
             healthUI.UpdateHearts();
         }
+
+        // Hurt sound
+        PlaySound(hurtSound);
 
         if (animator != null)
         {
@@ -247,5 +259,18 @@ public class Player : MonoBehaviour
             animator.ResetTrigger("Hurt");
             animator.ResetTrigger("Attack");
         }
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        AudioSource.PlayClipAtPoint(
+            clip,
+            transform.position
+        );
     }
 }

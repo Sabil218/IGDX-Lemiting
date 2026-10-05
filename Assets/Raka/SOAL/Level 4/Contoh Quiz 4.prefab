@@ -1207,6 +1207,11 @@ MonoBehaviour:
   - {fileID: 2804914637138227377}
   - {fileID: 6198058592573186261}
   correctAnswer: 3
+  correctSound: {fileID: 8300000, guid: 67fab0394ac5958409d42281d47ae2d9, type: 3}
+  wrongSound: {fileID: 8300000, guid: d38170184905164488dc5d497debdb26, type: 3}
+  soundVolume: 1
+  pressedScale: 0.9
+  pressDuration: 0.08
 --- !u!1 &3291294584438087223
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,6 +15,11 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public BattleManager battleManager;
     public Transform player;
 
+    [Header("Hurt Sound")]
+    public AudioClip hurtSound;
+    [Range(0f, 1f)]
+    public float hurtVolume = 1f;
+
     [Header("Death Fade")]
     public float fadeDuration = 1f;
 
@@ -80,6 +85,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     private IEnumerator FadeOut()
     {
+        // Play hurt sound saat enemy mulai fade
+        PlayHurtSound();
+
         SpriteRenderer[] sprites =
             GetComponentsInChildren<SpriteRenderer>();
 
@@ -151,6 +159,33 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         }
 
         Destroy(gameObject);
+    }
+
+    protected virtual void PlayHurtSound()
+    {
+        if (hurtSound == null)
+            return;
+
+        GameObject soundObject =
+            new GameObject("Enemy Hurt Sound");
+
+        AudioSource source =
+            soundObject.AddComponent<AudioSource>();
+
+        source.clip = hurtSound;
+        source.volume = hurtVolume;
+
+        // 2D sound
+        source.spatialBlend = 0f;
+
+        source.playOnAwake = false;
+
+        source.Play();
+
+        Destroy(
+            soundObject,
+            hurtSound.length
+        );
     }
 
     protected virtual void DropItems()
