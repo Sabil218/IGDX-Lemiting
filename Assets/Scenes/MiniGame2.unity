@@ -757,7 +757,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 32.42, y: 2.76}
+  m_AnchoredPosition: {x: 31.05, y: 2.15}
   m_SizeDelta: {x: 4, y: 4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &249443510
@@ -2048,8 +2048,8 @@ Transform:
   m_GameObject: {fileID: 699898380}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.67, y: 12.53, z: 0}
-  m_LocalScale: {x: 1.3, y: 1.3, z: 1}
+  m_LocalPosition: {x: 12.88, y: 11.61, z: 0.08285891}
+  m_LocalScale: {x: 1.3781298, y: 1.3781298, z: 1.0601}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 684682240}
@@ -2355,7 +2355,7 @@ Transform:
   m_GameObject: {fileID: 815108703}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.71, y: 5.65, z: 0}
+  m_LocalPosition: {x: 12.71, y: 4.95, z: 0.08285891}
   m_LocalScale: {x: 0.9, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3350,9 +3350,9 @@ MonoBehaviour:
   postDropWaitDelay: 0.75
   cameraReturnDelay: 0.45
   sfxAudioSource: {fileID: 0}
-  correctLetterSfx: {fileID: 0}
-  wrongLetterSfx: {fileID: 0}
-  wordCompleteSfx: {fileID: 0}
+  correctLetterSfx: {fileID: 8300000, guid: d8e46047e5b004742aa672492882efd5, type: 3}
+  wrongLetterSfx: {fileID: 8300000, guid: f94877d225731ac4fab31268f39189b5, type: 3}
+  wordCompleteSfx: {fileID: 8300000, guid: f067d77a2c2f9aa4abd1cc2454c22332, type: 3}
   AnswerArea: {fileID: 2115557002948033326, guid: 0430d4dc9eaf6824d9fb66615ef240f3, type: 3}
   WordTile: {fileID: 8098831010861218251, guid: e75a3b465004c4945a0696e9f5994c97, type: 3}
   targetBoardContainer: {fileID: 1702899600}
@@ -3540,8 +3540,8 @@ Transform:
   m_GameObject: {fileID: 1365676854}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 28.79, y: 6.89, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 25.72, y: 6.89, z: 0.08285891}
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 684682240}
@@ -3708,9 +3708,9 @@ MonoBehaviour:
   postDropWaitDelay: 0.75
   cameraReturnDelay: 0.45
   sfxAudioSource: {fileID: 0}
-  correctLetterSfx: {fileID: 0}
-  wrongLetterSfx: {fileID: 0}
-  wordCompleteSfx: {fileID: 0}
+  correctLetterSfx: {fileID: 8300000, guid: d8e46047e5b004742aa672492882efd5, type: 3}
+  wrongLetterSfx: {fileID: 8300000, guid: f94877d225731ac4fab31268f39189b5, type: 3}
+  wordCompleteSfx: {fileID: 8300000, guid: f067d77a2c2f9aa4abd1cc2454c22332, type: 3}
   AnswerArea: {fileID: 2115557002948033326, guid: 0430d4dc9eaf6824d9fb66615ef240f3, type: 3}
   WordTile: {fileID: 8098831010861218251, guid: e75a3b465004c4945a0696e9f5994c97, type: 3}
   targetBoardContainer: {fileID: 7880755502998043445}
@@ -4996,7 +4996,7 @@ Transform:
   m_GameObject: {fileID: 1850264505}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.71, y: 5.84, z: 0}
+  m_LocalPosition: {x: 12.64, y: 5.21, z: 0.08285891}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7066,8 +7066,8 @@ Transform:
   m_GameObject: {fileID: 353480475479072324}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 47.15, y: -10.65, z: -0.08285891}
-  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_LocalPosition: {x: 47.4, y: -10.7, z: -0.08285891}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1125364218182700917}

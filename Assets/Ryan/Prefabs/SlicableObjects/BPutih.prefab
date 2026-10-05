@@ -463,7 +463,7 @@ MonoBehaviour:
     secondaryTiltAngle: -3
     cutSprite: {fileID: 0}
   initialGuidelineDelay: 0.5
-  perpDistanceTolerance: 0.6
+  perpDistanceTolerance: 0.4
   sliceCompletionThreshold: 0.25
   knockbackDistance: 0.9
   knockbackDuration: 0.2

@@ -327,6 +327,10 @@ public class PlatingCutscene : MonoBehaviour
     private IEnumerator BounceInObject(Transform target)
     {
         target.gameObject.SetActive(true);
+        foreach (Transform child in target.GetComponentsInChildren<Transform>(true))
+        {
+            child.gameObject.SetActive(true);
+        }
         Vector3 targetScale = Vector3.one;
         if (initialScales.TryGetValue(target, out Vector3 cached))
         {
