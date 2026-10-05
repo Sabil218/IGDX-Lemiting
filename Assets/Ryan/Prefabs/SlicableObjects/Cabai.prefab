@@ -95,7 +95,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 10
   m_TargetDisplay: 0
 --- !u!114 &697769297720285031
 MonoBehaviour:
@@ -669,7 +669,7 @@ MonoBehaviour:
   sliceCompletionThreshold: 0.25
   knockbackDistance: 0.2
   knockbackDuration: 0.2
-  customSliceSfx: {fileID: 0}
+  customSliceSfx: {fileID: 8300000, guid: d0472a5e5f1b5304296e8509b6fd3588, type: 3}
 --- !u!114 &2106615739267096990
 MonoBehaviour:
   m_ObjectHideFlags: 0

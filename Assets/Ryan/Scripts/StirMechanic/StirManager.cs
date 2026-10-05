@@ -96,10 +96,51 @@ public class StirManager : MonoBehaviour, ICookingPhase
         return transform.position;
     }
 
+    private Sprite initialSpoonSprite;
+
     private void Awake()
     {
+        CacheSpoonInitialSprite();
         SetVisualsActive(false);
         StopStirAudio();
+    }
+
+    private void CacheSpoonInitialSprite()
+    {
+        if (spoonTransform != null && initialSpoonSprite == null)
+        {
+            SpriteRenderer sr = spoonTransform.GetComponent<SpriteRenderer>();
+            if (sr != null) initialSpoonSprite = sr.sprite;
+        }
+        else if (initialSpoonSprite == null)
+        {
+            GameObject stove = GameObject.Find("StoveObject");
+            if (stove != null)
+            {
+                Transform spoon = stove.transform.Find("Spoon");
+                if (spoon != null)
+                {
+                    SpriteRenderer sr = spoon.GetComponent<SpriteRenderer>();
+                    if (sr != null) initialSpoonSprite = sr.sprite;
+                }
+            }
+        }
+    }
+
+    public void ResetSpoonVisual()
+    {
+        if (spoonAnimator != null)
+        {
+            spoonAnimator.SetBool("isStirring", false);
+            spoonAnimator.Play("Idle", 0, 0f);
+            spoonAnimator.Update(0f);
+        }
+        CacheSpoonInitialSprite();
+        if (spoonTransform != null && initialSpoonSprite != null)
+        {
+            SpriteRenderer sr = spoonTransform.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sprite = initialSpoonSprite;
+        }
     }
 
     private void Start()
@@ -149,6 +190,7 @@ public class StirManager : MonoBehaviour, ICookingPhase
         currentAngularVelocity = 0f;
         stirItems.Clear();
         initializedItems = false;
+        ResetSpoonVisual();
         SetVisualsActive(true);
 
         EnsureItemsInitialized();
@@ -556,6 +598,7 @@ public class StirManager : MonoBehaviour, ICookingPhase
 
     private void HideSpoonVisuals()
     {
+        ResetSpoonVisual();
         CookingManager.SetSpoonActive(false);
     }
 

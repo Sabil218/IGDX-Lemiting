@@ -161,24 +161,42 @@ public class FoodSlicer : MonoBehaviour
 
         for (int i = 0; i < slicePhases.Length; i++)
         {
-            if (slicePhases[i].sliceLine != null)
-                slicePhases[i].sliceLine.gameObject.SetActive(false);
+            var phase = slicePhases[i];
+            if (phase.sliceLine != null)
+                phase.sliceLine.gameObject.SetActive(false);
 
-            Transform sourceT = slicePhases[i].sourceObject != null ? slicePhases[i].sourceObject.transform : transform;
+            Transform sourceT = phase.sourceObject != null ? phase.sourceObject.transform : transform;
 
-            foreach (GameObject obj in slicePhases[i].resultObjects)
+            foreach (GameObject obj in phase.resultObjects)
             {
                 if (obj != null)
                 {
+                    GameObject activeObj = null;
                     if (!obj.scene.IsValid())
                     {
-                        GameObject spawned = Instantiate(obj, sourceT.position, sourceT.rotation, transform);
-                        spawned.SetActive(true);
-                        spawnedFragments.Add(spawned);
+                        activeObj = Instantiate(obj, sourceT.position, sourceT.rotation, transform);
+                        activeObj.SetActive(true);
+                        spawnedFragments.Add(activeObj);
                     }
                     else
                     {
-                        obj.SetActive(true);
+                        activeObj = obj;
+                        activeObj.SetActive(true);
+                    }
+
+                    // Terapkan perubahan posisi (knockback) dan rotasi (tilt) persis seperti saat dipotong di talenan
+                    bool isEjected = phase.ejectedFragment != null && (obj.transform == phase.ejectedFragment || obj.name == phase.ejectedFragment.name);
+                    if (isEjected)
+                    {
+                        Vector3 knockbackDir = new Vector3(phase.knockbackDirection.x, phase.knockbackDirection.y, 0).normalized;
+                        activeObj.transform.localPosition += knockbackDir * knockbackDistance;
+                        activeObj.transform.localRotation *= Quaternion.Euler(0, 0, phase.tiltAngle);
+                    }
+                    else if (phase.moveNonEjected)
+                    {
+                        Vector3 secKnockbackDir = new Vector3(phase.secondaryKnockbackDirection.x, phase.secondaryKnockbackDirection.y, 0);
+                        activeObj.transform.localPosition += secKnockbackDir;
+                        activeObj.transform.localRotation *= Quaternion.Euler(0, 0, phase.secondaryTiltAngle);
                     }
                 }
             }
@@ -207,6 +225,10 @@ public class FoodSlicer : MonoBehaviour
                 }
             }
         }
+
+        // Pastikan sprite induk utuh dimatikan total agar tidak ada visual ganda di bawah potongan
+        SpriteRenderer rootSr = GetComponent<SpriteRenderer>();
+        if (rootSr != null) rootSr.enabled = false;
     }
 
     private void HandleSwipeMoving(Vector2 currentPos)
@@ -389,17 +411,24 @@ public class FoodSlicer : MonoBehaviour
 
         float elapsedTime = 0f;
         Vector3 startScale = target.localScale;
-        target.localScale = startScale * 1.15f;
+        Vector3 popScale = startScale * 1.15f;
 
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
-            float t = elapsedTime / duration;
-            t = 1f - (1f - t) * (1f - t);
+            float progress = Mathf.Clamp01(elapsedTime / duration);
+            
+            // Ease out quad for smooth deceleration
+            float t = 1f - (1f - progress) * (1f - progress);
 
-            target.localPosition = Vector3.Lerp(startPos, endPos, t);
+            // Subtle hop arc for authentic bounciness feel
+            float hopArc = Mathf.Sin(progress * Mathf.PI) * 0.12f;
+            Vector3 currentPos = Vector3.Lerp(startPos, endPos, t);
+            currentPos.y += hopArc;
+
+            target.localPosition = currentPos;
             target.localRotation = Quaternion.Lerp(startRot, endRot, t);
-            target.localScale = Vector3.Lerp(target.localScale, startScale, t);
+            target.localScale = Vector3.Lerp(popScale, startScale, t);
             yield return null;
         }
 

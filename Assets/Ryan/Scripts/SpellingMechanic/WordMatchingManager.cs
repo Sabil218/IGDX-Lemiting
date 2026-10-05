@@ -12,9 +12,15 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         public Transform ingredientObject;
         public bool disableRotation;
         public bool dropInCenter;
+        [Tooltip("Jatuhkan potongan satu-per-satu secara berurutan ke wajan (jika false/default, bahan dijatuhkan langsung bersamaan seperti ikan).")]
+        public bool dropSequentially;
+        [Tooltip("Pengali ukuran khusus saat bahan muncul di rak eja (1 = ikuti prefab, misal 1.3 atau 1.5 jika ingin lebih besar di rak).")]
+        public float spawnScaleMultiplier = 1f;
     }
 
     [Header("Spelling Rounds")]
+    //Scale Food
+    [SerializeField] private float defaultSpawnScaleMultiplier = 1f;
     public SpellingRoundData[] spellingRounds;
     private int currentSpellingIndex = 0;
 
@@ -60,6 +66,7 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     private Transform currentIngredient;
     private bool currentDisableRotation;
     private bool currentDropInCenter;
+    private bool currentDropSequentially;
 
     private BoardDropZone mainWordDisplay;
 
@@ -67,8 +74,11 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
 
     private void Awake()
     {
-        Camera.main.transparencySortMode = TransparencySortMode.CustomAxis;
-        Camera.main.transparencySortAxis = new Vector3(0, 1, 0);
+        if (Camera.main != null)
+        {
+            Camera.main.transparencySortMode = TransparencySortMode.CustomAxis;
+            Camera.main.transparencySortAxis = new Vector3(0, 1, 0);
+        }
     }
 
     private void OnEnable()
@@ -106,6 +116,25 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
             panContentContainer = CookingVisualController.Instance.rawIngredientsContainer;
         }
 
+        // Pastikan wajan bersih dari sisa bahan dan layer masakan fase sebelumnya (misal sagu / papeda)
+        if (panContentContainer != null)
+        {
+            for (int i = panContentContainer.childCount - 1; i >= 0; i--)
+            {
+                Transform child = panContentContainer.GetChild(i);
+                if (child != null)
+                {
+                    child.gameObject.SetActive(false);
+                    Destroy(child.gameObject);
+                }
+            }
+        }
+
+        if (CookingVisualController.Instance != null)
+        {
+            CookingVisualController.Instance.ResetAllCookedVisuals();
+        }
+
         if (dropCutscene != null)
         {
             dropCutscene.ResetDropHistory();
@@ -137,6 +166,13 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                     GameObject spawned = Instantiate(activeIngredient.gameObject, transform.position, transform.rotation, transform);
                     currentSpawnedIngredient = spawned;
                     activeIngredient = spawned.transform;
+
+                    // Terapkan pengali skala khusus saat di rak eja (agar proporsional tanpa mengubah ukuran di talenan)
+                    float mult = round.spawnScaleMultiplier > 0.01f ? round.spawnScaleMultiplier : defaultSpawnScaleMultiplier;
+                    if (mult > 0.01f && Mathf.Abs(mult - 1f) > 0.001f)
+                    {
+                        activeIngredient.localScale *= mult;
+                    }
                 }
 
                 activeIngredient.gameObject.SetActive(false);
@@ -148,7 +184,7 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
                 }
             }
 
-            LoadRound(round.targetWord, activeIngredient, round.disableRotation, round.dropInCenter);
+            LoadRound(round.targetWord, activeIngredient, round.disableRotation, round.dropInCenter, round.dropSequentially);
         }
     }
 
@@ -187,12 +223,13 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
     }
 
     // Sets up the board and spawns the random letter tiles for the player to drag.
-    public void LoadRound(string word, Transform ingredient, bool disableRotation, bool dropInCenter = false)
+    public void LoadRound(string word, Transform ingredient, bool disableRotation, bool dropInCenter = false, bool dropSequentially = false)
     {
         currentWord = word.ToUpper();
         currentIngredient = ingredient;
         currentDisableRotation = disableRotation;
         currentDropInCenter = dropInCenter;
+        currentDropSequentially = dropSequentially;
 
         ClearContainer(targetBoardContainer);
         ClearLetterPool();
@@ -536,10 +573,10 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         }
     }
 
-    public void SyncCameraBlendWithDropDuration()
+    public void SyncCameraBlendWithDropDuration(bool isSequential = false)
     {
         if (dropCutscene == null) return;
-        float targetDuration = dropCutscene.DropDuration;
+        float targetDuration = isSequential ? dropCutscene.SequentialPieceDuration : dropCutscene.DropDuration;
 
         if (Camera.main != null)
         {
@@ -602,27 +639,34 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
             yield return new WaitForSeconds(0.35f);
         }
 
-        // 2. Kamera mulai bergerak ke wajan & bahan makanan mulai jatuh dari rak kayu ke wajan
-        onDropCutsceneStart?.Invoke();
-
-        EnsureCameraReferences();
-        SyncCameraBlendWithDropDuration();
-        if (panVirtualCamera != null)
+        // 2. Persiapkan fungsi pergerakan kamera ke wajan (hanya dipicu saat potongan terakhir dijatuhkan)
+        bool cameraTriggered = false;
+        void TriggerPanCamera()
         {
-            panVirtualCamera.gameObject.SetActive(true);
-            panVirtualCamera.Priority = 25; // Cinemachine blend ke wajan
+            if (cameraTriggered) return;
+            cameraTriggered = true;
+
+            onDropCutsceneStart?.Invoke();
+            EnsureCameraReferences();
+            SyncCameraBlendWithDropDuration(currentDropSequentially);
+            if (panVirtualCamera != null)
+            {
+                panVirtualCamera.gameObject.SetActive(true);
+                panVirtualCamera.Priority = 25; // Cinemachine blend ke wajan
+            }
         }
 
         bool dropFinished = false;
         if (dropCutscene != null)
         {
-            dropCutscene.DropToPan(currentIngredient, ingredientSpawnPoint, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, () =>
+            dropCutscene.DropToPan(currentIngredient, ingredientSpawnPoint, targetDropArea, panContentContainer, currentDisableRotation, currentDropInCenter, currentDropSequentially, () =>
             {
                 dropFinished = true;
-            });
+            }, TriggerPanCamera);
         }
         else
         {
+            TriggerPanCamera();
             dropFinished = true;
         }
 
@@ -631,6 +675,9 @@ public class WordMatchingManager : MonoBehaviour, ICookingPhase
         {
             yield return null;
         }
+
+        // Safeguard: Pastikan kamera beralih ke wajan jika belum sempat terpicu
+        TriggerPanCamera();
 
         // Tunggu hingga camera blend selesai jika masih dalam proses blend
         yield return StartCoroutine(WaitForCameraBlend());

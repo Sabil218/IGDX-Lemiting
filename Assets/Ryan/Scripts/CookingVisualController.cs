@@ -27,6 +27,94 @@ public class CookingVisualController : MonoBehaviour
     // Prepares the sprite layers for cooking progression and hides visuals from previous phases.
     public void SetLayeredTransitionStages(LayeredCookingStage[] newStages)
     {
+        ResetAllCookedVisuals();
+
+        layeredCookingStages = newStages;
+        activeBaseRenderers.Clear();
+        activeFrontRenderers.Clear();
+
+        if (newStages != null)
+        {
+            for (int i = 0; i < newStages.Length; i++)
+            {
+                if (newStages[i].baseRenderer != null)
+                {
+                    SpriteRenderer bsr = newStages[i].baseRenderer;
+                    if (bsr.transform.parent != null && !bsr.transform.parent.gameObject.activeSelf)
+                    {
+                        bsr.transform.parent.gameObject.SetActive(true);
+                    }
+                    bsr.gameObject.SetActive(true);
+                    bsr.enabled = true;
+                    bsr.color = new Color(1f, 1f, 1f, 0f);
+                    activeBaseRenderers.Add(bsr);
+                }
+
+                if (newStages[i].frontRenderer != null)
+                {
+                    SpriteRenderer fsr = newStages[i].frontRenderer;
+                    if (fsr.transform.parent != null && !fsr.transform.parent.gameObject.activeSelf)
+                    {
+                        fsr.transform.parent.gameObject.SetActive(true);
+                    }
+                    fsr.gameObject.SetActive(true);
+                    fsr.enabled = true;
+                    fsr.color = new Color(1f, 1f, 1f, 0f);
+                    activeFrontRenderers.Add(fsr);
+                }
+            }
+        }
+
+        // Reset progress ke 0 agar bahan mentah tampak 100% dan layer matang transparan 0%
+        UpdateStirProgress(0f);
+
+        Debug.Log($"[CookingVisual] SetLayeredTransitionStages: {newStages?.Length ?? 0} stages, base={activeBaseRenderers.Count}, front={activeFrontRenderers.Count}");
+    }
+
+    public void ResetAllCookedVisuals()
+    {
+        // 1. Matikan dan transparankan semua layer Papeda
+        Transform pMatang = transform.Find("PapedaMatang");
+        if (pMatang != null)
+        {
+            foreach (var sr in pMatang.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.color = new Color(1f, 1f, 1f, 0f);
+            }
+            pMatang.gameObject.SetActive(false);
+        }
+
+        Transform pSetengah = transform.Find("PapedaSetengah");
+        if (pSetengah != null)
+        {
+            foreach (var sr in pSetengah.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.color = new Color(1f, 1f, 1f, 0f);
+            }
+            pSetengah.gameObject.SetActive(false);
+        }
+
+        // 2. Matikan dan transparankan semua layer Kuah
+        Transform kMatang = transform.Find("Matang");
+        if (kMatang != null)
+        {
+            foreach (var sr in kMatang.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.color = new Color(1f, 1f, 1f, 0f);
+            }
+            kMatang.gameObject.SetActive(false);
+        }
+
+        Transform kSetengah = transform.Find("SetengahMatang");
+        if (kSetengah != null)
+        {
+            foreach (var sr in kSetengah.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.color = new Color(1f, 1f, 1f, 0f);
+            }
+            kSetengah.gameObject.SetActive(false);
+        }
+
         foreach (SpriteRenderer r in activeBaseRenderers) {
             if (r != null) r.color = new Color(1f, 1f, 1f, 0f);
         }
@@ -34,32 +122,25 @@ public class CookingVisualController : MonoBehaviour
             if (r != null) r.color = new Color(1f, 1f, 1f, 0f);
         }
 
-        layeredCookingStages = newStages;
+        layeredCookingStages = null;
         activeBaseRenderers.Clear();
         activeFrontRenderers.Clear();
+    }
 
-        for (int i = 0; i < newStages.Length; i++)
+    public void ClearRawIngredients()
+    {
+        if (rawIngredientsContainer != null)
         {
-            if (newStages[i].baseRenderer != null)
+            for (int i = rawIngredientsContainer.childCount - 1; i >= 0; i--)
             {
-                SpriteRenderer bsr = newStages[i].baseRenderer;
-                bsr.gameObject.SetActive(true);
-                bsr.enabled = true;
-                bsr.color = new Color(1f, 1f, 1f, 0f);
-                activeBaseRenderers.Add(bsr);
-            }
-
-            if (newStages[i].frontRenderer != null)
-            {
-                SpriteRenderer fsr = newStages[i].frontRenderer;
-                fsr.gameObject.SetActive(true);
-                fsr.enabled = true;
-                fsr.color = new Color(1f, 1f, 1f, 0f);
-                activeFrontRenderers.Add(fsr);
+                Transform child = rawIngredientsContainer.GetChild(i);
+                if (child != null)
+                {
+                    child.gameObject.SetActive(false);
+                    Destroy(child.gameObject);
+                }
             }
         }
-
-        Debug.Log($"[CookingVisual] SetLayeredTransitionStages: {newStages.Length} stages, base={activeBaseRenderers.Count}, front={activeFrontRenderers.Count}");
     }
 
     private void Awake()
@@ -67,6 +148,7 @@ public class CookingVisualController : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            ResetAllCookedVisuals();
         }
         else
         {

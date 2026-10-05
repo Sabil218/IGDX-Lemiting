@@ -18,6 +18,13 @@ public class IngredientDropCutscene : MonoBehaviour
     // Ketinggian busur lempar/tumpah (parabola) sebelum jatuh ke wajan
     [SerializeField] private float tossArcHeight = 0.55f;
 
+    [Header("Sequential Drop Settings")]
+    [Tooltip("Durasi lempar parabola untuk tiap potongan saat dropSequentially aktif.")]
+    [SerializeField] private float sequentialPieceDuration = 0.45f;
+    public float SequentialPieceDuration => Mathf.Max(0.05f, sequentialPieceDuration);
+    [Tooltip("Jeda waktu antar potongan sebelum potongan berikutnya dilempar.")]
+    [SerializeField] private float sequentialPieceDelay = 0.10f;
+
     [Header("Scale & Wajan Basin Bounds")]
     // Faktor skala bahan makanan saat berada di wajan.
     [SerializeField] private float targetScale = 0.65f;
@@ -129,12 +136,23 @@ public class IngredientDropCutscene : MonoBehaviour
         ingredient.rotation = Quaternion.identity;
         ingredient.gameObject.SetActive(true);
 
-        // Pastikan seluruh SpriteRenderer child aktif
+        // Pastikan SpriteRenderer yang aktif tetap aktif tanpa mengubah sorting order
         SpriteRenderer[] renderers = ingredient.GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var sr in renderers)
         {
-            sr.gameObject.SetActive(true);
-            sr.enabled = true;
+            // PENTING: Jangan flip/toggle status enabled jika sprite tersebut memang sengaja dimatikan
+            // (misalnya badan ikan utuh yang sudah di-disable saat ForceSlicedState)
+            if (sr.enabled)
+            {
+                sr.gameObject.SetActive(true);
+            }
+        }
+
+        // Jika objek adalah bahan yang dipotong (FoodSlicer), pastikan sprite induk utuh dimatikan permanen
+        if (ingredient.GetComponent<FoodSlicer>() != null)
+        {
+            SpriteRenderer rootSr = ingredient.GetComponent<SpriteRenderer>();
+            if (rootSr != null) rootSr.enabled = false;
         }
 
         if (popSfx != null)
@@ -161,16 +179,49 @@ public class IngredientDropCutscene : MonoBehaviour
     // Menjatuhkan bahan makanan dari rak kayu langsung ke wajan secara mulus.
     public void DropToPan(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
     {
+        DropToPan(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, false, onComplete, null);
+    }
+
+    public void DropToPan(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, bool dropSequentially, Action onComplete)
+    {
+        DropToPan(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, dropSequentially, onComplete, null);
+    }
+
+    public void DropToPan(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, bool dropSequentially, Action onComplete, Action onCameraPanTrigger)
+    {
         if (ingredient == null || targetArea == null)
         {
+            onCameraPanTrigger?.Invoke();
             onComplete?.Invoke();
             return;
         }
 
-        StartCoroutine(DropToPanRoutine(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete));
+        // Cek apakah ingredient memiliki child pieces yang aktif (hasil potongan/slicing)
+        List<Transform> activePieces = new List<Transform>();
+        SpriteRenderer[] renderers = ingredient.GetComponentsInChildren<SpriteRenderer>();
+        foreach (var sr in renderers)
+        {
+            if (sr.enabled && sr.gameObject.activeInHierarchy && sr.transform != ingredient)
+            {
+                activePieces.Add(sr.transform);
+            }
+        }
+
+        // Jika opsi dropSequentially aktif dan terdapat lebih dari 1 potongan (misal Bawang Merah 3 potongan):
+        // Munculkan semua potongan di rak, lalu lempar 1 per 1 secara bergantian ke wajan dalam loop.
+        // Jika false (default):
+        // Jatuhkan seluruh objek/grup langsung bersamaan (seperti contoh pada Ikan).
+        if (dropSequentially && activePieces.Count > 1)
+        {
+            StartCoroutine(DropPiecesSequentiallyRoutine(ingredient, activePieces, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete, onCameraPanTrigger));
+        }
+        else
+        {
+            StartCoroutine(DropToPanRoutine(ingredient, spawnPoint, targetArea, panContentContainer, disableRotation, dropInCenter, onComplete, onCameraPanTrigger));
+        }
     }
 
-    private IEnumerator DropToPanRoutine(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete)
+    private IEnumerator DropPiecesSequentiallyRoutine(Transform ingredient, List<Transform> pieces, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete, Action onCameraPanTrigger = null)
     {
         EnsureSpawnPoint();
         Transform targetSpawn = spawnPoint != null ? spawnPoint : customSpawnPoint;
@@ -181,6 +232,182 @@ public class IngredientDropCutscene : MonoBehaviour
 
         Vector3 panCenter = targetArea.position;
         panCenter.z = 0f;
+
+        float pieceDuration = Mathf.Max(0.05f, sequentialPieceDuration);
+        float finalScaleFactor = (targetScale > 0f) ? targetScale : 0.65f;
+        int totalPieces = pieces.Count;
+
+        // Urutkan potongan dari kiri ke kanan agar animasi teratur dan estetik
+        pieces.Sort((a, b) => a.position.x.CompareTo(b.position.x));
+        int lastValidIndex = pieces.FindLastIndex(p => p != null);
+
+        Vector3 groupCenter = Vector3.zero;
+        if (dropInCenter)
+        {
+            foreach (var p in pieces)
+            {
+                if (p != null) groupCenter += p.position;
+            }
+            if (totalPieces > 0) groupCenter /= totalPieces;
+        }
+
+        Vector2[] pockets = GetPockets();
+
+        for (int i = 0; i < totalPieces; i++)
+        {
+            Transform piece = pieces[i];
+            if (piece == null) continue;
+
+            // Kamera baru mulai bergerak ke wajan tepat saat potongan TERAKHIR mulai dilempar
+            if (i == lastValidIndex)
+            {
+                onCameraPanTrigger?.Invoke();
+            }
+
+            Vector3 pieceLandingPos;
+            Quaternion targetRot;
+
+            if (dropInCenter)
+            {
+                Vector3 offsetFromGroup = piece.position - groupCenter;
+                pieceLandingPos = panCenter + (offsetFromGroup * finalScaleFactor);
+                pieceLandingPos.z = 0f;
+                targetRot = piece.rotation;
+            }
+            else
+            {
+                Vector2 pocket = pockets[currentPocketIndex % pockets.Length];
+                currentPocketIndex++;
+
+                float limitY = pocket.y >= 0f ? spreadRadiusYUp : spreadRadiusYDown;
+                float jitterX = UnityEngine.Random.Range(-0.06f, 0.06f) * spreadRadiusX;
+                float jitterY = UnityEngine.Random.Range(-0.05f, 0.05f) * limitY;
+
+                float offsetX = (pocket.x * spreadRadiusX) + jitterX;
+                float offsetY = (pocket.y * limitY) + jitterY;
+
+                float normX = offsetX / spreadRadiusX;
+                float normY = offsetY / limitY;
+                float distSq = normX * normX + normY * normY;
+                if (distSq > 1f)
+                {
+                    float scale = 0.95f / Mathf.Sqrt(distSq);
+                    offsetX *= scale;
+                    offsetY *= scale;
+                }
+
+                pieceLandingPos = panCenter + new Vector3(offsetX, offsetY, 0f);
+
+                float rotZVariation = disableRotation ? 0f : UnityEngine.Random.Range(-maxRandomRotationZ, maxRandomRotationZ);
+                targetRot = disableRotation ? Quaternion.identity : piece.rotation * Quaternion.Euler(0f, 0f, rotZVariation);
+            }
+
+            // Animasikan potongan ini melayang dalam parabola secara mandiri menuju target wajan
+            yield return StartCoroutine(AnimatePieceParabolaRoutine(piece, pieceLandingPos, targetRot, finalScaleFactor, pieceDuration, panContentContainer));
+
+            if (i < totalPieces - 1 && sequentialPieceDelay > 0f)
+            {
+                yield return new WaitForSeconds(sequentialPieceDelay);
+            }
+        }
+
+        // Pastikan transform induk juga diparent ke container wajan agar tersinkronisasi
+        if (ingredient != null && panContentContainer != null)
+        {
+            ingredient.SetParent(panContentContainer, true);
+        }
+
+        if (postImpactDelay > 0f)
+        {
+            yield return new WaitForSeconds(postImpactDelay);
+        }
+
+        onComplete?.Invoke();
+    }
+
+    private IEnumerator AnimatePieceParabolaRoutine(Transform piece, Vector3 targetLandingPos, Quaternion targetRot, float scaleFactor, float duration, Transform panContentContainer = null)
+    {
+        Vector3 startPos = piece.position;
+        Quaternion startRot = piece.rotation;
+        Vector3 startScale = piece.localScale;
+        Vector3 finalScale = startScale * scaleFactor;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            float tX = Mathf.SmoothStep(0f, 1f, t);
+            float arc = 4f * t * (1f - t) * tossArcHeight;
+            float gravityFall = t * t;
+
+            float curX = Mathf.Lerp(startPos.x, targetLandingPos.x, tX);
+            float curY = Mathf.Lerp(startPos.y, targetLandingPos.y, gravityFall) + arc;
+            float curZ = Mathf.Lerp(startPos.z, targetLandingPos.z, t);
+
+            piece.position = new Vector3(curX, curY, curZ);
+            piece.rotation = Quaternion.Lerp(startRot, targetRot, t);
+            piece.localScale = Vector3.Lerp(startScale, finalScale, t);
+
+            yield return null;
+        }
+
+        piece.position = targetLandingPos;
+        piece.rotation = targetRot;
+        piece.localScale = finalScale;
+
+        // Efek splash & SFX saat potongan mendarat
+        if (splashEffect != null)
+        {
+            splashEffect.transform.position = targetLandingPos;
+            splashEffect.Play();
+        }
+
+        if (landingSfx != null)
+        {
+            AudioSource.PlayClipAtPoint(landingSfx, targetLandingPos);
+        }
+
+        // Micro squash on landing
+        if (impactSquashIntensity > 0f && impactSquashDuration > 0f)
+        {
+            float impactElapsed = 0f;
+            while (impactElapsed < impactSquashDuration)
+            {
+                impactElapsed += Time.deltaTime;
+                float it = Mathf.Clamp01(impactElapsed / impactSquashDuration);
+                float decay = 1f - it;
+                float squashX = 1f + (impactSquashIntensity * 0.75f * decay);
+                float squashY = 1f - (impactSquashIntensity * decay);
+
+                piece.localScale = new Vector3(finalScale.x * squashX, finalScale.y * squashY, finalScale.z);
+                yield return null;
+            }
+            piece.localScale = finalScale;
+        }
+
+        // Langsung jangkar piece ke wajan agar aman
+        if (panContentContainer != null)
+        {
+            piece.SetParent(panContentContainer, true);
+        }
+    }
+
+    private IEnumerator DropToPanRoutine(Transform ingredient, Transform spawnPoint, Transform targetArea, Transform panContentContainer, bool disableRotation, bool dropInCenter, Action onComplete, Action onCameraPanTrigger = null)
+    {
+        EnsureSpawnPoint();
+        Transform targetSpawn = spawnPoint != null ? spawnPoint : customSpawnPoint;
+
+        Vector3 startPos = (targetSpawn != null) ? targetSpawn.position : ingredient.position;
+        startPos.z = 0f;
+        ingredient.position = startPos;
+
+        Vector3 panCenter = targetArea.position;
+        panCenter.z = 0f;
+
+        // Pemicu kamera untuk drop langsung
+        onCameraPanTrigger?.Invoke();
 
         // 1. Tentukan target akhir di wajan SEJAK AWAL
         Vector3 targetLandingPos;
