@@ -464,6 +464,7 @@ GameObject:
   m_Component:
   - component: {fileID: 981870001}
   - component: {fileID: 981870000}
+  - component: {fileID: 981870002}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: MainCamera
@@ -567,6 +568,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &981870002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981869999}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7111829ed5af9464f91aa107bd83e38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cookingManager: {fileID: 981870000}
+  levelUnlockObject: {fileID: 1317187824194720152}
+  unlockMethodName: UnlockNextLevel
 --- !u!212 &14011625364348641
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1027,6 +1043,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7067132207866212674}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &701720425680078214
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1317187824194720152}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1665.737, y: 218.20651, z: -3.537913}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &707442747954343103
 GameObject:
   m_ObjectHideFlags: 0
@@ -1247,6 +1278,19 @@ RectTransform:
   m_AnchoredPosition: {x: -221.44397, y: -123.64001}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &994283209469945484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1317187824194720152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff3f10a1b7e2c764ebae2ef9bb89959c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelNumber: 4
 --- !u!114 &1053805919171236642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1390,6 +1434,23 @@ GameObject:
   - component: {fileID: 442598016683690609}
   m_Layer: 5
   m_Name: SFXSlider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1317187824194720152
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 701720425680078214}
+  - component: {fileID: 994283209469945484}
+  m_Layer: 0
+  m_Name: LevelComplateManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6846,3 +6907,4 @@ SceneRoots:
   - {fileID: 887883856631918835}
   - {fileID: 3778343814635910784}
   - {fileID: 499428610373769074}
+  - {fileID: 701720425680078214}
